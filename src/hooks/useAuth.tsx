@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
+import { Student } from "./useStudents";
 import { supabase } from "@/integrations/supabase/client";
 
 type UserRole = 'gestor' | 'cuidador' | 'responsavel';
@@ -15,10 +16,15 @@ interface Profile {
   work_schedule?: string;
 }
 
+interface GuardianStudent {
+  students: Student;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
+  guardianStudents: Student[];
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
@@ -31,6 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [guardianStudents, setGuardianStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -49,11 +56,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .eq('user_id', session.user.id)
               .single();
             
-            setProfile(profileData);
+            setProfile(profileData as Profile);
+
+            if (profileData?.role === 'responsavel') {
+              const { data: studentsData } = await supabase
+                .from('guardians_students')
+                .select('students:student_id (*)')
+                .eq('guardian_id', profileData.id);
+              
+              const students = (studentsData as GuardianStudent[] | null)?.map(item => item.students) || [];
+              setGuardianStudents(students);
+            } else {
+              setGuardianStudents([]);
+            }
+
             setLoading(false);
           }, 0);
         } else {
           setProfile(null);
+          setGuardianStudents([]);
           setLoading(false);
         }
       }
@@ -73,10 +94,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .eq('user_id', session.user.id)
             .single();
           
-          setProfile(profileData);
+          setProfile(profileData as Profile);
+
+          if (profileData?.role === 'responsavel') {
+            const { data: studentsData } = await supabase
+              .from('guardians_students')
+              .select('students:student_id (*)')
+              .eq('guardian_id', profileData.id);
+            
+            const students = (studentsData as GuardianStudent[] | null)?.map(item => item.students) || [];
+            setGuardianStudents(students);
+          } else {
+            setGuardianStudents([]);
+          }
+
           setLoading(false);
         }, 0);
       } else {
+        setGuardianStudents([]);
         setLoading(false);
       }
     });
@@ -115,6 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     profile,
+    guardianStudents,
     loading,
     signIn,
     signUp,

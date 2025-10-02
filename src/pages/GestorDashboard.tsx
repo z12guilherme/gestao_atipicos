@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
@@ -20,12 +19,20 @@ import {
 import { UserManagement } from "@/components/gestor/UserManagement";
 import { StudentManagement } from "@/components/gestor/StudentManagement";
 import { AssignmentManagement } from "@/components/gestor/AssignmentManagement";
-import { useUsers } from "@/hooks/useUsers";
-import { useStudents } from "@/hooks/useStudents";
+import { useUsers, User } from "@/hooks/useUsers";
+import { useStudents, Student } from "@/hooks/useStudents";
+import { toast } from "sonner";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function GestorDashboard() {
   const { users } = useUsers();
   const { students } = useStudents();
+
+  const [activeTab, setActiveTab] = useState("users");
+  const [isUserDialogOpen, setUserDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [isStudentDialogOpen, setStudentDialogOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   
   const caregivers = users.filter(user => user.role === 'cuidador');
   const guardians = users.filter(user => user.role === 'responsavel');
@@ -214,19 +221,34 @@ export function GestorDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button className="w-full justify-start bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              <Button 
+                className="w-full justify-start bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                onClick={() => {
+                  setActiveTab("users");
+                  setEditingUser(null);
+                  setUserDialogOpen(true);
+                }}
+              >
                 <UserPlus className="mr-2 h-4 w-4" />
                 Novo Usuário
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => {
+                  setActiveTab("students");
+                  setEditingStudent(null);
+                  setStudentDialogOpen(true);
+                }}
+              >
                 <GraduationCap className="mr-2 h-4 w-4" />
                 Novo Estudante
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start" onClick={() => setActiveTab("assignments")}>
                 <Users className="mr-2 h-4 w-4" />
                 Gerenciar Atribuições
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start" onClick={() => toast.info("Em breve!", { description: "A funcionalidade de relatórios está em desenvolvimento." })}>
                 <Activity className="mr-2 h-4 w-4" />
                 Ver Relatórios
               </Button>
@@ -257,7 +279,7 @@ export function GestorDashboard() {
 
       {/* Management Tabs */}
       <Card className="border-0 shadow-lg">
-        <Tabs defaultValue="users" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <CardHeader>
             <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
               <TabsTrigger value="users" className="flex items-center space-x-2">
@@ -276,11 +298,21 @@ export function GestorDashboard() {
           </CardHeader>
           
           <TabsContent value="users" className="mt-0">
-            <UserManagement />
+            <UserManagement 
+              isDialogOpen={isUserDialogOpen}
+              setDialogOpen={setUserDialogOpen}
+              editingUser={editingUser}
+              setEditingUser={setEditingUser}
+            />
           </TabsContent>
           
           <TabsContent value="students" className="mt-0">
-            <StudentManagement />
+            <StudentManagement 
+              isDialogOpen={isStudentDialogOpen}
+              setDialogOpen={setStudentDialogOpen}
+              editingStudent={editingStudent}
+              setEditingStudent={setEditingStudent}
+            />
           </TabsContent>
           
           <TabsContent value="assignments" className="mt-0">

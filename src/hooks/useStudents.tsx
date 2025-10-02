@@ -82,10 +82,29 @@ export function useStudents() {
     },
   });
 
+  const deleteStudent = useMutation({
+    mutationFn: async (studentId: string) => {
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', studentId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+      toast.success('Estudante excluído com sucesso!');
+    },
+    onError: (error: any) => {
+      toast.error(`Erro ao excluir estudante: ${error.message}`);
+    },
+  });
+
   return {
     students: students || [],
     isLoading,
     createStudent,
     updateStudent,
+    deleteStudent,
   };
 }
