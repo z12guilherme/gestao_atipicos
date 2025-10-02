@@ -4,13 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Heart, Users, GraduationCap, Star } from "lucide-react";
 
 export default function Auth() {
-  const { user, signIn, signUp } = useAuth();
+  const { user, signIn } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -100,13 +99,8 @@ export default function Auth() {
         });
       }
     } catch (error) {
-      toast({
-        title: "Erro inesperado",
-        description: "Tente novamente em alguns instantes.",
-        variant: "destructive",
-      });
+      console.error("Signup error:", error);
     }
-
     setLoading(false);
   };
 
@@ -199,150 +193,61 @@ export default function Auth() {
                 </div>
                 <div className="hidden lg:block space-y-2">
                   <CardTitle className="text-2xl">Bem-vindo!</CardTitle>
-                  <CardDescription className="text-base">
-                    Acesse sua conta ou crie uma nova
-                  </CardDescription>
+                  <CardDescription className="text-base">Acesse sua conta para continuar</CardDescription>
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                <Tabs defaultValue="login" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-6">
-                    <TabsTrigger value="login" className="text-sm">Entrar</TabsTrigger>
-                    <TabsTrigger value="signup" className="text-sm">Cadastrar</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="login">
-                    <form onSubmit={handleLogin} className="space-y-5">
-                      <div className="space-y-2">
-                        <Label htmlFor="email" className="text-sm font-medium">Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          placeholder="seu@email.com"
-                          value={loginForm.email}
-                          onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
-                          className="h-11"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="password" className="text-sm font-medium">Senha</Label>
-                        <div className="relative">
-                          <Input
-                            id="password"
-                            type={showPassword ? "text" : "password"}
-                            placeholder="••••••••"
-                            value={loginForm.password}
-                            onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
-                            className="h-11 pr-10"
-                            required
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent"
-                            onClick={() => setShowPassword(!showPassword)}
-                          >
-                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </Button>
-                        </div>
-                      </div>
-                      <Button 
-                        type="submit" 
-                        className="w-full h-11 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                        disabled={loading}
+                <form onSubmit={handleLogin} className="space-y-5">
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={loginForm.email}
+                      onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
+                      className="h-11"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-sm font-medium">Senha</Label>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        value={loginForm.password}
+                        onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
+                        className="h-11 pr-10"
+                        required
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
                       >
-                        {loading ? (
-                          <div className="flex items-center space-x-2">
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            <span>Entrando...</span>
-                          </div>
-                        ) : (
-                          "Entrar"
-                        )}
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
-                    </form>
-                  </TabsContent>
-                  
-                  <TabsContent value="signup">
-                    <form onSubmit={handleSignup} className="space-y-5">
-                      <div className="space-y-2">
-                        <Label htmlFor="name" className="text-sm font-medium">Nome completo</Label>
-                        <Input
-                          id="name"
-                          type="text"
-                          placeholder="Seu nome completo"
-                          value={signupForm.name}
-                          onChange={(e) => setSignupForm({...signupForm, name: e.target.value})}
-                          className="h-11"
-                          required
-                        />
+                    </div>
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full h-11 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Entrando...</span>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-email" className="text-sm font-medium">Email</Label>
-                        <Input
-                          id="signup-email"
-                          type="email"
-                          placeholder="seu@email.com"
-                          value={signupForm.email}
-                          onChange={(e) => setSignupForm({...signupForm, email: e.target.value})}
-                          className="h-11"
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-password" className="text-sm font-medium">Senha</Label>
-                        <div className="relative">
-                          <Input
-                            id="signup-password"
-                            type={showPassword ? "text" : "password"}
-                            placeholder="Mínimo 6 caracteres"
-                            value={signupForm.password}
-                            onChange={(e) => setSignupForm({...signupForm, password: e.target.value})}
-                            className="h-11 pr-10"
-                            required
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent"
-                            onClick={() => setShowPassword(!showPassword)}
-                          >
-                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="confirm-password" className="text-sm font-medium">Confirmar senha</Label>
-                        <Input
-                          id="confirm-password"
-                          type={showPassword ? "text" : "password"}
-                          placeholder="Digite a senha novamente"
-                          value={signupForm.confirmPassword}
-                          onChange={(e) => setSignupForm({...signupForm, confirmPassword: e.target.value})}
-                          className="h-11"
-                          required
-                        />
-                      </div>
-                      <Button 
-                        type="submit" 
-                        className="w-full h-11 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                        disabled={loading}
-                      >
-                        {loading ? (
-                          <div className="flex items-center space-x-2">
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            <span>Cadastrando...</span>
-                          </div>
-                        ) : (
-                          "Cadastrar"
-                        )}
-                      </Button>
-                    </form>
-                  </TabsContent>
-                </Tabs>
+                    ) : (
+                      "Entrar"
+                    )}
+                  </Button>
+                </form>
               </CardContent>
             </Card>
           </div>
