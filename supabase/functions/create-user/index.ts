@@ -1,10 +1,7 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+ 
+  import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { corsHeaders } from '../../../cors.ts'
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -12,95 +9,76 @@ serve(async (req) => {
   }
 
   try {
+    // 1. Cria um cliente Supabase com privilégios de administrador
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
 
-    // Verify the request is from an authenticated gestor
+    // 2. Verifica se a requisição vem de um gestor autenticado
     const authHeader = req.headers.get('Authorization')!
     const token = authHeader.replace('Bearer ', '')
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
 
     if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
-      )
+      throw new Error("Acesso não autorizado. Token inválido.");
     }
 
-    // Check if user is a gestor
+    // 3. Confirma se o usuário autenticado tem o perfil 'gestor'
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('role')
-      .eq('user_id', user.id)
+      .eq('id', user.id) // A coluna de ID no profiles deve ser 'id'
       .single()
 
     if (profileError || profile?.role !== 'gestor') {
-      return new Response(
-        JSON.stringify({ error: 'Only gestores can create users' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
-      )
+      throw new Error("Apenas gestores podem criar novos usuários.");
     }
 
-    const { email, password, name, cpf, phone, role, function_title, work_schedule } = await req.json()
+    // 4. Extrai os dados do novo usuário do corpo da requisição
+    const { email, password, name, role, ...rest } = await req.json()
 
-    // Create auth user
+    if (!email || !password || !name || !role) {
+      throw new Error("Campos 'email', 'password', 'name' e 'role' são obrigatórios.");
+    }
+
+    // 5. Cria o usuário no serviço de autenticação
     const { data: authData, error: authUserError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
-      user_metadata: { name }
     })
 
-    if (authUserError) {
-      return new Response(
-        JSON.stringify({ error: authUserError.message }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
-    }
+    if (authUserError) throw authUserError;
+    if (!authData.user) throw new Error("Falha ao criar usuário na autenticação.");
 
-    // Create profile
-    const { data: profileData, error: createProfileError } = await supabaseAdmin
+    // 6. Insere o perfil correspondente na tabela 'profiles'
+    const { error: createProfileError } = await supabaseAdmin
       .from('profiles')
       .insert({
-        user_id: authData.user.id,
+        id: authData.user.id, // Garante que o ID do perfil seja o mesmo do usuário
         name,
-        cpf,
-        phone,
         role,
-        function_title,
-        work_schedule,
+        email,
+        ...rest // Insere outros campos como cpf, phone, etc.
       })
-      .select()
-      .single()
 
     if (createProfileError) {
-      // Rollback: delete the auth user if profile creation fails
+      // Rollback: se a criação do perfil falhar, deleta o usuário da autenticação
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
-      
-      return new Response(
-        JSON.stringify({ error: createProfileError.message }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
+      throw createProfileError;
     }
 
     return new Response(
-      JSON.stringify({ data: profileData }),
+      JSON.stringify({ message: "Usuário criado com sucesso!" }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
 
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error'
     return new Response(
-      JSON.stringify({ error: message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      JSON.stringify({ error: error.message }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
     )
   }
 })
