@@ -35,7 +35,6 @@ const studentSchema = z.object({
   diagnosis: z.string().trim().nullable().optional(),
   special_needs: z.string().trim().nullable().optional(),
   medical_info: z.string().trim().nullable().optional(),
-  additional_info: z.string().trim().nullable().optional(),
 });
 
 type StudentFormData = z.infer<typeof studentSchema>;
@@ -103,7 +102,6 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
     setValue("diagnosis", student.diagnosis || "");
     setValue("special_needs", student.special_needs || "");
     setValue("medical_info", student.medical_info || "");
-    setValue("additional_info", student.additional_info || "");
     setDialogOpen(true);
   };
   
@@ -265,11 +263,6 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="additional_info"><BadgeInfo className="inline mr-2 h-4 w-4"/>Informações Adicionais</Label>
-                        <Textarea id="additional_info" {...register("additional_info")} placeholder="Preferências, comportamentos, etc."/>
-                    </div>
-                    
-                    <div className="flex justify-end space-x-3 pt-4">
                         <Button type="button" variant="ghost" onClick={() => handleDialogChange(false)}>Cancelar</Button>
                         <Button type="submit" disabled={createStudent.isPending || updateStudent.isPending}>
                             {editingStudent 

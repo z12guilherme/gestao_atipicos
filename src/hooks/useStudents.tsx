@@ -8,6 +8,7 @@ export interface Student {
   cpf?: string;
   birth_date?: string;
   class_name?: string;
+  school_year?: string;
   diagnosis?: string;
   special_needs?: string;
   medical_info?: string;
@@ -38,6 +39,7 @@ export function useStudents() {
       cpf?: string;
       birth_date?: string;
       class_name?: string;
+      school_year?: string;
       diagnosis?: string;
       special_needs?: string;
       medical_info?: string;
