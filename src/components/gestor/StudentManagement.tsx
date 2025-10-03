@@ -337,7 +337,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="additional_info"><BadgeInfo className="inline mr-2 h-4 w-4"/>Informações Adicionais</e-label>
+                        <Label htmlFor="additional_info"><BadgeInfo className="inline mr-2 h-4 w-4"/>Informações Adicionais</Label>
                         <Textarea id="additional_info" {...register("additional_info")} placeholder="Preferências, comportamentos, etc."/>
                     </div>
                     
