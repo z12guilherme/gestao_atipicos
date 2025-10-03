@@ -100,13 +100,14 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
 
     const processData = async (data: any[]) => {
       try {
-        // Filtra linhas que não têm um nome, que são provavelmente linhas vazias.
-        const validData = data.filter(row => row.name && row.name.trim() !== '');
+        // Filtra linhas que não têm um nome, que são provavelmente linhas vazias ou de formatação.
+        const validData = data.filter(row => typeof row.name === 'string' && row.name.trim() !== '');
+
         if (validData.length === 0) {
           throw new Error("Nenhum dado válido encontrado no arquivo. Verifique se a coluna 'name' está preenchida.");
         }
         const { data: responseData, error } = await supabase.functions.invoke('bulk-create-students', {
-          body: validData,
+          body: validData, // Envia apenas os dados válidos
         });
 
         if (error) throw new Error(error.message);

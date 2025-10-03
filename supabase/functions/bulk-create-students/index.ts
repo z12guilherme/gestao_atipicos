@@ -10,14 +10,14 @@ const studentSchema = z.object({
     errorMap: () => ({ message: "Status deve ser 'ativo', 'inativo' ou 'transferido'" })
   }),
   // Campos opcionais
-  cpf: z.string().max(14).nullable().optional().or(z.literal('')),
-  class_name: z.string().nullable().optional().or(z.literal('')),
-  school_year: z.string().nullable().optional().or(z.literal('')),
-  diagnosis: z.string().nullable().optional().or(z.literal('')),
-  special_needs: z.string().nullable().optional().or(z.literal('')),
-  additional_info: z.string().nullable().optional().or(z.literal('')),
-  medical_info: z.string().nullable().optional().or(z.literal('')),
-}).strip(); // .strip() é importante para ignorar colunas extras que não estão no schema.
+  cpf: z.string().max(14).nullable().optional(),
+  class_name: z.string().nullable().optional(),
+  school_year: z.string().nullable().optional(),
+  diagnosis: z.string().nullable().optional(),
+  special_needs: z.string().nullable().optional(),
+  additional_info: z.string().nullable().optional(),
+  medical_info: z.string().nullable().optional(),
+}).strip();
 
 // Função para tentar converter a data para o formato AAAA-MM-DD
 function parseDate(dateStr: string | number | undefined): string | undefined {
