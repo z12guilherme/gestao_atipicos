@@ -17,7 +17,7 @@ const studentSchema = z.object({
   special_needs: z.string().nullable().optional(),
   additional_info: z.string().nullable().optional(),
   medical_info: z.string().nullable().optional(),
-}).strip();
+}).strip(); // .strip() é importante para ignorar colunas extras que não estão no schema.
 
 // Função para tentar converter a data para o formato AAAA-MM-DD
 function parseDate(dateStr: string | number | undefined): string | undefined {

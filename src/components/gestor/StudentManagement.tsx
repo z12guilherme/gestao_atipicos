@@ -107,7 +107,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
           throw new Error("Nenhum dado válido encontrado no arquivo. Verifique se a coluna 'name' está preenchida.");
         }
         const { data: responseData, error } = await supabase.functions.invoke('bulk-create-students', {
-          body: validData, // Envia apenas os dados válidos
+          body: validData,
         });
 
         if (error) throw new Error(error.message);
