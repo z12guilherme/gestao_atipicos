@@ -188,8 +188,14 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                   </div>
                 </DialogContent>
               </Dialog>
-
-              <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
+              
+              <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
+                setDialogOpen(isOpen);
+                if (!isOpen) {
+                  reset();
+                  setEditingStudent(null);
+                }
+              }}>
                 <DialogTrigger asChild>
                   <Button onClick={() => {
                     setEditingStudent(null);

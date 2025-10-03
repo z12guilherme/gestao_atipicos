@@ -202,7 +202,13 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
               </DialogContent>
             </Dialog>
 
-            <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
+            <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
+              setDialogOpen(isOpen);
+              if (!isOpen) {
+                reset();
+                setEditingUser(null);
+              }
+            }}>
               <DialogTrigger asChild>
                 <Button><UserPlus className="mr-2 h-4 w-4" />Novo Usuário</Button>
               </DialogTrigger>

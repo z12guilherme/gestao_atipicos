@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,8 +18,12 @@ const classSchema = z.object({
 
 type ClassFormData = z.infer<typeof classSchema>;
 
-export function ClassManagement() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+interface ClassManagementProps {
+  isDialogOpen: boolean;
+  setDialogOpen: Dispatch<SetStateAction<boolean>>;
+}
+
+export function ClassManagement({ isDialogOpen, setDialogOpen }: ClassManagementProps) {
   const { classes, isLoading, createClass, deleteClass } = useClasses();
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<ClassFormData>({
