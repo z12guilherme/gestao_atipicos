@@ -1,20 +1,23 @@
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { UserPlus, Edit, Save, Trash2 } from "lucide-react";
+import { UserPlus, Edit, Save, Trash2, Upload, FileDown } from "lucide-react";
 import { useUsers, User } from "@/hooks/useUsers";
 import { useForm } from "react-hook-form";
 import { useStudents } from "@/hooks/useStudents";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import Papa from "papaparse";
+import { supabase } from "@/integrations/supabase/client";
 
 // Schema base para os dados do perfil, sem email e senha
 const profileSchema = z.object({
@@ -50,6 +53,9 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
   const { users, isLoading, createUser, updateUser, deleteUser } = useUsers();
   const { students } = useStudents();
   
+  const [isImportOpen, setImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
   // LINHA CORRIGIDA
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<UserFormData>({
     resolver: zodResolver(editingUser ? updateUserSchema : createUserSchema),
@@ -98,6 +104,62 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
     return <Badge variant={variants[role as keyof typeof variants] as any}>{labels[role as keyof typeof labels]}</Badge>;
   };
   
+  const handleDownloadTemplate = () => {
+    const csvContent = "name,email,password,role,cpf,phone\nExemplo Nome,exemplo@email.com,senhaSegura123,cuidador,123.456.789-00,(99) 99999-9999";
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "modelo_importacao_usuarios.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleImport = () => {
+    if (!importFile) {
+      toast.error("Por favor, selecione um arquivo para importar.");
+      return;
+    }
+
+    setIsImporting(true);
+    Papa.parse(importFile, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        try {
+          const { data, error } = await supabase.functions.invoke('bulk-create-users', {
+            body: results.data,
+          });
+
+          if (error) {
+            throw new Error(error.message);
+          }
+
+          const { successCount, errorCount, errors } = data;
+
+          if (errorCount > 0) {
+            toast.warning(`${successCount} usuários importados com sucesso.`, {
+              description: `${errorCount} linhas continham erros. ${errors.map((e: any) => e.error).join('; ')}`,
+              duration: 8000,
+            });
+          } else {
+            toast.success(`${successCount} usuários importados com sucesso!`);
+          }
+
+          // Invalida a query para recarregar a lista de usuários
+          updateUser.queryClient.invalidateQueries({ queryKey: ['users'] });
+          setImportOpen(false);
+          setImportFile(null);
+        } catch (e: any) {
+          toast.error("Falha ao importar arquivo.", { description: e.message });
+        } finally {
+          setIsImporting(false);
+        }
+      },
+    });
+  };
+
   if (isLoading) {
     return <Card><CardContent className="p-6 text-center">Carregando...</CardContent></Card>;
   }
@@ -110,14 +172,45 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
             <CardTitle>Gerenciar Usuários</CardTitle>
             <CardDescription>Cadastre e gerencie funcionários, cuidadores e responsáveis</CardDescription>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => {
-                setEditingUser(null);
-                reset({ role: 'responsavel' }); // Reseta o formulário com o valor padrão
-                setDialogOpen(true);
-              }}><UserPlus className="mr-2 h-4 w-4" />Novo Usuário</Button>
-            </DialogTrigger>
+          <div className="flex space-x-2">
+            <Dialog open={isImportOpen} onOpenChange={setImportOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline"><Upload className="mr-2 h-4 w-4" />Importar</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Importar Usuários em Massa</DialogTitle>
+                  <DialogDescription>
+                    Envie um arquivo CSV para cadastrar múltiplos usuários de uma vez.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <p className="text-sm text-muted-foreground">
+                    O arquivo deve conter as colunas: `name`, `email`, `password`, `role`.
+                    O perfil (`role`) deve ser `gestor`, `cuidador` ou `responsavel`.
+                  </p>
+                  <Button variant="secondary" size="sm" onClick={handleDownloadTemplate}>
+                    <FileDown className="mr-2 h-4 w-4" />
+                    Baixar modelo CSV
+                  </Button>
+                  <div className="space-y-2">
+                    <Label htmlFor="import-file">Arquivo CSV</Label>
+                    <Input id="import-file" type="file" accept=".csv" onChange={(e) => setImportFile(e.target.files ? e.target.files[0] : null)} />
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button variant="ghost" onClick={() => setImportOpen(false)}>Cancelar</Button>
+                  <Button onClick={handleImport} disabled={isImporting || !importFile}>
+                    {isImporting ? "Importando..." : "Iniciar Importação"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
+              <DialogTrigger asChild>
+                <Button><UserPlus className="mr-2 h-4 w-4" />Novo Usuário</Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>{editingUser ? 'Editar Usuário' : 'Cadastrar Novo Usuário'}</DialogTitle>

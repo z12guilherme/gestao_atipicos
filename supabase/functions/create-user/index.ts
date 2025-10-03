@@ -1,9 +1,9 @@
- 
-  import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { corsHeaders } from '../../../cors.ts'
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { corsHeaders } from '../_shared/cors.ts'
 
 serve(async (req) => {
+  // Lida com a requisição pre-flight de CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -61,8 +61,8 @@ serve(async (req) => {
         name,
         role,
         email,
-        ...rest // Insere outros campos como cpf, phone, etc.
-      })
+        ...rest
+      });
 
     if (createProfileError) {
       // Rollback: se a criação do perfil falhar, deleta o usuário da autenticação
@@ -72,13 +72,15 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ message: "Usuário criado com sucesso!" }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
     )
 
   } catch (error) {
     return new Response(
       JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 400,
     )
   }
-})
+});

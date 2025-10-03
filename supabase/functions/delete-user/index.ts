@@ -1,7 +1,7 @@
 // supabase/functions/delete-user/index.ts
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { corsHeaders } from '../../../cors.ts';
+import { corsHeaders } from '../_shared/cors.ts';
 
 console.log("Função delete-user inicializada.");
 
