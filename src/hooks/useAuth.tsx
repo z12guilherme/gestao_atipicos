@@ -41,80 +41,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Fetch user profile
-          setTimeout(async () => {
-            const { data: profileData } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('user_id', session.user.id)
-              .single();
-            
-            setProfile(profileData as Profile);
+    const fetchSessionAndProfile = async () => {
+      setLoading(true);
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-            if (profileData?.role === 'responsavel') {
-              const { data: studentsData } = await supabase
-                .from('guardians_students')
-                .select('students:student_id (*)')
-                .eq('guardian_id', profileData.id);
-              
-              const students = (studentsData as GuardianStudent[] | null)?.map(item => item.students) || [];
-              setGuardianStudents(students);
-            } else {
-              setGuardianStudents([]);
-            }
-
-            setLoading(false);
-          }, 0);
-        } else {
-          setProfile(null);
-          setGuardianStudents([]);
-          setLoading(false);
-        }
+      if (sessionError) {
+        console.error("Erro ao buscar sessão:", sessionError);
+        setLoading(false);
+        return;
       }
-    );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
-        // Fetch user profile
-        setTimeout(async () => {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .single();
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (profileError) console.error("Erro ao buscar perfil:", profileError);
+        setProfile(profileData as Profile | null);
+
+        if (profileData?.role === 'responsavel') {
+          const { data: studentsData } = await supabase
+            .from('guardians_students')
+            .select('students:student_id (*)')
+            .eq('guardian_id', profileData.id);
           
-          setProfile(profileData as Profile);
-
-          if (profileData?.role === 'responsavel') {
-            const { data: studentsData } = await supabase
-              .from('guardians_students')
-              .select('students:student_id (*)')
-              .eq('guardian_id', profileData.id);
-            
-            const students = (studentsData as GuardianStudent[] | null)?.map(item => item.students) || [];
-            setGuardianStudents(students);
-          } else {
-            setGuardianStudents([]);
-          }
-
-          setLoading(false);
-        }, 0);
+          const students = (studentsData as any[] | null)?.map(item => item.students) || [];
+          setGuardianStudents(students as Student[]);
+        }
       } else {
+        setProfile(null);
         setGuardianStudents([]);
-        setLoading(false);
       }
-    });
+      setLoading(false);
+    };
+
+    fetchSessionAndProfile();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        // Recarrega os dados da sessão e perfil quando o estado de autenticação muda (login/logout)
+        fetchSessionAndProfile();
+      }
+    );
 
     return () => subscription.unsubscribe();
   }, []);

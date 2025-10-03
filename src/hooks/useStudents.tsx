@@ -8,10 +8,10 @@ export interface Student {
   cpf?: string;
   birth_date?: string;
   class_name?: string;
-  school_year?: string;
   diagnosis?: string;
   special_needs?: string;
   medical_info?: string;
+  guardian_id?: string | null;
   status: 'ativo' | 'inativo' | 'transferido';
   created_at: string;
   updated_at: string;
@@ -39,10 +39,10 @@ export function useStudents() {
       cpf?: string;
       birth_date?: string;
       class_name?: string;
-      school_year?: string;
       diagnosis?: string;
       special_needs?: string;
       medical_info?: string;
+      guardian_id?: string | null;
       status: 'ativo' | 'inativo' | 'transferido';
     }) => {
       const { data, error } = await supabase
@@ -59,7 +59,11 @@ export function useStudents() {
       toast.success('Estudante cadastrado com sucesso!');
     },
     onError: (error: any) => {
-      toast.error(`Erro ao cadastrar estudante: ${error.message}`);
+      if (error.message?.includes('duplicate key value violates unique constraint "students_cpf_key"')) {
+        toast.error('Erro ao cadastrar: Já existe um estudante com este CPF.');
+      } else {
+        toast.error(`Erro ao cadastrar estudante: ${error.message}`);
+      }
     },
   });
 
@@ -80,7 +84,11 @@ export function useStudents() {
       toast.success('Estudante atualizado com sucesso!');
     },
     onError: (error: any) => {
-      toast.error(`Erro ao atualizar estudante: ${error.message}`);
+      if (error.message?.includes('duplicate key value violates unique constraint "students_cpf_key"')) {
+        toast.error('Erro ao atualizar: Já existe um estudante com este CPF.');
+      } else {
+        toast.error(`Erro ao atualizar estudante: ${error.message}`);
+      }
     },
   });
 

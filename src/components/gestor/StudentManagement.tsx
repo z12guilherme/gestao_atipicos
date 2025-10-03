@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { UserPlus, Edit, Save, Trash2, Stethoscope, FileText, BadgeInfo, Upload, FileDown } from "lucide-react";
 import { useStudents, Student } from "@/hooks/useStudents"; // Hook para buscar estudantes
+import { useClasses } from "@/hooks/useClasses"; // Hook para buscar turmas
 import { useFileImport } from "@/hooks/useFileImport";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,7 +32,6 @@ const studentSchema = z.object({
   // Campos opcionais
   cpf: z.string().trim().max(14, "CPF inválido").nullable().optional(),
   class_name: z.string().trim().nullable().optional(),
-  school_year: z.string().trim().nullable().optional(),
   diagnosis: z.string().trim().nullable().optional(),
   special_needs: z.string().trim().nullable().optional(),
   medical_info: z.string().trim().nullable().optional(),
@@ -49,6 +49,7 @@ interface StudentManagementProps {
 export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent, setEditingStudent }: StudentManagementProps) {
 
   const { students, isLoading, createStudent, updateStudent, deleteStudent } = useStudents();
+  const { classes } = useClasses();
   const {
     isImportOpen, setImportOpen,
     importFile, setImportFile,
@@ -59,8 +60,8 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
   } = useFileImport({ supabaseFunction: 'bulk-create-students', invalidateQueryKey: 'students', entityName: 'estudantes' });
 
   const handleDownloadCsvTemplate = () => {
-    const csvContent = "name,birth_date,status,school_year,class_name,cpf,diagnosis,special_needs,medical_info,additional_info\r\n" +
-      "Exemplo Aluno,2010-05-15,ativo,5º Ano,Turma A,123.456.789-00,TDAH,Apoio pedagógico,Alergia a amendoim,Gosta de desenhar";
+    const csvContent = "name,birth_date,status,class_name,cpf,diagnosis,special_needs,medical_info\r\n" +
+      "Exemplo Aluno,2010-05-15,ativo,Turma A,123.456.789-00,TDAH,Apoio pedagógico,Alergia a amendoim";
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -73,8 +74,8 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
 
   const handleDownloadXlsxTemplate = () => {
     const worksheetData = [
-      ["name", "birth_date", "status", "school_year", "class_name", "cpf", "diagnosis", "special_needs", "medical_info", "additional_info"],
-      ["Exemplo Aluno", "2010-05-15", "ativo", "5º Ano", "Turma A", "123.456.789-00", "TDAH", "Apoio pedagógico", "Alergia a amendoim", "Gosta de desenhar"]
+      ["name", "birth_date", "status", "class_name", "cpf", "diagnosis", "special_needs", "medical_info"],
+      ["Exemplo Aluno", "2010-05-15", "ativo", "Turma A", "123.456.789-00", "TDAH", "Apoio pedagógico", "Alergia a amendoim"]
     ];
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
@@ -97,7 +98,6 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
     setValue("cpf", student.cpf || "");
     setValue("birth_date", student.birth_date || "");
     setValue("status", student.status);
-    setValue("school_year", student.school_year || "");
     setValue("class_name", student.class_name || "");
     setValue("diagnosis", student.diagnosis || "");
     setValue("special_needs", student.special_needs || "");
@@ -193,6 +193,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                 <DialogTrigger asChild>
                   <Button onClick={() => {
                     setEditingStudent(null);
+                    reset({ name: '', birth_date: '', status: 'ativo', cpf: '', class_name: '', diagnosis: '', special_needs: '', medical_info: '' });
                     setDialogOpen(true);
                   }}>
                     <UserPlus className="mr-2 h-4 w-4" />
@@ -224,19 +225,23 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="school_year">Ano Escolar</Label>
-                            <Input id="school_year" {...register("school_year")} placeholder="Ex: 9º Ano" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="class_name">Turma</Label>
-                            <Input id="class_name" {...register("class_name")} placeholder="Ex: Turma A" />
+                            <Label htmlFor="class_name">Turma</Label>                            
+                            <Select onValueChange={(value) => setValue("class_name", value)} value={watch("class_name") || ""}>
+                                <SelectTrigger><SelectValue placeholder="Selecione uma turma" /></SelectTrigger>
+                                <SelectContent>
+                                    {classes.map((c) => (
+                                        <SelectItem key={c.id} value={c.name}>
+                                            {c.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="status">Status *</Label>
-                            {/* Adicionamos o registro do campo status aqui */}
-                            <Select onValueChange={(value) => setValue("status", value as any)} defaultValue={editingStudent?.status || 'ativo'}>
+                            <Select onValueChange={(value) => setValue("status", value as any)} value={watch('status') || 'ativo'}>
                                 <SelectTrigger><SelectValue placeholder="Selecione o status" /></SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="ativo">Ativo</SelectItem>
@@ -262,7 +267,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                         <Textarea id="medical_info" {...register("medical_info")} placeholder="Alergias, medicamentos, contatos de emergência..."/>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="flex justify-end space-x-3 pt-4">
                         <Button type="button" variant="ghost" onClick={() => handleDialogChange(false)}>Cancelar</Button>
                         <Button type="submit" disabled={createStudent.isPending || updateStudent.isPending}>
                             {editingStudent 
@@ -283,7 +288,6 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>Ano Escolar</TableHead>
               <TableHead>Turma</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Idade</TableHead>
@@ -294,7 +298,6 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
             {students.map((student) => (
               <TableRow key={student.id}>
                 <TableCell className="font-medium">{student.name}</TableCell>
-                <TableCell>{student.school_year || 'Não definido'}</TableCell>
                 <TableCell>{student.class_name || 'Não definida'}</TableCell>
                 <TableCell><Badge variant={student.status === 'ativo' ? 'default' : 'secondary'}>{student.status}</Badge></TableCell>
                 <TableCell>{calculateAge(student.birth_date)}</TableCell>

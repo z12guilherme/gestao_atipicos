@@ -29,7 +29,7 @@ const profileSchema = z.object({
   function_title: z.string().trim().max(100, "Função muito longa").optional(),
   work_schedule: z.string().trim().max(500, "Horário muito longo").optional(),
   student_ids: z.array(z.string()).default([]), // Para vincular estudantes
-});
+})
 
 // Schema para criar um novo usuário (email e senha são obrigatórios)
 const createUserSchema = profileSchema.extend({
@@ -90,8 +90,9 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
   const onSubmit = async (data: UserFormData) => {
     try {
       if (editingUser) {
-        // Na edição, não passamos email/senha, apenas os dados do perfil
-        await updateUser.mutateAsync({ id: editingUser.id, ...data });
+        // Na edição, separamos os dados do perfil dos student_ids
+        const { student_ids, ...profileData } = data;
+        await updateUser.mutateAsync({ id: editingUser.id, profileData, student_ids });
       } else {
         await createUser.mutateAsync(data);
       }

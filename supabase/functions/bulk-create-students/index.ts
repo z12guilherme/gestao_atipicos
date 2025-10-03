@@ -15,11 +15,10 @@ const studentSchema = z.object({
   // Campos opcionais
   cpf: z.string().trim().max(14, "CPF inválido").nullable().optional(),
   class_name: z.string().trim().nullable().optional(),
-  school_year: z.string().trim().nullable().optional(),
   diagnosis: z.string().trim().nullable().optional(),
   special_needs: z.string().trim().nullable().optional(),
   medical_info: z.string().trim().nullable().optional(),
-  additional_info: z.string().trim().nullable().optional(),
+  guardian_id: z.string().uuid("ID do responsável inválido").nullable().optional(),
 }).strip(); // .strip() é importante para ignorar colunas extras que não estão no schema.
 
 /**

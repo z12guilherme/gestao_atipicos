@@ -1,6 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, QueryKey } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { PostgrestError } from "@supabase/supabase-js";
 
 export interface User {
   id: string;
@@ -10,6 +11,8 @@ export interface User {
   role: 'gestor' | 'cuidador' | 'responsavel';
   function_title?: string;
   work_schedule?: string;
+  email?: string; // Adicionado para consistência
+  student_ids?: string[]; // Adicionado para carregar os estudantes vinculados
   user_id: string;
   created_at: string;
 }
@@ -21,12 +24,13 @@ export function useUsers() {
     queryKey: ['users'],
     queryFn: async () => {
       const { data, error } = await supabase
+        // Consulta ajustada para buscar o email da tabela auth.users
         .from('profiles')
-        .select('*')
+        .select('*, email:user_id(email)') // A sintaxe correta usa o nome da coluna FK
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      return data as User[];
+      if (error) throw new PostgrestError(error as any);
+      return data?.map(p => ({ ...p, email: (p as any).email?.email })) as User[] || [];
     },
   });
 
@@ -68,16 +72,40 @@ export function useUsers() {
   });
 
   const updateUser = useMutation({
-    mutationFn: async ({ id, ...userData }: Partial<User> & { id: string }) => {
-      const { data, error } = await supabase
+    mutationFn: async ({ id, profileData, student_ids }: { id: string, profileData: Partial<User>, student_ids?: string[] }) => {
+      // 1. Atualiza os dados do perfil
+      const { data: updatedProfile, error: profileError } = await supabase
         .from('profiles')
-        .update(userData)
+        .update(profileData)
         .eq('id', id)
         .select()
         .single();
 
-      if (error) throw error;
-      return data;
+      if (profileError) throw profileError;
+
+      // 2. Se for um responsável, atualiza os estudantes vinculados na tabela de junção
+      if (profileData.role === 'responsavel' && student_ids) {
+        // Remove todas as associações existentes para este responsável
+        const { error: deleteError } = await supabase
+          .from('guardians_students')
+          .delete()
+          .eq('guardian_id', id);
+        
+        if (deleteError) throw deleteError;
+
+        // Cria as novas associações
+        if (student_ids.length > 0) {
+          const newAssignments = student_ids.map(student_id => ({
+            guardian_id: id, 
+            student_id, 
+            relationship: 'responsavel' // ou outro valor padrão
+          }));
+          const { error: insertError } = await supabase.from('guardians_students').insert(newAssignments);
+          if (insertError) throw insertError;
+        }
+      }
+
+      return updatedProfile;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });

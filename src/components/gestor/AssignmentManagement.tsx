@@ -208,9 +208,9 @@ export function AssignmentManagement() {
                         <SelectValue placeholder="Selecione um estudante" />
                       </SelectTrigger>
                       <SelectContent>
-                        {students.map((student) => (
-                          <SelectItem key={student.id} value={student.id}>
-                            {student.name} {student.class_name && `- ${student.class_name}`}
+                        {unassignedStudents.map((student) => (
+                          <SelectItem key={student.id} value={student.id} disabled={!student.id}>
+                            {student.name}
                           </SelectItem>
                         ))}
                       </SelectContent>

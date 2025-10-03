@@ -104,15 +104,35 @@ serve(async (req) => {
 
         createdAuthUserIds.push(authData.user.id); // Rastreia o ID do usuário criado
 
-        // Adiciona o perfil ao array para inserção em lote
-        const { password: _password, ...profileData } = validation.data;
-        profilesToInsert.push({
+        // Cria um payload explícito para a tabela 'profiles', garantindo que apenas os campos existentes sejam inseridos.
+        const profilePayload = {
           id: authData.user.id,
-          ...profileData,
-          student_ids: profileData.student_ids || [],
-        });
+          user_id: authData.user.id,
+          name: validation.data.name,
+          role: validation.data.role,
+          cpf: validation.data.cpf,
+          phone: validation.data.phone,
+          function_title: validation.data.function_title,
+          work_schedule: validation.data.work_schedule,
+        };
+        
+        // Adiciona o perfil ao array para inserção em lote
+        profilesToInsert.push(profilePayload);
 
         successCount++;
+
+        // Se for um responsável com estudantes, prepara a inserção na tabela de junção
+        if (validation.data.role === 'responsavel' && validation.data.student_ids && validation.data.student_ids.length > 0) {
+          const assignments = validation.data.student_ids.map(student_id => ({
+            guardian_id: authData.user.id, 
+            student_id, 
+            relationship: 'responsavel' 
+          }));
+          // Esta parte será executada após a inserção dos perfis
+          // Por simplicidade, vamos inserir aqui, mas em um cenário complexo, seria uma transação.
+          await supabaseAdmin.from('guardians_students').insert(assignments);
+        }
+
       } catch (error) {
         errorCount++;
         importErrors.push({ line: lineNumber, error: error.message });
