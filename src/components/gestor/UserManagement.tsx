@@ -18,6 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Papa from "papaparse";
 import { supabase } from "@/integrations/supabase/client";
+import * as XLSX from 'xlsx';
 
 // Schema base para os dados do perfil, sem email e senha
 const profileSchema = z.object({
@@ -104,7 +105,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
     return <Badge variant={variants[role as keyof typeof variants] as any}>{labels[role as keyof typeof labels]}</Badge>;
   };
   
-  const handleDownloadTemplate = () => {
+  const handleDownloadCsvTemplate = () => {
     const csvContent = "name,email,password,role,cpf,phone\nExemplo Nome,exemplo@email.com,senhaSegura123,cuidador,123.456.789-00,(99) 99999-9999";
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
@@ -116,6 +117,18 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
     document.body.removeChild(link);
   };
 
+  const handleDownloadXlsxTemplate = () => {
+    const worksheetData = [
+      ["name", "email", "password", "role", "cpf", "phone"],
+      ["Exemplo Nome", "exemplo@email.com", "senhaSegura123", "cuidador", "123.456.789-00", "(99) 99999-9999"]
+    ];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Usuários");
+    // Gera o arquivo e força o download
+    XLSX.writeFile(workbook, "modelo_importacao_usuarios.xlsx");
+  };
+
   const handleImport = () => {
     if (!importFile) {
       toast.error("Por favor, selecione um arquivo para importar.");
@@ -123,41 +136,65 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
     }
 
     setIsImporting(true);
-    Papa.parse(importFile, {
-      header: true,
-      skipEmptyLines: true,
-      complete: async (results) => {
-        try {
-          const { data, error } = await supabase.functions.invoke('bulk-create-users', {
-            body: results.data,
+
+    const processData = async (data: any[]) => {
+      try {
+        const { data: responseData, error } = await supabase.functions.invoke('bulk-create-users', {
+          body: data,
+        });
+
+        if (error) throw new Error(error.message);
+
+        const { successCount, errorCount, errors } = responseData;
+
+        if (errorCount > 0) {
+          toast.warning(`${successCount} usuários importados com sucesso.`, {
+            description: `${errorCount} linhas continham erros. ${errors.map((e: any) => e.error).join('; ')}`,
+            duration: 8000,
           });
+        } else {
+          toast.success(`${successCount} usuários importados com sucesso!`);
+        }
 
-          if (error) {
-            throw new Error(error.message);
-          }
+        updateUser.queryClient.invalidateQueries({ queryKey: ['users'] });
+        setImportOpen(false);
+        setImportFile(null);
+      } catch (e: any) {
+        toast.error("Falha ao importar arquivo.", { description: e.message });
+      } finally {
+        setIsImporting(false);
+      }
+    };
 
-          const { successCount, errorCount, errors } = data;
-
-          if (errorCount > 0) {
-            toast.warning(`${successCount} usuários importados com sucesso.`, {
-              description: `${errorCount} linhas continham erros. ${errors.map((e: any) => e.error).join('; ')}`,
-              duration: 8000,
-            });
-          } else {
-            toast.success(`${successCount} usuários importados com sucesso!`);
-          }
-
-          // Invalida a query para recarregar a lista de usuários
-          updateUser.queryClient.invalidateQueries({ queryKey: ['users'] });
-          setImportOpen(false);
-          setImportFile(null);
-        } catch (e: any) {
-          toast.error("Falha ao importar arquivo.", { description: e.message });
-        } finally {
+    if (importFile.type === 'text/csv' || importFile.name.endsWith('.csv')) {
+      Papa.parse(importFile, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => processData(results.data),
+        error: (error) => {
+          toast.error("Erro ao processar o arquivo CSV.", { description: error.message });
           setIsImporting(false);
         }
-      },
-    });
+      });
+    } else if (importFile.type.includes('spreadsheetml') || importFile.name.endsWith('.xlsx')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(worksheet);
+        processData(json);
+      };
+      reader.onerror = (error) => {
+        toast.error("Erro ao ler o arquivo XLSX.", { description: error.message });
+        setIsImporting(false);
+      };
+      reader.readAsArrayBuffer(importFile);
+    } else {
+      toast.error("Formato de arquivo não suportado. Use CSV ou XLSX.");
+      setIsImporting(false);
+    }
   };
 
   if (isLoading) {
@@ -189,13 +226,19 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
                     O arquivo deve conter as colunas: `name`, `email`, `password`, `role`.
                     O perfil (`role`) deve ser `gestor`, `cuidador` ou `responsavel`.
                   </p>
-                  <Button variant="secondary" size="sm" onClick={handleDownloadTemplate}>
-                    <FileDown className="mr-2 h-4 w-4" />
-                    Baixar modelo CSV
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="secondary" size="sm" onClick={handleDownloadCsvTemplate}>
+                      <FileDown className="mr-2 h-4 w-4" />
+                      Baixar modelo CSV
+                    </Button>
+                    <Button variant="secondary" size="sm" onClick={handleDownloadXlsxTemplate}>
+                      <FileDown className="mr-2 h-4 w-4" />
+                      Baixar modelo XLSX
+                    </Button>
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="import-file">Arquivo CSV</Label>
-                    <Input id="import-file" type="file" accept=".csv" onChange={(e) => setImportFile(e.target.files ? e.target.files[0] : null)} />
+                    <Input id="import-file" type="file" accept=".csv,.xlsx" onChange={(e) => setImportFile(e.target.files ? e.target.files[0] : null)} />
                   </div>
                 </div>
                 <div className="flex justify-end space-x-2">

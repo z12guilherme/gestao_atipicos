@@ -5,10 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import GuardianDashboard from "./pages/GuardianDashboard";
+import { GestorDashboard } from "./pages/GestorDashboard";
 
 const AppRoutes = () => {
   const { profile, loading } = useAuth();
@@ -20,7 +20,7 @@ const AppRoutes = () => {
   if (profile?.role === 'responsavel') {
     return <Navigate to="/dashboard-responsavel" replace />;
   }
-  return <Index />;
+  return <GestorDashboard />;
 }
 
 const queryClient = new QueryClient();

@@ -16,6 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import Papa from "papaparse";
+import * as XLSX from 'xlsx';
 import { supabase } from "@/integrations/supabase/client";
 
 // Schema de validação ATUALIZADO com todos os seus campos
@@ -59,7 +60,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
   const [importFile, setImportFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
 
-  const handleDownloadTemplate = () => {
+  const handleDownloadCsvTemplate = () => {
     const csvContent = "name,birth_date,school_year,status,diagnosis,special_needs,additional_info\n" +
       "Exemplo Aluno,2010-05-15,5º Ano,ativo,TDAH,Apoio pedagógico,Gosta de desenhar";
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -72,6 +73,18 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
     document.body.removeChild(link);
   };
 
+  const handleDownloadXlsxTemplate = () => {
+    const worksheetData = [
+      ["name", "birth_date", "school_year", "status", "diagnosis", "special_needs", "additional_info"],
+      ["Exemplo Aluno", "2010-05-15", "5º Ano", "ativo", "TDAH", "Apoio pedagógico", "Gosta de desenhar"]
+    ];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Estudantes");
+    // Gera o arquivo e força o download
+    XLSX.writeFile(workbook, "modelo_importacao_estudantes.xlsx");
+  };
+
   const handleImport = () => {
     if (!importFile) {
       toast.error("Por favor, selecione um arquivo CSV para importar.");
@@ -79,42 +92,65 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
     }
 
     setIsImporting(true);
-    Papa.parse(importFile, {
-      header: true,
-      skipEmptyLines: true,
-      complete: async (results) => {
-        try {
-          const { data, error } = await supabase.functions.invoke('bulk-create-students', {
-            body: results.data,
+
+    const processData = async (data: any[]) => {
+      try {
+        const { data: responseData, error } = await supabase.functions.invoke('bulk-create-students', {
+          body: data,
+        });
+
+        if (error) throw new Error(error.message);
+
+        const { successCount, errorCount, errors } = responseData;
+
+        if (errorCount > 0) {
+          toast.warning(`${successCount} estudantes importados com sucesso.`, {
+            description: `${errorCount} linhas continham erros. Detalhes: ${errors.map((e: any) => e.error).join('; ')}`,
+            duration: 8000,
           });
-
-          if (error) throw new Error(error.message);
-
-          const { successCount, errorCount, errors } = data;
-
-          if (errorCount > 0) {
-            toast.warning(`${successCount} estudantes importados com sucesso.`, {
-              description: `${errorCount} linhas continham erros. Detalhes: ${errors.map((e: any) => e.error).join('; ')}`,
-              duration: 8000,
-            });
-          } else {
-            toast.success(`${successCount} estudantes importados com sucesso!`);
-          }
-
-          updateStudent.queryClient.invalidateQueries({ queryKey: ['students'] });
-          setImportOpen(false);
-          setImportFile(null);
-        } catch (e: any) {
-          toast.error("Falha ao importar arquivo.", { description: e.message });
-        } finally {
-          setIsImporting(false);
+        } else {
+          toast.success(`${successCount} estudantes importados com sucesso!`);
         }
-      },
-      error: (error) => {
-        toast.error("Erro ao processar o arquivo CSV.", { description: error.message });
+
+        updateStudent.queryClient.invalidateQueries({ queryKey: ['students'] });
+        setImportOpen(false);
+        setImportFile(null);
+      } catch (e: any) {
+        toast.error("Falha ao importar arquivo.", { description: e.message });
+      } finally {
         setIsImporting(false);
       }
-    });
+    };
+
+    if (importFile.type === 'text/csv' || importFile.name.endsWith('.csv')) {
+      Papa.parse(importFile, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => processData(results.data),
+        error: (error) => {
+          toast.error("Erro ao processar o arquivo CSV.", { description: error.message });
+          setIsImporting(false);
+        }
+      });
+    } else if (importFile.type.includes('spreadsheetml') || importFile.name.endsWith('.xlsx')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(worksheet);
+        processData(json);
+      };
+      reader.onerror = (error) => {
+        toast.error("Erro ao ler o arquivo XLSX.", { description: error.message });
+        setIsImporting(false);
+      };
+      reader.readAsArrayBuffer(importFile);
+    } else {
+      toast.error("Formato de arquivo não suportado. Use CSV ou XLSX.");
+      setIsImporting(false);
+    }
   };
   
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm<StudentFormData>({
@@ -191,13 +227,19 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                       O arquivo deve conter as colunas: `name`, `birth_date`, `school_year`, `status`.
                       O status deve ser `ativo`, `inativo` ou `avaliando`.
                     </p>
-                    <Button variant="secondary" size="sm" onClick={handleDownloadTemplate}>
-                      <FileDown className="mr-2 h-4 w-4" />
-                      Baixar modelo CSV
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="secondary" size="sm" onClick={handleDownloadCsvTemplate}>
+                        <FileDown className="mr-2 h-4 w-4" />
+                        Baixar modelo CSV
+                      </Button>
+                      <Button variant="secondary" size="sm" onClick={handleDownloadXlsxTemplate}>
+                        <FileDown className="mr-2 h-4 w-4" />
+                        Baixar modelo XLSX
+                      </Button>
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="import-file">Arquivo CSV</Label>
-                      <Input id="import-file" type="file" accept=".csv" onChange={(e) => setImportFile(e.target.files ? e.target.files[0] : null)} />
+                      <Input id="import-file" type="file" accept=".csv,.xlsx" onChange={(e) => setImportFile(e.target.files ? e.target.files[0] : null)} />
                     </div>
                   </div>
                   <div className="flex justify-end space-x-2">
