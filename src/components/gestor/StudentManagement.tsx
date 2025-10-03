@@ -107,7 +107,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
 
         if (errorCount > 0) {
           toast.warning(`${successCount} estudantes importados com sucesso.`, {
-            description: `${errorCount} linhas continham erros. Detalhes: ${errors.map((e: any) => e.error).join('; ')}`,
+              description: `Falha em ${errorCount} linhas. Erros: ${errors.map((e: any) => e.error).join('; ')}`,
             duration: 8000,
           });
         } else {
@@ -227,7 +227,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                   <div className="space-y-4 py-4">
                     <p className="text-sm text-muted-foreground">
                       O arquivo deve conter as colunas: `name`, `birth_date`, `school_year`, `status`.
-                      O status deve ser `ativo`, `inativo` ou `avaliando`.
+                      O status deve ser `ativo`, `inativo` ou `transferido`.
                     </p>
                     <div className="flex gap-2">
                       <Button variant="secondary" size="sm" onClick={handleDownloadCsvTemplate}>

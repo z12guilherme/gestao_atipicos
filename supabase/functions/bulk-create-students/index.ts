@@ -4,10 +4,10 @@ import { corsHeaders } from '../_shared/cors.ts'
 
 // Schema para validar cada linha do CSV de estudantes
 const studentSchema = z.object({
-  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data de nascimento deve estar no formato AAAA-MM-DD").or(z.string().nonempty("Data de nascimento é obrigatória")),
+  name: z.string({ required_error: "A coluna 'name' é obrigatória." }).min(2, "Nome deve ter pelo menos 2 caracteres"),
+  birth_date: z.string({ required_error: "A coluna 'birth_date' é obrigatória." }).min(1, "Data de nascimento é obrigatória"),
   school_year: z.string().optional(),
-  status: z.enum(['ativo', 'inativo', 'transferido', 'avaliando'], {
+  status: z.enum(['ativo', 'inativo', 'transferido'], {
     errorMap: () => ({ message: "Status deve ser 'ativo', 'inativo', 'transferido' ou 'avaliando'" })
   }),
   // Campos opcionais
@@ -18,6 +18,16 @@ const studentSchema = z.object({
   additional_info: z.string().optional(),
   medical_info: z.string().optional(),
 });
+
+// Função para tentar converter a data para o formato AAAA-MM-DD
+function parseDate(dateStr: string | number | undefined): string | undefined {
+  if (!dateStr) return undefined;
+  // O Excel às vezes exporta datas como números seriais. Esta é uma conversão simplificada.
+  if (typeof dateStr === 'number') {
+    return new Date(Math.round((dateStr - 25569) * 86400 * 1000)).toISOString().split('T')[0];
+  }
+  return new Date(dateStr).toISOString().split('T')[0];
+}
 
 Deno.serve(async (req) => {
   // Lida com a requisição pre-flight de CORS
@@ -46,6 +56,11 @@ Deno.serve(async (req) => {
 
     for (const [index, studentData] of studentList.entries()) {
       const line = index + 2; // +1 para o índice base 1, +1 para o cabeçalho do CSV
+
+      // Pré-processamento da data
+      if (studentData.birth_date) {
+        studentData.birth_date = parseDate(studentData.birth_date);
+      }
 
       // Validação com Zod
       const validation = studentSchema.safeParse(studentData);
