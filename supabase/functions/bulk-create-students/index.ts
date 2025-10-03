@@ -108,17 +108,19 @@ Deno.serve(async (req) => {
     }
 
     if (studentsToInsert.length > 0) {
-      const { error: insertError } = await supabaseAdmin
+      const { error: insertError, count } = await supabaseAdmin
         .from('students')
         .insert(studentsToInsert);
 
       if (insertError) {
         console.error('Supabase insert error:', insertError);
+        // Em caso de erro no banco (ex: violação de constraint),
+        // retornamos o erro, mas com status 200 para o frontend tratar.
         results.errorCount = studentsToInsert.length; // All failed if batch insert fails
         results.errors.push({ line: 0, error: `Erro no banco de dados: ${insertError.message}` });
         results.successCount = 0;
       } else {
-        results.successCount = studentsToInsert.length;
+        results.successCount = count ?? 0;
       }
     }
 
