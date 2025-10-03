@@ -23,6 +23,7 @@ jobs:
           version: latest
 
       - name: Deploy Supabase Functions
+        # O comando 'supabase functions deploy' sem nomes específicos faz o deploy de todas as funções alteradas
         run: supabase functions deploy --project-ref ${{ secrets.SUPABASE_PROJECT_ID }}
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}

@@ -52,8 +52,6 @@ export function useFileImport({ supabaseFunction, invalidateQueryKey, entityName
           body: validData,
         });
 
-        if (error) throw new Error(error.message);
-
         const { successCount, errorCount, errors } = responseData;
 
         if (errorCount > 0) {

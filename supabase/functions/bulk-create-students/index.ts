@@ -20,12 +20,20 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
+  
+  console.log(`[${new Date().toISOString()}] Received request: ${req.method}`);
 
   try {
     const userList = await req.json();
+    console.log(`[${new Date().toISOString()}] Parsed request body, received ${userList?.length ?? 0} items.`);
 
-    if (!Array.isArray(userList) || userList.length === 0) {
-      throw new Error("O corpo da requisição deve ser um array não-vazio de usuários.");
+    if (!Array.isArray(userList)) {
+      throw new Error("O corpo da requisição deve ser um array de usuários.");
+    }
+
+    if (userList.length === 0) {
+      return new Response(JSON.stringify({ successCount: 0, errorCount: 1, errors: [{ line: 0, error: "O arquivo enviado está vazio ou não contém dados válidos." }] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
     }
 
     const supabaseAdmin = createClient(
@@ -92,9 +100,15 @@ Deno.serve(async (req) => {
     });
 
   } catch (error) {
-    return new Response(JSON.stringify({ error: `Erro inesperado no servidor: ${error.message}` }), {
+    console.error(`[${new Date().toISOString()}] Critical error in bulk-create-users:`, error);
+    const results = {
+      successCount: 0,
+      errorCount: 1,
+      errors: [{ line: 0, error: `Erro inesperado no servidor: ${error.message}. Verifique os logs da função no Supabase.` }],
+    };
+    return new Response(JSON.stringify(results), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500,
+      status: 200, // Always return 200 OK, let the frontend handle the error display.
     });
   }
 });
