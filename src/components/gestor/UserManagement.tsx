@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -59,11 +59,14 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
     isImporting,
     importErrors,
     isErrorsDialogOpen, setErrorsDialogOpen,
-    handleImport,
   } = useFileImport({ supabaseFunction: 'bulk-create-users', invalidateQueryKey: 'users', entityName: 'usuários' });
-  // LINHA CORRIGIDA
-  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<UserFormData>({ key: editingUser ? 'update' : 'create',
-    resolver: zodResolver(editingUser ? updateUserSchema : createUserSchema),
+
+  const currentSchema = useMemo(() => (editingUser ? updateUserSchema : createUserSchema), [editingUser]);
+
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<UserFormData>({
+    resolver: zodResolver(currentSchema),
+    // Redefine os valores padrão quando o formulário muda de "criar" para "editar" e vice-versa
+    defaultValues: editingUser ? { name: editingUser.name, role: editingUser.role, cpf: editingUser.cpf || "", phone: editingUser.phone || "", function_title: editingUser.function_title || "", work_schedule: editingUser.work_schedule || "" } : { name: "", email: "", password: "", role: "responsavel", student_ids: [] },
   });
 
   const selectedRole = watch("role");
@@ -300,7 +303,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
                       <AlertDialogHeader><AlertDialogTitle>Você tem certeza?</AlertDialogTitle><AlertDialogDescription>Esta ação não pode ser desfeita. Isso excluirá permanentemente o usuário e seus dados de nossos servidores.</AlertDialogDescription></AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => deleteUser.mutate(user.user_id)} disabled={deleteUser.isPending}>{deleteUser.isPending ? 'Excluindo...' : 'Excluir'}</AlertDialogAction>
+                        <AlertDialogAction onClick={() => deleteUser.mutate(user.id)} disabled={deleteUser.isPending}>{deleteUser.isPending ? 'Excluindo...' : 'Excluir'}</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
