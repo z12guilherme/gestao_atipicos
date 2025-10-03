@@ -13,7 +13,8 @@ import {
   CheckCircle,
   Clock,
   Heart,
-  UserCheck, 
+  UserCheck,
+  LogOut,
   Activity
 } from "lucide-react";
 import { UserManagement } from "@/components/gestor/UserManagement";
@@ -27,6 +28,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export function GestorDashboard() {
   const { users } = useUsers();
   const { students } = useStudents();
+  const { signOut } = useAuth();
 
   const [activeTab, setActiveTab] = useState("users");
   const [isUserDialogOpen, setUserDialogOpen] = useState(false);
@@ -82,6 +84,10 @@ export function GestorDashboard() {
           </Button>
           <Button variant="outline" onClick={() => toast.info("Em breve!", { description: "A funcionalidade de relatórios está em desenvolvimento." })}>
             <Activity className="mr-2 h-4 w-4" /> Relatórios
+          </Button>
+          <Button variant="ghost" size="icon" onClick={signOut} className="ml-2">
+            <LogOut className="h-5 w-5" />
+            <span className="sr-only">Sair</span>
           </Button>
         </div>
       </div>
