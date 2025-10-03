@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { PostgrestError } from "@supabase/supabase-js";
 
 export interface User {
   id: string;
+  user_id: string;
   name: string;
   cpf?: string;
   phone?: string;
@@ -13,41 +13,23 @@ export interface User {
   work_schedule?: string;
   email?: string;
   student_ids?: string[];
-  user_id: string;
   created_at: string;
 }
 
 export function useUsers() {
   const queryClient = useQueryClient();
 
-  // ==============================
-  // FETCH USERS
-  // ==============================
+  // --- QUERY: busca todos os usuários com email ---
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          auth_user: user_id (
-            email
-          )
-        `) // join correto com auth.users
-        .order('created_at', { ascending: false });
-
-      if (error) throw new PostgrestError(error as any);
-
-      return data?.map(p => ({
-        ...p,
-        email: (p as any).auth_user?.email || ''
-      })) as User[] || [];
+      const { data, error } = await supabase.rpc('get_profiles_with_email');
+      if (error) throw error;
+      return data as User[];
     },
   });
 
-  // ==============================
-  // CREATE USER
-  // ==============================
+  // --- MUTATION: criar usuário ---
   const createUser = useMutation({
     mutationFn: async (userData: {
       email: string;
@@ -61,7 +43,6 @@ export function useUsers() {
       student_ids?: string[];
     }) => {
       const { data: { session } } = await supabase.auth.getSession();
-
       if (!session) throw new Error('Você precisa estar autenticado');
 
       const response = await supabase.functions.invoke('create-user', {
@@ -69,7 +50,6 @@ export function useUsers() {
       });
 
       if (response.error) throw new Error(response.error.message);
-
       return response.data.data;
     },
     onSuccess: () => {
@@ -81,12 +61,10 @@ export function useUsers() {
     },
   });
 
-  // ==============================
-  // UPDATE USER
-  // ==============================
+  // --- MUTATION: atualizar usuário ---
   const updateUser = useMutation({
     mutationFn: async ({ id, profileData, student_ids }: { id: string, profileData: Partial<User>, student_ids?: string[] }) => {
-      // Atualiza dados do perfil
+      // 1️⃣ Atualiza os dados do perfil
       const { data: updatedProfile, error: profileError } = await supabase
         .from('profiles')
         .update(profileData)
@@ -96,19 +74,21 @@ export function useUsers() {
 
       if (profileError) throw profileError;
 
-      // Atualiza estudantes vinculados se for responsável
+      // 2️⃣ Se for responsável, atualiza estudantes vinculados
       if (profileData.role === 'responsavel' && student_ids) {
+        // Remove associações antigas
         const { error: deleteError } = await supabase
           .from('guardians_students')
           .delete()
           .eq('guardian_id', id);
         if (deleteError) throw deleteError;
 
+        // Cria novas associações
         if (student_ids.length > 0) {
           const newAssignments = student_ids.map(student_id => ({
             guardian_id: id,
             student_id,
-            relationship: 'responsavel',
+            relationship: 'responsavel'
           }));
           const { error: insertError } = await supabase.from('guardians_students').insert(newAssignments);
           if (insertError) throw insertError;
@@ -126,14 +106,10 @@ export function useUsers() {
     },
   });
 
-  // ==============================
-  // DELETE USER
-  // ==============================
+  // --- MUTATION: deletar usuário ---
   const deleteUser = useMutation({
     mutationFn: async (userId: string) => {
-      const { error } = await supabase.functions.invoke('delete-user', {
-        body: { userId },
-      });
+      const { error } = await supabase.functions.invoke('delete-user', { body: { userId } });
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {
