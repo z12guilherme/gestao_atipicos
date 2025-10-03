@@ -67,10 +67,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (profileData?.role === 'responsavel') {
           const { data: studentsData } = await supabase
             .from('guardians_students')
-            .select('students:student_id (*)')
+            .select('students:student_id(*)') // Sintaxe de join correta
             .eq('guardian_id', profileData.id);
           
-          const students = (studentsData as any[] | null)?.map(item => item.students) || [];
+          const students = (studentsData as any[] | null)?.map(item => item.students).filter(Boolean) || [];
           setGuardianStudents(students as Student[]);
         }
       } else {
