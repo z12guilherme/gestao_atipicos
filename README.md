@@ -127,6 +127,54 @@ npm run dev
 
 A aplicação estará disponível em `http://localhost:5173`.
 
+---
+
+## 📖 Guia de Uso
+
+### Acesso à Plataforma
+
+Para começar, acesse a plataforma através do link fornecido e utilize o email e a senha cadastrados para fazer login. A plataforma possui três perfis de acesso, cada um com seu próprio painel.
+
+### 👤 Painel do Gestor
+
+O gestor possui acesso total ao sistema, permitindo o gerenciamento completo de usuários, estudantes e atribuições.
+
+*   **Gerenciamento de Usuários:** Crie, visualize, edite e exclua perfis. É possível importar múltiplos usuários de uma vez a partir de arquivos **CSV** ou **XLSX**.
+*   **Gerenciamento de Estudantes:** Centralize todas as informações dos estudantes, incluindo dados médicos e necessidades. A importação em massa também está disponível para estudantes.
+*   **Gerenciamento de Atribuições:** Vincule cuidadores aos estudantes que eles irão acompanhar. O painel mostra os estudantes agrupados por cuidador e uma lista de estudantes que ainda não foram atribuídos.
+
+### ❤️ Painel do Responsável
+
+Como responsável, você tem acesso a um painel focado na privacidade e no acompanhamento do(s) seu(s) filho(s).
+
+*   **Visualizando Informações:** Ao fazer login, você verá uma lista dos estudantes vinculados ao seu perfil, podendo consultar dados como turma, status, diagnóstico e necessidades especiais. O acesso é restrito apenas aos seus dependentes.
+
+### 🤝 Painel do Cuidador
+
+O painel do cuidador foi projetado para focar nas suas atividades diárias e no acompanhamento dos estudantes sob sua responsabilidade.
+
+*   **Meus Estudantes:** A tela principal exibe uma lista clara de todos os estudantes que foram atribuídos a você pelo gestor.
+*   **Agenda Diária e Observações (Funcionalidades Futuras):** Em breve, o cuidador poderá visualizar a agenda de atividades e registrar observações sobre o progresso e ocorrências do dia.
+
+---
+
+## 🐳 Docker
+
+Para facilitar a implantação e garantir um ambiente consistente, o projeto pode ser executado em um container Docker.
+
+1.  **Construir a imagem:**
+    ```bash
+    docker build -t gestao-atipicos .
+    ```
+2.  **Executar o container:**
+    ```bash
+    docker run -p 8080:80 gestao-atipicos
+    ```
+
+A aplicação estará disponível em `http://localhost:8080`.
+
+---
+
 ## 🤝 Contribuição
 
 Contribuições são sempre bem-vindas! Se você tem alguma ideia para melhorar o projeto, sinta-se à vontade para abrir uma *issue* ou enviar um *pull request*.

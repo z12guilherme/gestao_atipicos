@@ -1,7 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { corsHeaders } from '../_shared/cors.ts'
-
+ 
 // Schema para validar cada linha do CSV de estudantes
 const studentSchema = z.object({
   name: z.string({ required_error: "A coluna 'name' é obrigatória." }).trim().min(3, "O nome deve ter pelo menos 3 caracteres."),
@@ -19,14 +19,36 @@ const studentSchema = z.object({
   medical_info: z.string().nullable().optional(),
 }).strip(); // .strip() é importante para ignorar colunas extras que não estão no schema.
 
-// Função para tentar converter a data para o formato AAAA-MM-DD
-function parseDate(dateStr: string | number | undefined): string | undefined {
-  if (!dateStr) return undefined;
-  // O Excel às vezes exporta datas como números seriais. Esta é uma conversão simplificada.
-  if (typeof dateStr === 'number') {
-    return new Date(Math.round((dateStr - 25569) * 86400 * 1000)).toISOString().split('T')[0];
+/**
+ * Converte diferentes formatos de data para o padrão AAAA-MM-DD.
+ * Suporta:
+ * - Números seriais do Excel.
+ * - Strings no formato 'DD/MM/AAAA'.
+ * - Strings já em formatos reconhecíveis pelo `new Date()`.
+ * Retorna `undefined` se a data for inválida ou vazia.
+ */
+function parseDate(dateInput: string | number | undefined): string | undefined {
+  if (!dateInput) return undefined;
+
+  let date: Date;
+
+  if (typeof dateInput === 'number') {
+    // Converte número serial do Excel para data
+    date = new Date(Math.round((dateInput - 25569) * 86400 * 1000));
+  } else if (typeof dateInput === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(dateInput)) {
+    // Converte formato DD/MM/AAAA para AAAA-MM-DD para evitar erros de fuso horário
+    const [day, month, year] = dateInput.split('/');
+    date = new Date(`${year}-${month}-${day}T00:00:00`);
+  } else {
+    date = new Date(dateInput);
   }
-  return new Date(dateStr).toISOString().split('T')[0];
+
+  // Verifica se a data resultante é válida
+  if (isNaN(date.getTime())) {
+    return undefined; // Retorna undefined se a data for inválida
+  }
+
+  return date.toISOString().split('T')[0];
 }
 
 Deno.serve(async (req) => {
@@ -57,13 +79,15 @@ Deno.serve(async (req) => {
     for (const [index, studentData] of studentList.entries()) {
       const line = index + 2; // +1 para o índice base 1, +1 para o cabeçalho do CSV
 
-      // Pré-processamento da data
-      if (studentData.birth_date) {
-        studentData.birth_date = parseDate(studentData.birth_date);
+      // Pré-processamento e validação da data
+      const parsedDate = parseDate(studentData.birth_date);
+      if (studentData.birth_date && !parsedDate) {
+        results.errorCount++;
+        results.errors.push({ line, error: `Linha ${line}: Formato de data inválido para '${studentData.birth_date}'. Use AAAA-MM-DD ou DD/MM/AAAA.` });
+        continue;
       }
-
       // Validação com Zod
-      const validation = studentSchema.safeParse(studentData);
+      const validation = studentSchema.safeParse({ ...studentData, birth_date: parsedDate });
       if (!validation.success) {
         results.errorCount++;
         const errorMessages = validation.error.flatten().fieldErrors;
