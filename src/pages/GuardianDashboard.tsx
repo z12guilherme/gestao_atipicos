@@ -2,13 +2,17 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Stethoscope, FileText, BadgeInfo } from "lucide-react";
-
+ 
 const calculateAge = (birthDate: string | null | undefined) => {
     if (!birthDate) return '';
     const today = new Date();
     const birthDateObj = new Date(birthDate);
+    // Verifica se a data é válida
+    if (isNaN(birthDateObj.getTime())) {
+        return '';
+    }
     let age = today.getFullYear() - birthDateObj.getFullYear();
-    const m = today.getMonth() - birthDateObj.getMonth();
+    const m = today.getMonth() - birthDateObj.getMonth(); 
     if (m < 0 || (m === 0 && today.getDate() < birthDateObj.getDate())) {
         age--;
     }

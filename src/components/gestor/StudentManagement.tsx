@@ -178,12 +178,12 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
     setValue("cpf", student.cpf || "");
     setValue("birth_date", student.birth_date || "");
     setValue("status", student.status);
+    setValue("school_year", student.school_year || "");
     setValue("class_name", student.class_name || "");
     setValue("diagnosis", student.diagnosis || "");
     setValue("special_needs", student.special_needs || "");
     setValue("medical_info", student.medical_info || "");
     setValue("additional_info", student.additional_info || "");
-    // O campo additional_info não está no formulário, então não é setado aqui.
     setDialogOpen(true);
   };
   
@@ -298,10 +298,14 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="school_year">Ano Escolar</Label>
+                            <Input id="school_year" {...register("school_year")} placeholder="Ex: 9º Ano" />
+                        </div>
                         <div className="space-y-2">
                             <Label htmlFor="class_name">Turma</Label>
-                            <Input id="class_name" {...register("class_name")} placeholder="Ex: 1º Ano A" />
+                            <Input id="class_name" {...register("class_name")} placeholder="Ex: Turma A" />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="status">Status *</Label>
@@ -331,6 +335,11 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                         <Label htmlFor="medical_info"><Stethoscope className="inline mr-2 h-4 w-4"/>Informações Médicas Adicionais</Label>
                         <Textarea id="medical_info" {...register("medical_info")} placeholder="Alergias, medicamentos, contatos de emergência..."/>
                     </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="additional_info"><BadgeInfo className="inline mr-2 h-4 w-4"/>Informações Adicionais</e-label>
+                        <Textarea id="additional_info" {...register("additional_info")} placeholder="Preferências, comportamentos, etc."/>
+                    </div>
                     
                     <div className="flex justify-end space-x-3 pt-4">
                         <Button type="button" variant="ghost" onClick={() => handleDialogChange(false)}>Cancelar</Button>
@@ -353,6 +362,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
+              <TableHead>Ano Escolar</TableHead>
               <TableHead>Turma</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Idade</TableHead>
@@ -363,6 +373,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
             {students.map((student) => (
               <TableRow key={student.id}>
                 <TableCell className="font-medium">{student.name}</TableCell>
+                <TableCell>{student.school_year || 'Não definido'}</TableCell>
                 <TableCell>{student.class_name || 'Não definida'}</TableCell>
                 <TableCell><Badge variant={student.status === 'ativo' ? 'default' : 'secondary'}>{student.status}</Badge></TableCell>
                 <TableCell>{calculateAge(student.birth_date)}</TableCell>

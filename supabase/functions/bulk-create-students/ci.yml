@@ -35,6 +35,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # 4. Executa o build da aplicação para garantir que não há erros de compilação
+      # 4. Executa o build da aplicação para garantir que não há erros de compilação e o lint para verificar a formatação
       - name: Build project
         run: npm run build
