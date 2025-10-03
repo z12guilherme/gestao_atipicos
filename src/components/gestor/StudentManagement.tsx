@@ -84,7 +84,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
     XLSX.writeFile(workbook, "modelo_importacao_estudantes.xlsx");
   };
   
-  const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm<StudentFormData>({
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<StudentFormData>({
     resolver: zodResolver(studentSchema),
     defaultValues: {
       status: 'ativo', // Garante que o status sempre tenha um valor padrão
