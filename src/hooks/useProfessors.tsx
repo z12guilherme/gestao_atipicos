@@ -21,11 +21,11 @@ export function useProfessors() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('professors')
-        .select('*, profile:user_id(name, email:auth_users(email))') // Assumindo que user_id em professors refere-se ao id em profiles
+        .select('*, profile:user_id(name, user_id(email))') // Sintaxe de join aninhado correta
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as Professor[];
+      return data?.map(p => ({ ...p, profile: { ...p.profile, email: (p.profile as any)?.user_id?.email } })) as Professor[] || [];
     },
   });
 
