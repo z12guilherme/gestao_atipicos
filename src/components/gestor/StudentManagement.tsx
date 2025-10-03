@@ -1,7 +1,7 @@
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
@@ -9,11 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { UserPlus, Edit, Save, Trash2, Stethoscope, FileText, BadgeInfo } from "lucide-react";
+import { UserPlus, Edit, Save, Trash2, Stethoscope, FileText, BadgeInfo, Upload, FileDown } from "lucide-react";
 import { useStudents, Student } from "@/hooks/useStudents";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { toast } from "sonner";
+import Papa from "papaparse";
+import { supabase } from "@/integrations/supabase/client";
 
 // Schema de validação ATUALIZADO com todos os seus campos
 const studentSchema = z.object({
@@ -52,6 +55,67 @@ interface StudentManagementProps {
 export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent, setEditingStudent }: StudentManagementProps) {
 
   const { students, isLoading, createStudent, updateStudent, deleteStudent } = useStudents();
+  const [isImportOpen, setImportOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+
+  const handleDownloadTemplate = () => {
+    const csvContent = "name,birth_date,school_year,status,diagnosis,special_needs,additional_info\n" +
+      "Exemplo Aluno,2010-05-15,5º Ano,ativo,TDAH,Apoio pedagógico,Gosta de desenhar";
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "modelo_importacao_estudantes.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleImport = () => {
+    if (!importFile) {
+      toast.error("Por favor, selecione um arquivo CSV para importar.");
+      return;
+    }
+
+    setIsImporting(true);
+    Papa.parse(importFile, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        try {
+          const { data, error } = await supabase.functions.invoke('bulk-create-students', {
+            body: results.data,
+          });
+
+          if (error) throw new Error(error.message);
+
+          const { successCount, errorCount, errors } = data;
+
+          if (errorCount > 0) {
+            toast.warning(`${successCount} estudantes importados com sucesso.`, {
+              description: `${errorCount} linhas continham erros. Detalhes: ${errors.map((e: any) => e.error).join('; ')}`,
+              duration: 8000,
+            });
+          } else {
+            toast.success(`${successCount} estudantes importados com sucesso!`);
+          }
+
+          updateStudent.queryClient.invalidateQueries({ queryKey: ['students'] });
+          setImportOpen(false);
+          setImportFile(null);
+        } catch (e: any) {
+          toast.error("Falha ao importar arquivo.", { description: e.message });
+        } finally {
+          setIsImporting(false);
+        }
+      },
+      error: (error) => {
+        toast.error("Erro ao processar o arquivo CSV.", { description: error.message });
+        setIsImporting(false);
+      }
+    });
+  };
   
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm<StudentFormData>({
     resolver: zodResolver(studentSchema),
@@ -109,18 +173,53 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
               <CardTitle>Gerenciar Estudantes</CardTitle>
               <CardDescription>Cadastre e gerencie informações dos estudantes</CardDescription>
             </div>
-            
-            <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
-              <DialogTrigger asChild>
-                <Button onClick={() => {
-                  setEditingStudent(null);
-                  setDialogOpen(true);
-                }}>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Novo Estudante
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex space-x-2">
+              {/* Botão de Importar */}
+              <Dialog open={isImportOpen} onOpenChange={setImportOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline"><Upload className="mr-2 h-4 w-4" />Importar</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Importar Estudantes em Massa</DialogTitle>
+                    <DialogDescription>
+                      Envie um arquivo CSV para cadastrar múltiplos estudantes de uma vez.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <p className="text-sm text-muted-foreground">
+                      O arquivo deve conter as colunas: `name`, `birth_date`, `school_year`, `status`.
+                      O status deve ser `ativo`, `inativo` ou `avaliando`.
+                    </p>
+                    <Button variant="secondary" size="sm" onClick={handleDownloadTemplate}>
+                      <FileDown className="mr-2 h-4 w-4" />
+                      Baixar modelo CSV
+                    </Button>
+                    <div className="space-y-2">
+                      <Label htmlFor="import-file">Arquivo CSV</Label>
+                      <Input id="import-file" type="file" accept=".csv" onChange={(e) => setImportFile(e.target.files ? e.target.files[0] : null)} />
+                    </div>
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="ghost" onClick={() => setImportOpen(false)}>Cancelar</Button>
+                    <Button onClick={handleImport} disabled={isImporting || !importFile}>
+                      {isImporting ? "Importando..." : "Iniciar Importação"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
+                <DialogTrigger asChild>
+                  <Button onClick={() => {
+                    setEditingStudent(null);
+                    setDialogOpen(true);
+                  }}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Novo Estudante
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>{editingStudent ? 'Editar Estudante' : 'Cadastrar Novo Estudante'}</DialogTitle>
                 </DialogHeader>
@@ -190,6 +289,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                 </form>
               </DialogContent>
             </Dialog>
+            </div>
         </div>
       </CardHeader>
       
