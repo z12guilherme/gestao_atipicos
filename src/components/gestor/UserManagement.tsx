@@ -60,7 +60,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
     importErrors,
     isErrorsDialogOpen, setErrorsDialogOpen,
     handleImport,
-  } = useFileImport({ supabaseFunction: 'bulk-create-users', invalidateQueryKey: 'users', entityName: 'usuários' });
+  } = useFileImport({ supabaseFunction: 'create-user', invalidateQueryKey: 'users', entityName: 'usuários' });
 
   const currentSchema = useMemo(() => (editingUser ? updateUserSchema : createUserSchema), [editingUser]);
 
@@ -80,7 +80,10 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
     setValue("phone", user.phone || "");
     setValue("function_title", user.function_title || "");
     setValue("work_schedule", user.work_schedule || "");
-    // student_ids será carregado separadamente ou virá do perfil do usuário
+    // Garante que os estudantes vinculados sejam carregados no formulário de edição
+    if (user.role === 'responsavel') {
+      setValue("student_ids", user.student_ids || []);
+    }
     setDialogOpen(true);
   };
   

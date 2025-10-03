@@ -1,11 +1,24 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { corsHeaders } from '../_shared/cors.ts'
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { corsHeaders } from '../_shared/cors.ts';
+
+const userRecordSchema = z.object({
+  name: z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  email: z.string().trim().email("Email inválido"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+  role: z.enum(['gestor', 'cuidador', 'responsavel']),
+  // Campos opcionais
+  cpf: z.string().trim().max(14, "CPF inválido").optional().nullable(),
+  phone: z.string().trim().max(20, "Telefone inválido").optional().nullable(),
+  function_title: z.string().trim().max(100, "Função muito longa").optional().nullable(),
+  work_schedule: z.string().trim().max(500, "Horário muito longo").optional().nullable(),
+}).strip();
 
 serve(async (req) => {
   // Lida com a requisição pre-flight de CORS
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
@@ -17,9 +30,9 @@ serve(async (req) => {
     );
 
     // 2. Verifica se a requisição vem de um gestor autenticado
-    const authHeader = req.headers.get('Authorization')!
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+    const authHeader = req.headers.get('Authorization')!;
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
 
     if (authError || !user) {
       throw new Error("Acesso não autorizado. Token inválido.");
@@ -29,58 +42,105 @@ serve(async (req) => {
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('role')
-      .eq('id', user.id) // A coluna de ID no profiles deve ser 'id'
-      .single()
+      .eq('id', user.id)
+      .single();
 
     if (profileError || profile?.role !== 'gestor') {
       throw new Error("Apenas gestores podem criar novos usuários.");
     }
 
-    // 4. Extrai os dados do novo usuário do corpo da requisição
-    const { email, password, name, role, ...rest } = await req.json()
+    // 4. Extrai a LISTA de registros do corpo da requisição
+    const { records } = await req.json();
 
-    if (!email || !password || !name || !role) {
-      throw new Error("Campos 'email', 'password', 'name' e 'role' são obrigatórios.");
+    if (!records || !Array.isArray(records)) {
+      throw new Error("Formato de dados inválido. Esperava um array de 'records'.");
     }
 
-    // 5. Cria o usuário no serviço de autenticação
-    const { data: authData, error: authUserError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-    })
+    let successCount = 0;
+    const importErrors: { line: number, error: string }[] = [];
+    const profilesToInsert = []; // Array para coletar perfis para inserção em lote
+    const createdAuthUserIds: string[] = []; // Array para rastrear IDs de usuários criados para possível rollback
 
-    if (authUserError) throw authUserError;
-    if (!authData.user) throw new Error("Falha ao criar usuário na autenticação.");
+    // 5. Itera sobre cada registro para criar os usuários
+    for (let i = 0; i < records.length; i++) {
+      const record = records[i];
+      const lineNumber = i + 2; // +2 para corresponder à linha da planilha (cabeçalho + índice 0)
 
-    // 6. Insere o perfil correspondente na tabela 'profiles'
-    const { error: createProfileError } = await supabaseAdmin
-      .from('profiles')
-      .insert({
-        id: authData.user.id, // Garante que o ID do perfil seja o mesmo do usuário
-        name,
-        role,
-        email,
-        ...rest
-      });
+      try {
+        // Validação com Zod antes de qualquer operação
+        const validation = userRecordSchema.safeParse(record);
+        if (!validation.success) {
+          const firstError = validation.error.flatten().fieldErrors;
+          const errorMessage = Object.values(firstError)[0]?.[0] || 'Dados inválidos';
+          throw new Error(errorMessage);
+        }
 
-    if (createProfileError) {
-      // Rollback: se a criação do perfil falhar, deleta o usuário da autenticação
-      await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
-      throw createProfileError;
+        const { email, password } = validation.data;
+
+        // Cria o usuário no serviço de autenticação
+        const { data: authData, error: authUserError } = await supabaseAdmin.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+        });
+
+        if (authUserError) throw authUserError;
+        if (!authData.user) throw new Error("Falha ao criar usuário na autenticação.");
+
+        createdAuthUserIds.push(authData.user.id); // Rastreia o ID do usuário criado
+
+        // Adiciona o perfil ao array para inserção em lote
+        const { password: _password, ...profileData } = validation.data;
+        profilesToInsert.push({
+          id: authData.user.id,
+          ...profileData,
+          student_ids: profileData.student_ids || [],
+        });
+
+        successCount++;
+      } catch (error) {
+        importErrors.push({ line: lineNumber, error: error.message });
+      }
+    }
+
+    // 6. Insere todos os perfis coletados de uma só vez
+    if (profilesToInsert.length > 0) {
+      const { error: batchInsertError } = await supabaseAdmin
+        .from('profiles')
+        .insert(profilesToInsert);
+
+      if (batchInsertError) {
+        // Rollback: Se a inserção dos perfis falhar, tenta deletar os usuários de autenticação criados.
+        console.error("Erro na inserção em lote de perfis:", batchInsertError);
+        console.log(`Iniciando rollback para ${createdAuthUserIds.length} usuários...`);
+        for (const userId of createdAuthUserIds) {
+          await supabaseAdmin.auth.admin.deleteUser(userId);
+        }
+        console.log("Rollback concluído.");
+
+        // Limpa erros individuais, pois a operação em lote falhou como um todo.
+        importErrors.length = 0;
+        // Adiciona uma única mensagem de erro clara para o usuário.
+        importErrors.push({ line: 0, error: `Falha crítica ao salvar perfis. A importação foi revertida. Erro: ${batchInsertError.message}` });
+        // Zera a contagem de sucessos, pois os perfis não foram criados.
+        successCount = 0;
+      }
     }
 
     return new Response(
-      JSON.stringify({ message: "Usuário criado com sucesso!" }),
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    )
-
+      JSON.stringify({ successCount, errorCount: importErrors.length, errors: importErrors }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+    );
   } catch (error) {
+    console.error(`[${new Date().toISOString()}] Critical error in create-user:`, error.message);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    )
+      JSON.stringify({
+        successCount: 0,
+        errorCount: 1,
+        errors: [{ line: 0, error: `Erro inesperado no servidor: ${error.message}` }],
+      }),
+      // Usar status 500 para erro interno do servidor é mais apropriado
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 },
+    );
   }
 });

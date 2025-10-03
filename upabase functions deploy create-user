@@ -1,0 +1,48 @@
+* [33mfd242d3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m fix: Corrige estrutura de workflows e implementa funções de importação
+* [33m4889bf4[m fix: Corrige estrutura de workflows e implementa funções de importação
+* [33mf3a88c1[m fix: Corrige estrutura de workflows e implementa funções de importação
+* [33m5c5e8f2[m fix: Corrige estrutura de workflows e adiciona função de importação de usuários
+* [33mf29d334[m feat: Adiciona função robusta para importação de usuários em massa
+* [33m06fb4f0[m feat: Adiciona função robusta para importação de usuários em massa
+* [33m88af7b4[m fix: Implementa bulk-create-users e corrige bulk-create-students; ajusta deploy de funções
+* [33m506a4b2[m fix: Implementa bulk-create-users e corrige bulk-create-students; ajusta deploy de funções
+* [33m6430483[m fix: Implementa bulk-create-users e corrige bulk-create-students; ajusta deploy de funções
+* [33m38052ed[m feat: Adiciona função robusta para importação de usuários em massa
+* [33meb03217[m feat: Finaliza refatoração, melhora UI e consolida dashboards
+* [33m95c73ed[m feat: Finaliza refatoração, melhora UI e consolida dashboards
+* [33m9ee0474[m feat: Finaliza refatoração, melhora UI e consolida dashboards
+* [33me04ef23[m feat: Finaliza refatoração, melhora UI e consolida dashboards
+* [33m3c04ded[m fix: Correção de bugs de import
+* [33m4fb5e72[m fix: Correção de bugs de import
+* [33meca7fa3[m fix: Garante tratamento correto de datas em importação XLSX de usuários
+* [33mc653604[m chore: Organiza estrutura do projeto e adiciona CI com GitHub Actions
+* [33m67b7281[m feat: Adiciona diálogo detalhado para erros de importação
+* [33mccd0164[m fix: Corrige tag JSX que causava erro de build na Vercel
+* [33mf92cbdd[m feat: Aprimora importação de alunos e corrige bugs
+* [33med940d7[m Initial commit: Estrutura inicial do projeto e funcionalidades
+* [33m6c87b1a[m fix: Melhora robustez da importação de estudantes
+* [33m6d872a4[m fix: Melhora robustez da importação de estudantes
+* [33mf89f562[m fix: Refatora e unifica validação da importação de estudantes
+* [33ma6126e4[m fix: Refatora e robustece validação da importação de estudantes
+* [33mea896f9[m fix: Melhora robustez da importação de estudantes
+* [33md2cb9c4[m fix: Torna importação de estudantes mais flexível ignorando colunas extras
+* [33m260d368[m fix: Melhora validação e tratamento de erros na importação de estudantes
+* [33m52318cb[m fix: Corrige invalidação de cache após importação em massa
+* [33m3011d8e[m fix: Corrige lógica da função de importação de estudantes
+* [33m8843cd1[m fix: Corrige erro de tela branca no dashboard do gestor
+* [33ma274cda[m feat: Adiciona botão de sair no dashboard do gestor
+* [33m1a897d3[m feat: Melhora a interface do dashboard do gestor
+* [33m4b1c080[m docs: Atualiza documentação do projeto
+* [33m6c86386[m docs: Adiciona informações do desenvolvedor no README
+* [33ma509a0c[m feat: Adiciona importação de estudantes e limpa arquivos
+* [33m66c3fda[m feat: Adiciona e publica função de importação de estudantes
+* [33m7c6c321[m feat: Adiciona papaparse para importação de CSV
+* [33mf78d098[m feat: Adiciona importação de usuários em massa via CSV
+* [33m8635f20[m feat: Configura e corrige Edge Functions de criar e deletar usuários
+* [33m45d379d[m Retirada do Botão de cadastro
+* [33m6f88e14[m resolução de conflito
+* [33m30127a7[m Update README.md
+* [33m6de782d[m Correções Gerais
+[31m|[m * [33mc1c845d[m[33m ([m[1;31morigin/versao_14h02[m[33m, [m[1;32mversao_14h02[m[33m)[m Reformulação completa
+[31m|[m[31m/[m  
+* [33ma8e45f2[m[33m ([m[1;31morigin/restaurar_12h58[m[33m)[m Versão inicial: sistema completo com dashboards e interface moderna
