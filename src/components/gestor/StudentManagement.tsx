@@ -19,7 +19,7 @@ import Papa from "papaparse";
 import * as XLSX from 'xlsx';
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog";
+import { ImportErrorsDialog } from "../shared/ImportErrorsDialog.tsx";
 
 // Schema de validação ATUALIZADO com todos os seus campos
 const studentSchema = z.object({
@@ -155,7 +155,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
       const reader = new FileReader();
       reader.onload = (e) => {
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: 'array' });
+        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName]; 
         const json = XLSX.utils.sheet_to_json(worksheet);
