@@ -53,7 +53,7 @@ export function useUsers() {
       }
 
       const response = await supabase.functions.invoke('create-user', {
-        body: userData,
+        body: { records: [userData] }, // A Edge Function espera um array 'records'
       });
 
       if (response.error) {
