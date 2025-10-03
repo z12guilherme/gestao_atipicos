@@ -6,9 +6,8 @@ import { corsHeaders } from '../_shared/cors.ts'
 const studentSchema = z.object({
   name: z.string({ required_error: "A coluna 'name' é obrigatória." }).min(2, "Nome deve ter pelo menos 2 caracteres"),
   birth_date: z.string({ required_error: "A coluna 'birth_date' é obrigatória." }).min(1, "Data de nascimento é obrigatória"),
-  school_year: z.string().optional(),
   status: z.enum(['ativo', 'inativo', 'transferido'], {
-    errorMap: () => ({ message: "Status deve ser 'ativo', 'inativo', 'transferido' ou 'avaliando'" })
+    errorMap: () => ({ message: "Status deve ser 'ativo', 'inativo' ou 'transferido'" })
   }),
   // Campos opcionais
   cpf: z.string().optional(),
@@ -17,7 +16,7 @@ const studentSchema = z.object({
   special_needs: z.string().optional(),
   additional_info: z.string().optional(),
   medical_info: z.string().optional(),
-});
+}).strip(); // Adicionado .strip() para ignorar campos extras como 'school_year'
 
 // Função para tentar converter a data para o formato AAAA-MM-DD
 function parseDate(dateStr: string | number | undefined): string | undefined {
