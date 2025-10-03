@@ -5,7 +5,12 @@ import { getCorsHeaders } from "../_shared/cors.ts";
 // Schema para validar cada linha do CSV de estudantes
 const studentSchema = z.object({
   name: z.string({ required_error: "A coluna 'name' é obrigatória." }).trim().min(3, "O nome deve ter pelo menos 3 caracteres."),
-  birth_date: z.string({ required_error: "A coluna 'birth_date' é obrigatória." }),
+  birth_date: z.preprocess((arg) => {
+    // Pré-processa o campo 'birth_date' antes da validação
+    if (!arg) return undefined;
+    // Tenta converter a data usando a função parseDate
+    return parseDate(arg as string | number);
+  }, z.string({ required_error: "A coluna 'birth_date' é obrigatória e o formato é inválido." }).regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de data inválido. Use AAAA-MM-DD ou DD/MM/AAAA.")),
   status: z.enum(['ativo', 'inativo', 'transferido'], { errorMap: () => ({ message: "O status deve ser 'ativo', 'inativo' ou 'transferido'." }) }),
   // Campos opcionais
   cpf: z.string().trim().max(14, "CPF inválido").nullable().optional(),
@@ -88,15 +93,8 @@ Deno.serve(async (req) => {
     for (const [index, studentData] of studentList.entries()) {
       const line = index + 2; // +1 para o índice base 1, +1 para o cabeçalho do CSV
 
-      // Pré-processamento e validação da data
-      const parsedDate = parseDate(studentData.birth_date);
-      if (studentData.birth_date && !parsedDate) {
-        results.errorCount++;
-        results.errors.push({ line, error: `Linha ${line}: Formato de data inválido para '${studentData.birth_date}'. Use AAAA-MM-DD ou DD/MM/AAAA.` });
-        continue;
-      }
       // Validação com Zod
-      const validation = studentSchema.safeParse({ ...studentData, birth_date: parsedDate });
+      const validation = studentSchema.safeParse(studentData);
       if (!validation.success) {
         results.errorCount++;
         const errorMessages = validation.error.flatten().fieldErrors;
