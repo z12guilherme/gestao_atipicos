@@ -25,11 +25,11 @@ export function useUsers() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*, user_id(email)')
+        .select('*, user:user_id(email)') // Sintaxe correta para join com alias
         .order('created_at', { ascending: false });
 
       if (error) throw new PostgrestError(error as any);
-      return data?.map(p => ({ ...p, email: (p as any).user_id?.email })) as User[] || [];
+      return data?.map(p => ({ ...p, email: (p as any).user?.email })) as User[] || [];
     },
   });
 
