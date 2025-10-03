@@ -10,13 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { UserPlus, Edit, Save, Trash2, Upload, FileDown } from "lucide-react";
-import { useUsers, User } from "@/hooks/useUsers";
+import { useUsers, User } from "@/hooks/useUsers"; // Hook para buscar usuários
 import { useForm } from "react-hook-form";
-import { useStudents } from "@/hooks/useStudents";
+import { useStudents } from "@/hooks/useStudents"; // Hook para buscar estudantes
 import { Check, ChevronsUpDown } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Papa from "papaparse";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from 'xlsx';
 
@@ -53,6 +54,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
 
   const { users, isLoading, createUser, updateUser, deleteUser } = useUsers();
   const { students } = useStudents();
+  const queryClient = useQueryClient();
   
   const [isImportOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
@@ -156,7 +158,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
           toast.success(`${successCount} usuários importados com sucesso!`);
         }
 
-        updateUser.queryClient.invalidateQueries({ queryKey: ['users'] });
+        queryClient.invalidateQueries({ queryKey: ['users'] });
         setImportOpen(false);
         setImportFile(null);
       } catch (e: any) {

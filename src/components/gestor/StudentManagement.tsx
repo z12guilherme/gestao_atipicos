@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { UserPlus, Edit, Save, Trash2, Stethoscope, FileText, BadgeInfo, Upload, FileDown } from "lucide-react";
-import { useStudents, Student } from "@/hooks/useStudents";
+import { useStudents, Student } from "@/hooks/useStudents"; // Hook para buscar estudantes
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import Papa from "papaparse";
 import * as XLSX from 'xlsx';
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Schema de validação ATUALIZADO com todos os seus campos
 const studentSchema = z.object({
@@ -56,6 +57,7 @@ interface StudentManagementProps {
 export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent, setEditingStudent }: StudentManagementProps) {
 
   const { students, isLoading, createStudent, updateStudent, deleteStudent } = useStudents();
+  const queryClient = useQueryClient();
   const [isImportOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -112,7 +114,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
           toast.success(`${successCount} estudantes importados com sucesso!`);
         }
 
-        updateStudent.queryClient.invalidateQueries({ queryKey: ['students'] });
+        queryClient.invalidateQueries({ queryKey: ['students'] });
         setImportOpen(false);
         setImportFile(null);
       } catch (e: any) {
