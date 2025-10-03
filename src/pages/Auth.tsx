@@ -202,6 +202,12 @@ export default function Auth() {
           </div>
         </div>
       </div>
+
+      <footer className="absolute bottom-0 left-0 right-0 py-4">
+        <p className="text-center text-sm text-muted-foreground">
+          Todos os Direitos Reservados &copy; {new Date().getFullYear()} | Dev: Marcos Guilherme
+        </p>
+      </footer>
     </div>
   );
 }
