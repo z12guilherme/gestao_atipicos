@@ -300,7 +300,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                 <TableCell className="font-medium">{student.name}</TableCell>
                 <TableCell>{student.class_name || 'Não definida'}</TableCell>
                 <TableCell><Badge variant={student.status === 'ativo' ? 'default' : 'secondary'}>{student.status}</Badge></TableCell>
-                <TableCell>{calculateAge(student.birth_date)}</TableCell>
+                <TableCell>{student.birth_date ? calculateAge(student.birth_date) : 'Não informada'}</TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(student)}>
                     <Edit className="h-4 w-4" />
