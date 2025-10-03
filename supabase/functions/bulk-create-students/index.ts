@@ -4,18 +4,19 @@ import { corsHeaders } from '../_shared/cors.ts'
 
 // Schema para validar cada linha do CSV de estudantes
 const studentSchema = z.object({
-  name: z.string({ required_error: "A coluna 'name' é obrigatória." }).min(2, "Nome deve ter pelo menos 2 caracteres"),
-  birth_date: z.string({ required_error: "A coluna 'birth_date' é obrigatória." }).min(1, "Data de nascimento é obrigatória"),
+  name: z.string({ required_error: "A coluna 'name' é obrigatória." }).min(2, "O nome deve ter pelo menos 2 caracteres."),
+  birth_date: z.string({ required_error: "A coluna 'birth_date' é obrigatória." }).min(1, "A data de nascimento é obrigatória."),
   status: z.enum(['ativo', 'inativo', 'transferido'], {
     errorMap: () => ({ message: "Status deve ser 'ativo', 'inativo' ou 'transferido'" })
   }),
   // Campos opcionais
-  cpf: z.string().optional(),
-  class_name: z.string().optional(),
-  diagnosis: z.string().optional(),
-  special_needs: z.string().optional(),
-  additional_info: z.string().optional(),
-  medical_info: z.string().optional(),
+  cpf: z.string().nullable().optional(),
+  class_name: z.string().nullable().optional(),
+  school_year: z.string().nullable().optional(), // Adicionado para corresponder ao modelo
+  diagnosis: z.string().nullable().optional(),
+  special_needs: z.string().nullable().optional(),
+  additional_info: z.string().nullable().optional(),
+  medical_info: z.string().nullable().optional(),
 }).strip(); // Adicionado .strip() para ignorar campos extras como 'school_year'
 
 // Função para tentar converter a data para o formato AAAA-MM-DD
