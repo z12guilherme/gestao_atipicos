@@ -65,6 +65,26 @@ Deno.serve(async (req) => {
   console.log(`[${new Date().toISOString()}] Received request for bulk-create-students: ${req.method}`);
 
   try {
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Validação de segurança: Garante que apenas gestores podem executar esta função.
+    const authHeader = req.headers.get('Authorization')!;
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+    if (authError || !user) {
+      throw new Error("Acesso não autorizado. Token inválido.");
+    }
+
+    const { data: profile, error: profileError } = await supabaseAdmin.from('profiles').select('role').eq('id', user.id).single();
+
+    if (profileError || profile?.role !== 'gestor') {
+      throw new Error("Apenas gestores podem importar estudantes.");
+    }
+
     const studentList = await req.json();
     console.log(`[${new Date().toISOString()}] Parsed request body, received ${studentList?.length ?? 0} items.`);
 
@@ -77,11 +97,6 @@ Deno.serve(async (req) => {
         headers: responseHeaders, status: 400 });
     }
 
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-    
     const results = {
       successCount: 0,
       errorCount: 0,
