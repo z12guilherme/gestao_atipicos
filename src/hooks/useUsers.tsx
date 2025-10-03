@@ -25,7 +25,7 @@ export function useUsers() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*, user_id(email)') // Sintaxe correta para join
+        .select('*, user_id(email)')
         .order('created_at', { ascending: false });
 
       if (error) throw new PostgrestError(error as any);
