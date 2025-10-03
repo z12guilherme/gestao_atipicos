@@ -26,11 +26,11 @@ export function useUsers() {
       const { data, error } = await supabase
         // Consulta ajustada para buscar o email da tabela auth.users
         .from('profiles')
-        .select('*, auth_user:user_id(email)') // Sintaxe correta para join com alias
+        .select('*, user:user_id(email)') // Sintaxe correta para join com alias
         .order('created_at', { ascending: false });
       
       if (error) throw new PostgrestError(error as any);
-      return data?.map(p => ({ ...p, email: (p as any).auth_user?.email })) as User[] || [];
+      return data?.map(p => ({ ...p, email: (p as any).user?.email })) as User[] || [];
     },
   });
 
@@ -53,7 +53,7 @@ export function useUsers() {
       }
 
       const response = await supabase.functions.invoke('create-user', {
-        body: userData,
+        body: { records: [userData] }, // A Edge Function espera um array 'records'
       });
 
       if (response.error) {
