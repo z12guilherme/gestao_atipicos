@@ -26,11 +26,11 @@ export function useUsers() {
       const { data, error } = await supabase
         // Consulta ajustada para buscar o email da tabela auth.users
         .from('profiles')
-        .select('*, email:user_id(email)') // Sintaxe correta para join com alias
+        .select('*, user:user_id(email)') // Sintaxe correta para join
         .order('created_at', { ascending: false });
       
       if (error) throw new PostgrestError(error as any);
-      return data?.map(p => ({ ...p, email: (p as any).email?.email })) as User[] || [];
+      return data?.map(p => ({ ...p, email: (p as any).user?.email })) as User[] || [];
     },
   });
 
