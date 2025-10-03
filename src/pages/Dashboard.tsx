@@ -55,7 +55,7 @@ const Dashboard = () => {
 
   return (
     <Layout>
-      {getDashboardContent()}
+      {getDashboardContent()} {/* Executa a função para renderizar o conteúdo */}
     </Layout>
   );
 };
