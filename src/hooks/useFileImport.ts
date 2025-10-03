@@ -37,10 +37,14 @@ export function useFileImport({ supabaseFunction, invalidateQueryKey, entityName
 
     const processData = async (data: any[]) => {
       try {
-        const validData = data.filter(row => row && Object.values(row).some(val => val !== null && val !== ''));
+        // Filtro mais robusto: garante que a linha exista e que a coluna 'name' (obrigatória) esteja preenchida.
+        // Isso evita o processamento de linhas vazias ou mal formatadas que podem ser geradas por planilhas.
+        const validData = data.filter(row => 
+          row && typeof row.name === 'string' && row.name.trim() !== ''
+        );
 
         if (validData.length === 0) {
-          toast.error("Nenhum dado válido encontrado no arquivo.", { description: "Verifique se a planilha não está vazia." });
+          toast.error("Nenhum dado válido encontrado no arquivo.", { description: "Verifique se a planilha não está vazia e se a coluna 'name' está preenchida." });
           return;
         }
 
