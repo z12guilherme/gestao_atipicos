@@ -70,6 +70,7 @@ serve(async (req) => {
 
 
     let successCount = 0;
+    let errorCount = 0;
     const importErrors: { line: number, error: string }[] = [];
     const profilesToInsert = []; // Array para coletar perfis para inserção em lote
     const createdAuthUserIds: string[] = []; // Array para rastrear IDs de usuários criados para possível rollback
@@ -84,6 +85,7 @@ serve(async (req) => {
         const validation = userRecordSchema.safeParse(record);
         if (!validation.success) {
           const firstError = validation.error.flatten().fieldErrors;
+          errorCount++;
           const errorMessage = Object.values(firstError)[0]?.[0] || 'Dados inválidos';
           throw new Error(errorMessage);
         }
@@ -112,6 +114,7 @@ serve(async (req) => {
 
         successCount++;
       } catch (error) {
+        errorCount++;
         importErrors.push({ line: lineNumber, error: error.message });
       }
     }
@@ -135,13 +138,15 @@ serve(async (req) => {
         importErrors.length = 0;
         // Adiciona uma única mensagem de erro clara para o usuário.
         importErrors.push({ line: 0, error: `Falha crítica ao salvar perfis. A importação foi revertida. Erro: ${batchInsertError.message}` });
+        // Garante que a contagem de erros reflita o número de registros que falharam.
+        errorCount = createdAuthUserIds.length;
         // Zera a contagem de sucessos, pois os perfis não foram criados.
         successCount = 0;
       }
     }
 
     return new Response(
-      JSON.stringify({ successCount, errorCount: importErrors.length, errors: importErrors }),
+      JSON.stringify({ successCount, errorCount, errors: importErrors }),
       { headers: responseHeaders, status: 200 },
     );
   } catch (error) {
