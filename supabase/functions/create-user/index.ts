@@ -20,6 +20,7 @@ const userRecordSchema = z.object({
   phone: z.string().trim().max(20, "Telefone inválido").optional().nullable(),
   function_title: z.string().trim().max(100, "Função muito longa").optional().nullable(),
   work_schedule: z.string().trim().max(500, "Horário muito longo").optional().nullable(),
+  student_ids: z.array(z.string()).optional().default([]), // Aceita os estudantes vinculados
 }).strip();
 
 serve(async (req) => {
@@ -64,11 +65,21 @@ serve(async (req) => {
     }
 
     // 4. Extrai a LISTA de registros do corpo da requisição
-    const { records } = await req.json();
+    const records = await req.json();
+    console.log(`[${new Date().toISOString()}] Parsed request body, received ${records?.length ?? 0} items.`);
 
-    if (!records || !Array.isArray(records)) {
-      throw new Error("Formato de dados inválido. Esperava um array de 'records'.");
+    if (!Array.isArray(records)) {
+      return new Response(JSON.stringify({ successCount: 0, errorCount: 1, errors: [{ line: 0, error: "O corpo da requisição é inválido. Esperava-se um array de usuários." }] }), {
+        headers: responseHeaders, status: 400
+      });
     }
+
+    if (records.length === 0) {
+      return new Response(JSON.stringify({ successCount: 0, errorCount: 1, errors: [{ line: 0, error: "O arquivo enviado está vazio ou não contém dados válidos." }] }), {
+        headers: responseHeaders, status: 400
+      });
+    }
+
 
     let successCount = 0;
     const importErrors: { line: number, error: string }[] = [];
@@ -143,7 +154,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ successCount, errorCount: importErrors.length, errors: importErrors }),
-      { headers: responseHeaders, status: 200 }
+      { headers: responseHeaders, status: 200 },
     );
   } catch (error) {
     console.error(`[${new Date().toISOString()}] Critical error in create-user:`, error.message);
@@ -153,7 +164,7 @@ serve(async (req) => {
         errorCount: 1,
         errors: [{ line: 0, error: `Erro inesperado no servidor: ${error.message}` }],
       }),
-      { headers: responseHeaders, status: 500 },
+      { headers: responseHeaders, status: 500 }
     );
   }
 });

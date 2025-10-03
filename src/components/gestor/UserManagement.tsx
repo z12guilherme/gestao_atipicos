@@ -214,12 +214,12 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
                   <>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email *</Label>
-                      <Input id="email" type="email" {...register("email")} />
+                      <Input id="email" type="email" autoComplete="email" {...register("email")} />
                       {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="password">Senha *</Label>
-                      <Input id="password" type="password" {...register("password")} />
+                      <Input id="password" type="password" autoComplete="new-password" {...register("password")} />
                       {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
                     </div>
                   </>
