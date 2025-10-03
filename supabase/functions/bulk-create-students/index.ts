@@ -116,8 +116,12 @@ Deno.serve(async (req) => {
 
       if (insertError) {
         console.error('Supabase insert error:', insertError);
-        results.errorCount = studentsToInsert.length; // All failed if batch insert fails
-        results.errors.push({ line: 0, error: `Erro no banco de dados: ${insertError.message}` });
+        // Se a inserção em lote falhar, todos os estudantes na lista são considerados erros.
+        results.errorCount += studentsToInsert.length;
+        // Adiciona um erro para cada linha que falhou na inserção.
+        studentsToInsert.forEach((_, index) => {
+          results.errors.push({ line: index + 2, error: `Falha na inserção no banco de dados: ${insertError.message}` });
+        });
         results.successCount = 0;
       } else {
         results.successCount = studentsToInsert.length;
