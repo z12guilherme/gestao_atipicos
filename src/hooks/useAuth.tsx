@@ -70,8 +70,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .select('students:student_id(*)') // Sintaxe de join correta
             .eq('guardian_id', profileData.id);
           
-          const validStudents = (studentsData as any[] | null)?.map(item => item.students).filter(Boolean) || [];
-          setGuardianStudents(validStudents as Student[]);
+          const students = (studentsData as GuardianStudent[] | null)?.map(item => item.students).filter(Boolean) as Student[] || [];
+          setGuardianStudents(students);
         }
       } else {
         setProfile(null);
