@@ -1,0 +1,29 @@
+# .github/workflows/deploy-supabase-functions.yml
+
+name: Deploy Supabase Functions
+
+on:
+  push:
+    branches:
+      - main
+    # Executa apenas se houver mudanças na pasta de funções
+    paths:
+      - 'supabase/functions/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/cli@v1
+        with:
+          version: latest
+
+      - name: Deploy Supabase Functions
+        run: supabase functions deploy --project-ref $SUPABASE_PROJECT_ID
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
