@@ -20,8 +20,9 @@ import {
 import { UserManagement } from "@/components/gestor/UserManagement";
 import { StudentManagement } from "@/components/gestor/StudentManagement";
 import { AssignmentManagement } from "@/components/gestor/AssignmentManagement";
-import { useUsers, User } from "@/hooks/useUsers";
-import { useStudents, Student } from "@/hooks/useStudents";
+import { useUsers, User } from "@/hooks/useUsers"; // Hook para buscar usuários
+import { useStudents, Student } from "@/hooks/useStudents"; // Hook para buscar estudantes
+import { useAuth } from "@/hooks/useAuth"; // Hook para autenticação
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
