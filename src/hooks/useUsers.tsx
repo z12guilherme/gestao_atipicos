@@ -26,7 +26,7 @@ export function useUsers() {
       const { data, error } = await supabase
         // Consulta ajustada para buscar o email da tabela auth.users
         .from('profiles')
-        .select('*, user:user_id(email)') // Sintaxe correta para join
+        .select('*, user:user_id(email)') // Sintaxe corrigida para o join
         .order('created_at', { ascending: false });
       
       if (error) throw new PostgrestError(error as any);
