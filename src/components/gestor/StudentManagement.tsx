@@ -19,6 +19,7 @@ import Papa from "papaparse";
 import * as XLSX from 'xlsx';
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { ImportErrorsDialog } from "../shared/ImportErrorsDialog";
 
 // Schema de validação ATUALIZADO com todos os seus campos
 const studentSchema = z.object({
@@ -64,6 +65,8 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
   const [isImportOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [importErrors, setImportErrors] = useState<{ line: number; error: string }[]>([]);
+  const [isErrorsDialogOpen, setErrorsDialogOpen] = useState(false);
 
   const handleDownloadCsvTemplate = () => {
     const csvContent = "name,birth_date,status,school_year,class_name,cpf,diagnosis,special_needs,medical_info,additional_info\r\n" +
@@ -100,12 +103,15 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
 
     const processData = async (data: any[]) => {
       try {
-        // Filtra linhas que não têm um nome, que são provavelmente linhas vazias ou de formatação.
-        const validData = data.filter(row => typeof row.name === 'string' && row.name.trim() !== '');
+        // Filtra linhas que não têm um nome (provavelmente linhas vazias ou de formatação)
+        // e garante que todos os dados sejam strings para evitar erros.
+        const validData = data.filter(row => row && typeof row.name === 'string' && row.name.trim() !== '');
 
         if (validData.length === 0) {
-          throw new Error("Nenhum dado válido encontrado no arquivo. Verifique se a coluna 'name' está preenchida.");
+          toast.error("Nenhum dado válido encontrado no arquivo.", { description: "Verifique se a planilha não está vazia e se a coluna 'name' está preenchida." });
+          return;
         }
+
         const { data: responseData, error } = await supabase.functions.invoke('bulk-create-students', {
           body: validData,
         });
@@ -115,9 +121,10 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
         const { successCount, errorCount, errors } = responseData;
 
         if (errorCount > 0) {
+          setImportErrors(errors);
+          setErrorsDialogOpen(true);
           toast.warning(`${successCount} estudantes importados com sucesso.`, {
-              description: `Falha em ${errorCount} linhas. Erros: ${errors.map((e: any) => e.error).join('; ')}`,
-            duration: 8000,
+            description: `Falha em ${errorCount} linhas. Verifique os detalhes para corrigir.`,
           });
         } else {
           toast.success(`${successCount} estudantes importados com sucesso!`);
@@ -126,6 +133,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
         queryClient.invalidateQueries({ queryKey: ['students'] });
         setImportOpen(false);
         setImportFile(null);
+        setImportErrors([]);
       } catch (e: any) {
         toast.error("Falha ao importar arquivo.", { description: e.message });
       } finally {
@@ -215,6 +223,13 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
   }
 
   return (
+    <>
+    <ImportErrorsDialog
+      isOpen={isErrorsDialogOpen}
+      onOpenChange={setErrorsDialogOpen}
+      errors={importErrors}
+      fileName={importFile?.name || ''}
+    />
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -401,5 +416,6 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
         </Table>
       </CardContent>
     </Card>
+    </>
   );
 }
