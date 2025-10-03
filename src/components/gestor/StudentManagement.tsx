@@ -157,7 +157,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
+        const worksheet = workbook.Sheets[sheetName]; 
         const json = XLSX.utils.sheet_to_json(worksheet);
         processData(json);
       };
