@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Heart, Users, GraduationCap, Star } from "lucide-react";
 
 export default function Auth() {
-  const { user, signIn } = useAuth();
+  const { user, signIn, signUp } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -17,13 +17,6 @@ export default function Auth() {
   const [loginForm, setLoginForm] = useState({
     email: "",
     password: "",
-  });
-
-  const [signupForm, setSignupForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
   });
 
   if (user) {
@@ -57,50 +50,6 @@ export default function Auth() {
       });
     }
 
-    setLoading(false);
-  };
-
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (signupForm.password !== signupForm.confirmPassword) {
-      toast({
-        title: "Erro",
-        description: "As senhas não coincidem.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (signupForm.password.length < 6) {
-      toast({
-        title: "Erro",
-        description: "A senha deve ter pelo menos 6 caracteres.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const { error } = await signUp(signupForm.email, signupForm.password, signupForm.name);
-      
-      if (error) {
-        toast({
-          title: "Erro no cadastro",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Cadastro realizado com sucesso!",
-          description: "Verifique seu email para confirmar a conta.",
-        });
-      }
-    } catch (error) {
-      console.error("Signup error:", error);
-    }
     setLoading(false);
   };
 

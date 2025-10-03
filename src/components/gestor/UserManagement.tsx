@@ -290,6 +290,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
             </DialogContent>
           </Dialog>
         </div>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>
