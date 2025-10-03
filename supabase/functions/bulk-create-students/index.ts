@@ -1,6 +1,13 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
-import { corsHeaders } from '../_shared/cors.ts'
+
+const allowedOrigins = [
+  'https://gestao-atipicos.vercel.app', // Produção
+  'http://localhost:5173',             // Desenvolvimento Vite (padrão)
+  'http://localhost:8080',             // Desenvolvimento Docker
+];
+
+const corsHeaders = { 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 
 // Schema para validar cada linha do CSV de estudantes
 const studentSchema = z.object({
@@ -50,9 +57,16 @@ function parseDate(dateInput: string | number | undefined): string | undefined {
 }
 
 Deno.serve(async (req) => {
+  const origin = req.headers.get("Origin")!;
+  const responseHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
+
+  if (allowedOrigins.includes(origin)) {
+    responseHeaders['Access-Control-Allow-Origin'] = origin;
+  }
+
   // Lida com a requisição pre-flight de CORS
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: responseHeaders });
   }
   
   console.log(`[${new Date().toISOString()}] Received request for bulk-create-students: ${req.method}`);
@@ -67,7 +81,7 @@ Deno.serve(async (req) => {
 
     if (studentList.length === 0) {
       return new Response(JSON.stringify({ successCount: 0, errorCount: 1, errors: [{ line: 0, error: "O arquivo enviado está vazio ou não contém dados válidos." }] }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 });
+        headers: responseHeaders, status: 400 });
     }
 
     const supabaseAdmin = createClient(
@@ -123,7 +137,7 @@ Deno.serve(async (req) => {
     }
     
     return new Response(JSON.stringify(results), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: responseHeaders,
       status: 200,
     });
 
@@ -135,8 +149,8 @@ Deno.serve(async (req) => {
       errors: [{ line: 0, error: `Erro inesperado no servidor: ${error.message}. Verifique os logs da função no Supabase.` }],
     };
     return new Response(JSON.stringify(results), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200, // Always return 200 OK, let the frontend handle the error display.
+      headers: responseHeaders,
+      status: 500,
     });
   }
 });
