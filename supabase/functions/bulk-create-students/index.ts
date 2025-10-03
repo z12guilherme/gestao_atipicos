@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
       errors: [] as { line: number, error: string }[],
     };
 
-    const studentsToInsert = [];
+    const studentsToInsert: { data: z.infer<typeof studentSchema>, line: number }[] = [];
 
     for (const [index, studentData] of studentList.entries()) {
       const line = index + 2; // +1 para o índice base 1, +1 para o cabeçalho do CSV
@@ -106,21 +106,21 @@ Deno.serve(async (req) => {
       }
       
       // Adiciona o estudante validado à lista para inserção em lote
-      studentsToInsert.push(validation.data);
+      studentsToInsert.push({ data: validation.data, line });
     }
 
     if (studentsToInsert.length > 0) {
       const { error: insertError } = await supabaseAdmin
         .from('students')
-        .insert(studentsToInsert);
+        .insert(studentsToInsert.map(item => item.data)); // Insere apenas os dados
 
       if (insertError) {
         console.error('Supabase insert error:', insertError);
         // Se a inserção em lote falhar, todos os estudantes na lista são considerados erros.
         results.errorCount += studentsToInsert.length;
-        // Adiciona um erro para cada linha que falhou na inserção.
-        studentsToInsert.forEach((_, index) => {
-          results.errors.push({ line: index + 2, error: `Falha na inserção no banco de dados: ${insertError.message}` });
+        // Adiciona um erro para cada linha que falhou, usando o número da linha original.
+        studentsToInsert.forEach((item) => {
+          results.errors.push({ line: item.line, error: `Falha na inserção no banco de dados: ${insertError.message}` });
         });
         results.successCount = 0;
       } else {
