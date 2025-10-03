@@ -208,6 +208,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>{editingUser ? 'Editar Usuário' : 'Cadastrar Novo Usuário'}</DialogTitle>
+                <DialogDescription>Preencha os campos abaixo para {editingUser ? 'atualizar o perfil do' : 'criar um novo'} usuário.</DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 {!editingUser && (

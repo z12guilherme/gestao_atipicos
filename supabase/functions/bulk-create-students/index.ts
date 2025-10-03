@@ -1,13 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
-
-const allowedOrigins = [
-  'https://gestao-atipicos.vercel.app', // Produção
-  'http://localhost:5173',             // Desenvolvimento Vite (padrão)
-  'http://localhost:8080',             // Desenvolvimento Docker
-];
-
-const corsHeaders = { 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 // Schema para validar cada linha do CSV de estudantes
 const studentSchema = z.object({
@@ -57,12 +50,7 @@ function parseDate(dateInput: string | number | undefined): string | undefined {
 }
 
 Deno.serve(async (req) => {
-  const origin = req.headers.get("Origin")!;
-  const responseHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
-
-  if (allowedOrigins.includes(origin)) {
-    responseHeaders['Access-Control-Allow-Origin'] = origin;
-  }
+  const responseHeaders = getCorsHeaders(req);
 
   // Lida com a requisição pre-flight de CORS
   if (req.method === 'OPTIONS') {

@@ -201,6 +201,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>{editingStudent ? 'Editar Estudante' : 'Cadastrar Novo Estudante'}</DialogTitle>
+                  <DialogDescription>Preencha os campos abaixo para {editingStudent ? 'atualizar os dados do' : 'cadastrar um novo'} estudante.</DialogDescription>
                 </DialogHeader>
                 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
