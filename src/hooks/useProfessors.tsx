@@ -9,7 +9,8 @@ export interface Professor {
   created_at: string;
   updated_at: string;
   // Campos opcionais para joins
-  profile?: { name: string; email?: string };
+  name?: string;
+  email?: string;
 }
 
 export function useProfessors() {
@@ -19,13 +20,11 @@ export function useProfessors() {
   const { data: professors, isLoading } = useQuery({
     queryKey,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('professors')
-        .select('*, profile:user_id(name, user_id(email))') // Sintaxe de join aninhado correta
-        .order('created_at', { ascending: false });
+      // Chama a função RPC para buscar os dados de forma segura e eficiente
+      const { data, error } = await supabase.rpc('get_professors_with_details');
       
       if (error) throw error;
-      return data?.map(p => ({ ...p, profile: { ...p.profile, email: (p.profile as any)?.user_id?.email } })) as Professor[] || [];
+      return data as Professor[];
     },
   });
 
