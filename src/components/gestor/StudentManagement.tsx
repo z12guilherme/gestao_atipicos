@@ -22,14 +22,17 @@ import { useQueryClient } from "@tanstack/react-query";
 
 // Schema de validação ATUALIZADO com todos os seus campos
 const studentSchema = z.object({
-  name: z.string().trim().min(3, "Nome deve ter pelo menos 3 caracteres"),
-  cpf: z.string().trim().max(14, "CPF inválido").optional(),
-  birth_date: z.string().nonempty("Data de nascimento é obrigatória"),
-  class_name: z.string().trim().optional(),
-  diagnosis: z.string().trim().optional(),
-  special_needs: z.string().trim().optional(),
-  medical_info: z.string().trim().optional(),
-  status: z.enum(['ativo', 'inativo', 'transferido']),
+  name: z.string({ required_error: "O nome é obrigatório." }).trim().min(3, "Nome deve ter pelo menos 3 caracteres"),
+  birth_date: z.string({ required_error: "A data de nascimento é obrigatória." }).nonempty("Data de nascimento é obrigatória"),
+  status: z.enum(['ativo', 'inativo', 'transferido'], { required_error: "O status é obrigatório." }),
+  // Campos opcionais
+  cpf: z.string().trim().max(14, "CPF inválido").optional().or(z.literal('')),
+  class_name: z.string().trim().optional().or(z.literal('')),
+  school_year: z.string().trim().optional().or(z.literal('')),
+  diagnosis: z.string().trim().optional().or(z.literal('')),
+  special_needs: z.string().trim().optional().or(z.literal('')),
+  medical_info: z.string().trim().optional().or(z.literal('')),
+  additional_info: z.string().trim().optional().or(z.literal('')),
 });
 
 type StudentFormData = z.infer<typeof studentSchema>;
@@ -63,8 +66,8 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
   const [isImporting, setIsImporting] = useState(false);
 
   const handleDownloadCsvTemplate = () => {
-    const csvContent = "name,birth_date,school_year,status,diagnosis,special_needs,additional_info\n" +
-      "Exemplo Aluno,2010-05-15,5º Ano,ativo,TDAH,Apoio pedagógico,Gosta de desenhar";
+    const csvContent = "name,birth_date,status,school_year,class_name,cpf,diagnosis,special_needs,medical_info,additional_info\n" +
+      "Exemplo Aluno,2010-05-15,ativo,5º Ano,Turma A,123.456.789-00,TDAH,Apoio pedagógico,Alergia a amendoim,Gosta de desenhar";
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -77,8 +80,8 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
 
   const handleDownloadXlsxTemplate = () => {
     const worksheetData = [
-      ["name", "birth_date", "school_year", "status", "diagnosis", "special_needs", "additional_info"],
-      ["Exemplo Aluno", "2010-05-15", "5º Ano", "ativo", "TDAH", "Apoio pedagógico", "Gosta de desenhar"]
+      ["name", "birth_date", "status", "school_year", "class_name", "cpf", "diagnosis", "special_needs", "medical_info", "additional_info"],
+      ["Exemplo Aluno", "2010-05-15", "ativo", "5º Ano", "Turma A", "123.456.789-00", "TDAH", "Apoio pedagógico", "Alergia a amendoim", "Gosta de desenhar"]
     ];
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
@@ -178,6 +181,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
     setValue("diagnosis", student.diagnosis || "");
     setValue("special_needs", student.special_needs || "");
     setValue("medical_info", student.medical_info || "");
+    // O campo additional_info não está no formulário, então não é setado aqui.
     setDialogOpen(true);
   };
   
@@ -231,7 +235,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                   </DialogHeader>
                   <div className="space-y-4 py-4">
                     <p className="text-sm text-muted-foreground">
-                      O arquivo deve conter as colunas: `name`, `birth_date`, `school_year`, `status`.
+                      As colunas obrigatórias são: `name`, `birth_date`, `status`.
                       O status deve ser `ativo`, `inativo` ou `transferido`.
                     </p>
                     <div className="flex gap-2">
@@ -245,7 +249,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                       </Button>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="import-file">Arquivo CSV</Label>
+                      <Label htmlFor="import-file">Arquivo (CSV ou XLSX)</Label>
                       <Input id="import-file" type="file" accept=".csv,.xlsx" onChange={(e) => setImportFile(e.target.files ? e.target.files[0] : null)} />
                     </div>
                   </div>

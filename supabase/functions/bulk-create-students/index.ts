@@ -4,20 +4,20 @@ import { corsHeaders } from '../_shared/cors.ts'
 
 // Schema para validar cada linha do CSV de estudantes
 const studentSchema = z.object({
-  name: z.string({ required_error: "A coluna 'name' é obrigatória." }).min(2, "O nome deve ter pelo menos 2 caracteres."),
+  name: z.string({ required_error: "A coluna 'name' é obrigatória." }).min(3, "O nome deve ter pelo menos 3 caracteres."),
   birth_date: z.string({ required_error: "A coluna 'birth_date' é obrigatória." }).min(1, "A data de nascimento é obrigatória."),
   status: z.enum(['ativo', 'inativo', 'transferido'], {
     errorMap: () => ({ message: "Status deve ser 'ativo', 'inativo' ou 'transferido'" })
   }),
   // Campos opcionais
-  cpf: z.string().nullable().optional(),
+  cpf: z.string().max(14).nullable().optional(),
   class_name: z.string().nullable().optional(),
-  school_year: z.string().nullable().optional(), // Adicionado para corresponder ao modelo
+  school_year: z.string().nullable().optional(),
   diagnosis: z.string().nullable().optional(),
   special_needs: z.string().nullable().optional(),
   additional_info: z.string().nullable().optional(),
   medical_info: z.string().nullable().optional(),
-}).strip(); // Adicionado .strip() para ignorar campos extras como 'school_year'
+}).strip();
 
 // Função para tentar converter a data para o formato AAAA-MM-DD
 function parseDate(dateStr: string | number | undefined): string | undefined {
