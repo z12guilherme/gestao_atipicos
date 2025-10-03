@@ -23,7 +23,10 @@ import { calculateAge } from "@/lib/utils";
 // Schema de validação ATUALIZADO com todos os seus campos
 const studentSchema = z.object({
   name: z.string({ required_error: "O nome é obrigatório." }).trim().min(3, "O nome deve ter pelo menos 3 caracteres."),
-  birth_date: z.string({ required_error: "A data de nascimento é obrigatória." }).min(1, "A data de nascimento é obrigatória."),
+  birth_date: z.preprocess(
+    (arg) => (arg === "" ? undefined : arg), // Transforma string vazia em undefined
+    z.string({ required_error: "A data de nascimento é obrigatória." }).min(1, "A data de nascimento é obrigatória.")
+  ),
   status: z.enum(['ativo', 'inativo', 'transferido'], { required_error: "O status é obrigatório." }),
   // Campos opcionais
   cpf: z.string().trim().max(14, "CPF inválido").nullable().optional(),
