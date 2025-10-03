@@ -7,13 +7,13 @@ import {
   Users, 
   GraduationCap, 
   UserPlus, 
-  Settings, 
-  TrendingUp, 
+  Settings,
+  TrendingUp,
   AlertCircle,
   CheckCircle,
   Clock,
   Heart,
-  UserCheck,
+  UserCheck, 
   Activity
 } from "lucide-react";
 import { UserManagement } from "@/components/gestor/UserManagement";
@@ -58,23 +58,30 @@ export function GestorDashboard() {
   return (
     <div className="space-y-8">
       {/* Header Section */}
-      <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
-        <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            {getWelcomeMessage()}
-          </h1>
-          <p className="text-lg text-muted-foreground mt-2">
-            Aqui está um resumo do seu sistema de gestão
-          </p>
-        </div>
-        <div className="flex items-center space-x-4">
-          <div className="text-right">
-            <p className="text-sm text-muted-foreground">Última atualização</p>
+      <div className="flex flex-col items-start justify-between gap-4 border-b border-gray-200 pb-6 dark:border-gray-800 md:flex-row md:items-center">
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+              {getWelcomeMessage()}
+            </h1>
+            <p className="text-lg text-muted-foreground">
+              Aqui está um resumo do seu sistema de gestão.
+            </p>
+          </div>
+          <div className="hidden border-l border-gray-300 pl-4 dark:border-gray-700 md:block">
+            <p className="text-sm text-muted-foreground">Data e Hora</p>
             <p className="text-sm font-medium">{new Date().toLocaleString('pt-BR')}</p>
           </div>
-          <Button size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-            <Activity className="mr-2 h-4 w-4" />
-            Relatórios
+        </div>
+        <div className="flex w-full items-center justify-start gap-2 md:w-auto md:justify-end">
+          <Button onClick={() => { setActiveTab("users"); setEditingUser(null); setUserDialogOpen(true); }}>
+            <UserPlus className="mr-2 h-4 w-4" /> Novo Usuário
+          </Button>
+          <Button variant="outline" onClick={() => { setActiveTab("students"); setEditingStudent(null); setStudentDialogOpen(true); }}>
+            <GraduationCap className="mr-2 h-4 w-4" /> Novo Estudante
+          </Button>
+          <Button variant="outline" onClick={() => toast.info("Em breve!", { description: "A funcionalidade de relatórios está em desenvolvimento." })}>
+            <Activity className="mr-2 h-4 w-4" /> Relatórios
           </Button>
         </div>
       </div>
@@ -168,7 +175,7 @@ export function GestorDashboard() {
       </div>
 
       {/* Quick Actions and Recent Activity */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <Card className="border-0 shadow-lg">
             <CardHeader>
@@ -212,49 +219,7 @@ export function GestorDashboard() {
           </Card>
         </div>
 
-        <div>
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Settings className="h-5 w-5 text-purple-600" />
-                <span>Ações Rápidas</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button 
-                className="w-full justify-start bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                onClick={() => {
-                  setActiveTab("users");
-                  setEditingUser(null);
-                  setUserDialogOpen(true);
-                }}
-              >
-                <UserPlus className="mr-2 h-4 w-4" />
-                Novo Usuário
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => {
-                  setActiveTab("students");
-                  setEditingStudent(null);
-                  setStudentDialogOpen(true);
-                }}
-              >
-                <GraduationCap className="mr-2 h-4 w-4" />
-                Novo Estudante
-              </Button>
-              <Button variant="outline" className="w-full justify-start" onClick={() => setActiveTab("assignments")}>
-                <Users className="mr-2 h-4 w-4" />
-                Gerenciar Atribuições
-              </Button>
-              <Button variant="outline" className="w-full justify-start" onClick={() => toast.info("Em breve!", { description: "A funcionalidade de relatórios está em desenvolvimento." })}>
-                <Activity className="mr-2 h-4 w-4" />
-                Ver Relatórios
-              </Button>
-            </CardContent>
-          </Card>
-
+        <div className="lg:col-span-3">
           <Card className="border-0 shadow-lg mt-6">
             <CardHeader>
               <CardTitle className="text-sm">Status do Sistema</CardTitle>
