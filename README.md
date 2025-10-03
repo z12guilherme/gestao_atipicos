@@ -7,6 +7,11 @@
   <p align="center">
     Plataforma completa para gestão e acompanhamento de estudantes atípicos, conectando cuidadores, famílias e gestores em um ambiente colaborativo e seguro.
   </p>
+  <p align="center">
+    <a href="https://gestao-atipicos.vercel.app/" target="_blank">
+      <strong>Acessar a aplicação →</strong>
+    </a>
+  </p>
 </div>
 
 <p align="center">
@@ -19,17 +24,23 @@
 
 ---
 
+<!-- Inserir um screenshot ou GIF da aplicação aqui -->
+<!-- <p align="center">
+  <img src="caminho/para/screenshot.png" alt="Screenshot do Dashboard" />
+</p> -->
+
 ## ✨ Funcionalidades Principais
 
 O sistema foi projetado com diferentes níveis de acesso, oferecendo um dashboard personalizado para cada perfil de usuário:
 
 #### 👤 **Dashboard do Gestor**
-- **Visão Geral:** Cards com estatísticas em tempo real sobre estudantes, cuidadores e responsáveis.
-- **Ações Rápidas:** Botões para acesso rápido às principais funcionalidades, como cadastrar novos usuários e estudantes.
+- **Visão Geral:** Dashboard interativo com estatísticas em tempo real sobre estudantes (ativos/inativos), cuidadores e responsáveis.
+- **Ações Rápidas:** Acesso rápido para cadastrar novos usuários e estudantes, além de gerenciar atribuições.
 - **Gerenciamento Completo (CRUD):**
   - **Usuários:** Crie, edite e exclua perfis de gestores, cuidadores e responsáveis.
   - **Estudantes:** Gerencie os dados completos dos estudantes, incluindo informações médicas e necessidades especiais.
   - **Atribuições:** Vincule cuidadores a estudantes de forma intuitiva.
+- **Importação em Massa:** Funcionalidade para importar múltiplos usuários ou estudantes de uma vez a partir de arquivos **CSV** ou **XLSX**, agilizando o cadastro inicial.
 
 #### ❤️ **Dashboard do Responsável**
 - **Privacidade em Primeiro Lugar:** Acesso restrito apenas às informações dos estudantes vinculados ao seu perfil.
@@ -38,7 +49,7 @@ O sistema foi projetado com diferentes níveis de acesso, oferecendo um dashboar
 #### 🤝 **Dashboard do Cuidador**
 - **Foco no Cuidado:** Visualize rapidamente os estudantes que estão sob sua responsabilidade.
 - **Agenda Diária:** Acompanhe as atividades programadas para o dia.
-- **Registro de Observações:** (Funcionalidade futura) Ferramenta para registrar o progresso e ocorrências diárias.
+- **Registro de Observações:** (Funcionalidade futura) Ferramenta para registrar o progresso e ocorrências diárias, facilitando a comunicação com a equipe e a família.
 
 ## 🚀 Tecnologias Utilizadas
 
@@ -59,6 +70,8 @@ Este projeto foi construído com uma stack moderna e robusta, focada em produtiv
 - **Formulários:**
   - **[React Hook Form](https://react-hook-form.com/):** Gerenciamento de formulários performático e flexível.
   - **[Zod](https://zod.dev/):** Validação de schemas com inferência de tipos.
+- **Utilitários:**
+  - **[SheetJS (xlsx)](https://sheetjs.com/):** Para leitura e processamento de planilhas XLSX.
 
 ## ⚙️ Como Executar o Projeto Localmente
 
@@ -66,14 +79,15 @@ Siga os passos abaixo para configurar e rodar a aplicação no seu ambiente de d
 
 ### Pré-requisitos
 
-1.  **Node.js:** Versão 18.x ou superior.
-2.  **Supabase Account:** Crie uma conta gratuita em supabase.com.
+1. **Node.js:** Versão 18.x ou superior.
+2. **Conta no Supabase:** Crie uma conta gratuita em [supabase.com](https://supabase.com).
+3. **Supabase CLI:** Instale a CLI do Supabase para gerenciar as Edge Functions localmente. Siga as [instruções de instalação](https://supabase.com/docs/guides/cli/getting-started).
 
 ### 1. Clonar o Repositório
 
 ```bash
-git clone https://github.com/seu-usuario/gestao_atipicos-main.git
-cd gestao_atipicos-main
+git clone https://github.com/z12guilherme/gestao_atipicos.git
+cd gestao_atipicos
 ```
 
 ### 2. Instalar as Dependências
