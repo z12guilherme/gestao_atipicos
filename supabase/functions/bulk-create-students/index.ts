@@ -1,19 +1,22 @@
-// supabase/functions/bulk-create-users/index.ts
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { corsHeaders } from '../_shared/cors.ts'
 
-// Schema para validar cada linha do CSV
-const userSchema = z.object({
-  email: z.string().email("Email inválido"),
-  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+// Schema para validar cada linha do CSV de estudantes
+const studentSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  role: z.enum(['gestor', 'cuidador', 'responsavel'], {
-    errorMap: () => ({ message: "Perfil deve ser 'gestor', 'cuidador' ou 'responsavel'" })
+  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data de nascimento deve estar no formato AAAA-MM-DD").or(z.string().nonempty("Data de nascimento é obrigatória")),
+  school_year: z.string().optional(),
+  status: z.enum(['ativo', 'inativo', 'transferido', 'avaliando'], {
+    errorMap: () => ({ message: "Status deve ser 'ativo', 'inativo', 'transferido' ou 'avaliando'" })
   }),
-  // Adicione outros campos opcionais que você queira importar
+  // Campos opcionais
   cpf: z.string().optional(),
-  phone: z.string().optional(),
+  class_name: z.string().optional(),
+  diagnosis: z.string().optional(),
+  special_needs: z.string().optional(),
+  additional_info: z.string().optional(),
+  medical_info: z.string().optional(),
 });
 
 Deno.serve(async (req) => {
@@ -21,29 +24,31 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
-
+  
   try {
-    const userList = await req.json()
-    if (!Array.isArray(userList)) {
-      throw new Error("O corpo da requisição deve ser um array de usuários.");
+    const studentList = await req.json();
+    if (!Array.isArray(studentList)) {
+      throw new Error("O corpo da requisição deve ser um array de estudantes.");
     }
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-
+    
     const results = {
       successCount: 0,
       errorCount: 0,
       errors: [] as { line: number, error: string }[],
     };
 
-    for (const [index, userData] of userList.entries()) {
+    const studentsToInsert = [];
+
+    for (const [index, studentData] of studentList.entries()) {
       const line = index + 2; // +1 para o índice base 1, +1 para o cabeçalho do CSV
 
       // Validação com Zod
-      const validation = userSchema.safeParse(userData);
+      const validation = studentSchema.safeParse(studentData);
       if (!validation.success) {
         results.errorCount++;
         const errorMessages = validation.error.flatten().fieldErrors;
@@ -51,42 +56,23 @@ Deno.serve(async (req) => {
         results.errors.push({ line, error: `Linha ${line}: ${firstError}` });
         continue;
       }
-
-      const { email, password, name, role, ...rest } = validation.data;
-
-      // 1. Cria o usuário no Auth
-      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-      });
-
-      if (authError) {
-        results.errorCount++;
-        results.errors.push({ line, error: `Linha ${line} (Email: ${email}): ${authError.message}` });
-        continue;
-      }
-
-      // 2. Insere o perfil na tabela 'profiles'
-      const { error: profileError } = await supabaseAdmin.from('profiles').insert({
-        id: authData.user.id,
-        name,
-        role,
-        email,
-        ...rest,
-      });
-
-      if (profileError) {
-        // Se a inserção do perfil falhar, deleta o usuário do Auth para não deixar lixo
-        await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-        results.errorCount++;
-        results.errors.push({ line, error: `Linha ${line} (Email: ${email}): ${profileError.message}` });
-        continue;
-      }
-
-      results.successCount++;
+      
+      // Adiciona o estudante validado à lista para inserção em lote
+      studentsToInsert.push(validation.data);
     }
 
+    if (studentsToInsert.length > 0) {
+      const { error: insertError, count } = await supabaseAdmin
+        .from('students')
+        .insert(studentsToInsert);
+
+      if (insertError) {
+        // Se a inserção em lote falhar, reportamos um erro geral
+        throw new Error(`Falha ao inserir estudantes: ${insertError.message}`);
+      }
+      results.successCount = count ?? 0;
+    }
+    
     return new Response(JSON.stringify(results), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
