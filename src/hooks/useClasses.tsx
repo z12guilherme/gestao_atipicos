@@ -45,10 +45,28 @@ export function useClasses() {
     },
   });
 
+  const deleteClass = useMutation({
+    mutationFn: async (classId: string) => {
+      const { error } = await supabase
+        .from('classes')
+        .delete()
+        .eq('id', classId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+      toast.success('Turma excluída com sucesso!');
+    },
+    onError: (error: any) => {
+      toast.error(`Erro ao excluir turma: ${error.message}`);
+    },
+  });
+
   return {
     classes: classes || [],
     isLoading,
     createClass,
-    // Futuras mutações (update, delete) podem ser adicionadas aqui.
+    deleteClass,
   };
 }
