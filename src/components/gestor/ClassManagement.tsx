@@ -33,7 +33,7 @@ export function ClassManagement({ isDialogOpen, setDialogOpen }: ClassManagement
   const onSubmit = async (data: ClassFormData) => {
     await createClass.mutateAsync(data);
     reset();
-    setIsDialogOpen(false);
+    setDialogOpen(false);
   };
 
   if (isLoading) {
@@ -48,7 +48,7 @@ export function ClassManagement({ isDialogOpen, setDialogOpen }: ClassManagement
             <CardTitle>Gerenciar Turmas</CardTitle>
             <CardDescription>Adicione, edite ou remova as turmas da instituição.</CardDescription>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={() => reset()}>
                 <PlusCircle className="mr-2 h-4 w-4" />
@@ -67,7 +67,7 @@ export function ClassManagement({ isDialogOpen, setDialogOpen }: ClassManagement
                   {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
                 </div>
                 <div className="flex justify-end space-x-2 pt-2">
-                  <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
+                  <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)}>Cancelar</Button>
                   <Button type="submit" disabled={createClass.isPending}>
                     {createClass.isPending ? 'Criando...' : 'Criar Turma'}
                   </Button>
