@@ -19,7 +19,7 @@ import Papa from "papaparse";
 import * as XLSX from 'xlsx';
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { ImportErrorsDialog } from "../shared/ImportErrorsDialog";
+import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog";
 
 // Schema de validação ATUALIZADO com todos os seus campos
 const studentSchema = z.object({
