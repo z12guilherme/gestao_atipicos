@@ -11,15 +11,14 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { UserPlus, Edit, Save, Trash2, Stethoscope, FileText, BadgeInfo, Upload, FileDown } from "lucide-react";
 import { useStudents, Student } from "@/hooks/useStudents"; // Hook para buscar estudantes
+import { useFileImport } from "@/hooks/useFileImport";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import Papa from "papaparse";
 import * as XLSX from 'xlsx';
-import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
 import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog.tsx";
+import { calculateAge } from "@/lib/utils";
 
 // Schema de validação ATUALIZADO com todos os seus campos
 const studentSchema = z.object({
@@ -38,19 +37,6 @@ const studentSchema = z.object({
 
 type StudentFormData = z.infer<typeof studentSchema>;
 
-// Função para calcular a idade
-const calculateAge = (birthDate: string | null | undefined) => {
-    if (!birthDate) return '';
-    const today = new Date();
-    const birthDateObj = new Date(birthDate);
-    let age = today.getFullYear() - birthDateObj.getFullYear();
-    const m = today.getMonth() - birthDateObj.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDateObj.getDate())) {
-        age--;
-    }
-    return `${age} anos`;
-};
-
 interface StudentManagementProps {
   isDialogOpen: boolean;
   setDialogOpen: Dispatch<SetStateAction<boolean>>;
@@ -61,12 +47,14 @@ interface StudentManagementProps {
 export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent, setEditingStudent }: StudentManagementProps) {
 
   const { students, isLoading, createStudent, updateStudent, deleteStudent } = useStudents();
-  const queryClient = useQueryClient();
-  const [isImportOpen, setImportOpen] = useState(false);
-  const [importFile, setImportFile] = useState<File | null>(null);
-  const [isImporting, setIsImporting] = useState(false);
-  const [importErrors, setImportErrors] = useState<{ line: number; error: string }[]>([]);
-  const [isErrorsDialogOpen, setErrorsDialogOpen] = useState(false);
+  const {
+    isImportOpen, setImportOpen,
+    importFile, setImportFile,
+    isImporting,
+    importErrors,
+    isErrorsDialogOpen, setErrorsDialogOpen,
+    handleImport,
+  } = useFileImport({ supabaseFunction: 'bulk-create-students', invalidateQueryKey: 'students', entityName: 'estudantes' });
 
   const handleDownloadCsvTemplate = () => {
     const csvContent = "name,birth_date,status,school_year,class_name,cpf,diagnosis,special_needs,medical_info,additional_info\r\n" +
@@ -91,85 +79,6 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
     XLSX.utils.book_append_sheet(workbook, worksheet, "Estudantes");
     // Gera o arquivo e força o download
     XLSX.writeFile(workbook, "modelo_importacao_estudantes.xlsx");
-  };
-
-  const handleImport = () => {
-    if (!importFile) {
-      toast.error("Por favor, selecione um arquivo CSV para importar.");
-      return;
-    }
-
-    setIsImporting(true);
-
-    const processData = async (data: any[]) => {
-      try {
-        // Filtra linhas que não têm um nome (provavelmente linhas vazias ou de formatação)
-        // e garante que todos os dados sejam strings para evitar erros.
-        const validData = data.filter(row => row && typeof row.name === 'string' && row.name.trim() !== '');
-
-        if (validData.length === 0) {
-          toast.error("Nenhum dado válido encontrado no arquivo.", { description: "Verifique se a planilha não está vazia e se a coluna 'name' está preenchida." });
-          return;
-        }
-
-        const { data: responseData, error } = await supabase.functions.invoke('bulk-create-students', {
-          body: validData,
-        });
-
-        if (error) throw new Error(error.message);
-
-        const { successCount, errorCount, errors } = responseData;
-
-        if (errorCount > 0) {
-          setImportErrors(errors);
-          setErrorsDialogOpen(true);
-          toast.warning(`${successCount} estudantes importados com sucesso.`, {
-            description: `Falha em ${errorCount} linhas. Verifique os detalhes para corrigir.`,
-          });
-        } else {
-          toast.success(`${successCount} estudantes importados com sucesso!`);
-        }
-
-        queryClient.invalidateQueries({ queryKey: ['students'] });
-        setImportOpen(false);
-        setImportFile(null);
-        setImportErrors([]);
-      } catch (e: any) {
-        toast.error("Falha ao importar arquivo.", { description: e.message });
-      } finally {
-        setIsImporting(false);
-      }
-    };
-
-    if (importFile.type === 'text/csv' || importFile.name.endsWith('.csv')) {
-      Papa.parse(importFile, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => processData(results.data),
-        error: (error) => {
-          toast.error("Erro ao processar o arquivo CSV.", { description: error.message });
-          setIsImporting(false);
-        }
-      });
-    } else if (importFile.type.includes('spreadsheetml') || importFile.name.endsWith('.xlsx')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const data = new Uint8Array(e.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName]; 
-        const json = XLSX.utils.sheet_to_json(worksheet);
-        processData(json);
-      };
-      reader.onerror = (error) => {
-        toast.error("Erro ao ler o arquivo XLSX.", { description: error.message });
-        setIsImporting(false);
-      };
-      reader.readAsArrayBuffer(importFile);
-    } else {
-      toast.error("Formato de arquivo não suportado. Use CSV ou XLSX.");
-      setIsImporting(false);
-    }
   };
   
   const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm<StudentFormData>({

@@ -17,14 +17,12 @@ import {
   User
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useStudents } from "@/hooks/useStudents";
+import { calculateAge } from "@/lib/utils";
 
 export function ResponsavelDashboard() {
-  const { profile } = useAuth();
-  const { students } = useStudents();
+  const { profile, guardianStudents, loading } = useAuth();
 
   // Mock data - in real app, this would come from API based on guardian relationships
-  const myChildren = students.slice(0, 2); // Simulate children
   const recentActivities = [
     { date: "Hoje", activity: "Terapia ocupacional", status: "Concluída", child: "Ana Silva" },
     { date: "Hoje", activity: "Atividade sensorial", status: "Em andamento", child: "Ana Silva" },
@@ -51,6 +49,10 @@ export function ResponsavelDashboard() {
     if (hour < 18) return "Boa tarde";
     return "Boa noite";
   };
+
+  if (loading) {
+    return <div className="p-6 text-center">Carregando...</div>;
+  }
 
   return (
     <div className="space-y-8">
@@ -94,7 +96,7 @@ export function ResponsavelDashboard() {
             </div>
           </CardHeader>
           <CardContent className="relative">
-            <div className="text-3xl font-bold text-orange-900 dark:text-orange-100">{myChildren.length}</div>
+            <div className="text-3xl font-bold text-orange-900 dark:text-orange-100">{guardianStudents.length}</div>
             <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
               Cadastrados no sistema
             </p>
@@ -240,10 +242,10 @@ export function ResponsavelDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {myChildren.length === 0 ? (
+              {guardianStudents.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">Nenhum filho cadastrado</p>
               ) : (
-                myChildren.map((child) => (
+                guardianStudents.map((child) => (
                   <div key={child.id} className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
                     <div className="flex items-center space-x-3 mb-2">
                       <div className="h-10 w-10 rounded-full bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center text-white font-medium">
@@ -252,7 +254,7 @@ export function ResponsavelDashboard() {
                       <div className="flex-1">
                         <p className="font-medium text-sm">{child.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {child.class_name || 'Sem turma'} • {child.status}
+                          {child.class_name || 'Sem turma'} • {calculateAge(child.birth_date)}
                         </p>
                       </div>
                     </div>

@@ -5,23 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import Auth from "./pages/Auth";
-import NotFound from "./pages/NotFound";
-import GuardianDashboard from "./pages/GuardianDashboard";
-import { GestorDashboard } from "./pages/GestorDashboard";
-
-const AppRoutes = () => {
-  const { profile, loading } = useAuth();
-
-  if (loading) {
-    return <div className="flex h-screen items-center justify-center">Carregando...</div>;
-  }
-
-  if (profile?.role === 'responsavel') {
-    return <Navigate to="/dashboard-responsavel" replace />;
-  }
-  return <GestorDashboard />;
-}
+import Auth from "@/pages/Auth";
+import NotFound from "@/pages/NotFound";
+import Dashboard from "@/pages/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -38,17 +24,9 @@ const App = () => (
               path="/" 
               element={
                 <ProtectedRoute>
-                  <AppRoutes />
+                  <Dashboard />
                 </ProtectedRoute>
               } 
-            />
-            <Route 
-              path="/dashboard-responsavel"
-              element={
-                <ProtectedRoute allowedRoles={['responsavel']}>
-                  <GuardianDashboard />
-                </ProtectedRoute>
-              }
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

@@ -11,15 +11,14 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { UserPlus, Edit, Save, Trash2, Upload, FileDown } from "lucide-react";
 import { useUsers, User } from "@/hooks/useUsers"; // Hook para buscar usuários
+import { useFileImport } from "@/hooks/useFileImport";
 import { useForm } from "react-hook-form";
 import { useStudents } from "@/hooks/useStudents"; // Hook para buscar estudantes
-import { Check, ChevronsUpDown } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import Papa from "papaparse";
-import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from 'xlsx';
+import { MultiSelect } from "@/components/ui/MultiSelect";
+import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog.tsx";
 
 // Schema base para os dados do perfil, sem email e senha
 const profileSchema = z.object({
@@ -29,7 +28,7 @@ const profileSchema = z.object({
   role: z.enum(['gestor', 'cuidador', 'responsavel']),
   function_title: z.string().trim().max(100, "Função muito longa").optional(),
   work_schedule: z.string().trim().max(500, "Horário muito longo").optional(),
-  student_ids: z.array(z.string()).optional(), // Para vincular estudantes
+  student_ids: z.array(z.string()).default([]), // Para vincular estudantes
 });
 
 // Schema para criar um novo usuário (email e senha são obrigatórios)
@@ -54,13 +53,16 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
 
   const { users, isLoading, createUser, updateUser, deleteUser } = useUsers();
   const { students } = useStudents();
-  const queryClient = useQueryClient();
-  
-  const [isImportOpen, setImportOpen] = useState(false);
-  const [importFile, setImportFile] = useState<File | null>(null);
-  const [isImporting, setIsImporting] = useState(false);
+  const {
+    isImportOpen, setImportOpen,
+    importFile, setImportFile,
+    isImporting,
+    importErrors,
+    isErrorsDialogOpen, setErrorsDialogOpen,
+    handleImport,
+  } = useFileImport({ supabaseFunction: 'bulk-create-users', invalidateQueryKey: 'users', entityName: 'usuários' });
   // LINHA CORRIGIDA
-  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<UserFormData>({
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<UserFormData>({ key: editingUser ? 'update' : 'create',
     resolver: zodResolver(editingUser ? updateUserSchema : createUserSchema),
   });
 
@@ -74,6 +76,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
     setValue("phone", user.phone || "");
     setValue("function_title", user.function_title || "");
     setValue("work_schedule", user.work_schedule || "");
+    // student_ids será carregado separadamente ou virá do perfil do usuário
     setDialogOpen(true);
   };
   
@@ -131,79 +134,18 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
     XLSX.writeFile(workbook, "modelo_importacao_usuarios.xlsx");
   };
 
-  const handleImport = () => {
-    if (!importFile) {
-      toast.error("Por favor, selecione um arquivo para importar.");
-      return;
-    }
-
-    setIsImporting(true);
-
-    const processData = async (data: any[]) => {
-      try {
-        const { data: responseData, error } = await supabase.functions.invoke('bulk-create-users', {
-          body: data,
-        });
-
-        if (error) throw new Error(error.message);
-
-        const { successCount, errorCount, errors } = responseData;
-
-        if (errorCount > 0) {
-          toast.warning(`${successCount} usuários importados com sucesso.`, {
-            description: `${errorCount} linhas continham erros. ${errors.map((e: any) => e.error).join('; ')}`,
-            duration: 8000,
-          });
-        } else {
-          toast.success(`${successCount} usuários importados com sucesso!`);
-        }
-
-        queryClient.invalidateQueries({ queryKey: ['users'] });
-        setImportOpen(false);
-        setImportFile(null);
-      } catch (e: any) {
-        toast.error("Falha ao importar arquivo.", { description: e.message });
-      } finally {
-        setIsImporting(false);
-      }
-    };
-
-    if (importFile.type === 'text/csv' || importFile.name.endsWith('.csv')) {
-      Papa.parse(importFile, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => processData(results.data),
-        error: (error) => {
-          toast.error("Erro ao processar o arquivo CSV.", { description: error.message });
-          setIsImporting(false);
-        }
-      });
-    } else if (importFile.type.includes('spreadsheetml') || importFile.name.endsWith('.xlsx')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const data = new Uint8Array(e.target?.result as ArrayBuffer); // Ensure data is Uint8Array
-        const workbook = XLSX.read(data, { type: 'array', cellDates: true }); // Add cellDates: true
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const json = XLSX.utils.sheet_to_json(worksheet);
-        processData(json);
-      };
-      reader.onerror = (error) => {
-        toast.error("Erro ao ler o arquivo XLSX.", { description: error.message });
-        setIsImporting(false);
-      };
-      reader.readAsArrayBuffer(importFile);
-    } else {
-      toast.error("Formato de arquivo não suportado. Use CSV ou XLSX.");
-      setIsImporting(false);
-    }
-  };
-
   if (isLoading) {
     return <Card><CardContent className="p-6 text-center">Carregando...</CardContent></Card>;
   }
 
   return (
+    <>
+    <ImportErrorsDialog
+      isOpen={isErrorsDialogOpen}
+      onOpenChange={setErrorsDialogOpen}
+      errors={importErrors}
+      fileName={importFile?.name || ''}
+    />
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -306,20 +248,15 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
                 )}
                 {selectedRole === 'responsavel' && (
                   <div className="space-y-2">
-                    <Label>Estudantes Vinculados</Label>
-                    <Select onValueChange={(value) => {
-                      const currentIds = watch('student_ids') || [];
-                      const newIds = currentIds.includes(value)
-                        ? currentIds.filter(id => id !== value)
-                        : [...currentIds, value];
-                      setValue('student_ids', newIds);
-                    }}>
-                      <SelectTrigger><SelectValue placeholder="Selecione os estudantes..." /></SelectTrigger>
-                      <SelectContent>
-                        {students.map(student => <SelectItem key={student.id} value={student.id}>{student.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <p className="text-sm text-muted-foreground">Estudantes selecionados: {watch('student_ids')?.length || 0}</p>
+                    <Label htmlFor="student_ids">Estudantes Vinculados</Label>
+                    <MultiSelect
+                      options={students.map(s => ({ value: s.id, label: s.name }))}
+                      selected={watch('student_ids') || []}
+                      onChange={(selected) => setValue('student_ids', selected)}
+                      placeholder="Selecione os estudantes..."
+                      className="w-full"
+                    />
+                    {errors.student_ids && <p className="text-sm text-destructive">{errors.student_ids.message}</p>}
                   </div>
                 )}
                 <div className="flex justify-end space-x-2 pt-2">
@@ -363,7 +300,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
                       <AlertDialogHeader><AlertDialogTitle>Você tem certeza?</AlertDialogTitle><AlertDialogDescription>Esta ação não pode ser desfeita. Isso excluirá permanentemente o usuário e seus dados de nossos servidores.</AlertDialogDescription></AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => deleteUser.mutate(user.user_id)} disabled={deleteUser.isPending}>Excluir</AlertDialogAction>
+                        <AlertDialogAction onClick={() => deleteUser.mutate(user.user_id)} disabled={deleteUser.isPending}>{deleteUser.isPending ? 'Excluindo...' : 'Excluir'}</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -374,5 +311,6 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
         </Table>
       </CardContent>
     </Card>
+    </>
   );
 }
