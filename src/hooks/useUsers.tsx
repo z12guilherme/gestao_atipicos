@@ -4,84 +4,83 @@ import { toast } from "sonner";
 import { PostgrestError } from "@supabase/supabase-js";
 
 export interface User {
-  id: string;
-  name: string;
-  cpf?: string;
-  phone?: string;
-  role: 'gestor' | 'cuidador' | 'responsavel';
-  function_title?: string;
-  work_schedule?: string;
+  id: string;
+  name: string;
+  cpf?: string;
+  phone?: string;
+  role: 'gestor' | 'cuidador' | 'responsavel';
+  function_title?: string;
+  work_schedule?: string;
   email?: string; // Adicionado para consistência
   student_ids?: string[]; // Adicionado para carregar os estudantes vinculados
-  user_id: string;
-  created_at: string;
+  user_id: string;
+  created_at: string;
 }
 
 export function useUsers() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
-  const { data: users, isLoading } = useQuery({
-    queryKey: ['users'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        // Consulta ajustada para buscar o email da tabela auth.users
-        .from('profiles')
-        .select('*, user:user_id(email)') // Sintaxe correta para join com alias
-        .order('created_at', { ascending: false });
-      
-      if (error) throw new PostgrestError(error as any);
-      return data?.map(p => ({ ...p, email: (p as any).user?.email })) as User[] || [];
-    },
-  });
+  const { data: users, isLoading } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*, user_id(email)') // Sintaxe correta para join
+        .order('created_at', { ascending: false });
 
-  const createUser = useMutation({
-    mutationFn: async (userData: {
-      email: string;
-      password: string;
-      name: string;
-      cpf?: string;
-      phone?: string;
-      role: 'gestor' | 'cuidador' | 'responsavel';
-      function_title?: string;
-      work_schedule?: string;
+      if (error) throw new PostgrestError(error as any);
+      return data?.map(p => ({ ...p, email: (p as any).user_id?.email })) as User[] || [];
+    },
+  });
+
+  const createUser = useMutation({
+    mutationFn: async (userData: {
+      email: string;
+      password: string;
+      name: string;
+      cpf?: string;
+      phone?: string;
+      role: 'gestor' | 'cuidador' | 'responsavel';
+      function_title?: string;
+      work_schedule?: string;
       student_ids?: string[];
-    }) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        throw new Error('Você precisa estar autenticado');
-      }
+    }) => {
+      const { data: { session } } = await supabase.auth.getSession();
 
-      const response = await supabase.functions.invoke('create-user', {
-        body: { records: [userData] }, // A Edge Function espera um array 'records'
-      });
+      if (!session) {
+        throw new Error('Você precisa estar autenticado');
+      }
 
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
+      const response = await supabase.functions.invoke('create-user', {
+        body: { records: [userData] }, // A Edge Function espera um array 'records'
+      });
 
-      return response.data.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success('Usuário criado com sucesso!');
-    },
-    onError: (error: any) => {
-      toast.error(`Erro ao criar usuário: ${error.message}`);
-    },
-  });
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
 
-  const updateUser = useMutation({
-    mutationFn: async ({ id, profileData, student_ids }: { id: string, profileData: Partial<User>, student_ids?: string[] }) => {
+      return response.data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success('Usuário criado com sucesso!');
+    },
+    onError: (error: any) => {
+      toast.error(`Erro ao criar usuário: ${error.message}`);
+    },
+  });
+
+  const updateUser = useMutation({
+    mutationFn: async ({ id, profileData, student_ids }: { id: string, profileData: Partial<User>, student_ids?: string[] }) => {
       // 1. Atualiza os dados do perfil
-      const { data: updatedProfile, error: profileError } = await supabase
-        .from('profiles')
-        .update(profileData)
-        .eq('id', id)
-        .select()
-        .single();
+      const { data: updatedProfile, error: profileError } = await supabase
+        .from('profiles')
+        .update(profileData)
+        .eq('id', id)
+        .select()
+        .single();
 
-      if (profileError) throw profileError;
+      if (profileError) throw profileError;
 
       // 2. Se for um responsável, atualiza os estudantes vinculados na tabela de junção
       if (profileData.role === 'responsavel' && student_ids) {
@@ -90,14 +89,14 @@ export function useUsers() {
           .from('guardians_students')
           .delete()
           .eq('guardian_id', id);
-        
+
         if (deleteError) throw deleteError;
 
         // Cria as novas associações
         if (student_ids.length > 0) {
           const newAssignments = student_ids.map(student_id => ({
-            guardian_id: id, 
-            student_id, 
+            guardian_id: id,
+            student_id,
             relationship: 'responsavel' // ou outro valor padrão
           }));
           const { error: insertError } = await supabase.from('guardians_students').insert(newAssignments);
@@ -105,16 +104,16 @@ export function useUsers() {
         }
       }
 
-      return updatedProfile;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success('Usuário atualizado com sucesso!');
-    },
-    onError: (error: any) => {
-      toast.error(`Erro ao atualizar usuário: ${error.message}`);
-    },
-  });
+      return updatedProfile;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success('Usuário atualizado com sucesso!');
+    },
+    onError: (error: any) => {
+      toast.error(`Erro ao atualizar usuário: ${error.message}`);
+    },
+  });
 
   const deleteUser = useMutation({
     mutationFn: async (userId: string) => {
@@ -137,11 +136,11 @@ export function useUsers() {
     },
   });
 
-  return {
-    users: users || [],
-    isLoading,
-    createUser,
-    updateUser,
-   deleteUser,
-  };
+  return {
+    users: users || [],
+    isLoading,
+    createUser,
+    updateUser,
+    deleteUser,
+  };
 }
