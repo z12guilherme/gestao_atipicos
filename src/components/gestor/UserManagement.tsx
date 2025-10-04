@@ -5,11 +5,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { UserPlus, Edit, Save, Trash2, Upload, FileDown } from "lucide-react";
+import { UserPlus, Edit, Save, Trash2, Upload, FileDown, Loader2, Users2 } from "lucide-react";
 import { useUsers, User } from "@/hooks/useUsers"; // Hook para buscar usuários
 import { useFileImport } from "@/hooks/useFileImport";
 import { useForm } from "react-hook-form";
@@ -19,13 +20,14 @@ import { z } from "zod";
 import * as XLSX from 'xlsx';
 import { MultiSelect } from "@/components/ui/MultiSelect";
 import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog.tsx";
+import { useProfile } from "@/hooks/useProfile";
 
 // Schema base para os dados do perfil, sem email e senha
 const profileSchema = z.object({
   name: z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres").max(100, "Nome muito longo"),
   cpf: z.string().trim().max(14, "CPF inválido").optional(),
   phone: z.string().trim().max(20, "Telefone inválido").optional(),
-  role: z.enum(['gestor', 'cuidador', 'responsavel']),
+  role: z.enum(['gestor', 'cuidador', 'responsavel', 'professor']),
   function_title: z.string().trim().max(100, "Função muito longa").optional(),
   work_schedule: z.string().trim().max(500, "Horário muito longo").optional(),
   student_ids: z.array(z.string()).default([]), // Para vincular estudantes
@@ -51,6 +53,7 @@ interface UserManagementProps {
 
 export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEditingUser }: UserManagementProps) {
 
+  const { profile } = useProfile();
   const { users, isLoading, createUser, updateUser, deleteUser } = useUsers();
   const { students } = useStudents();
   const {
@@ -113,9 +116,9 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
   };
 
   const getRoleBadge = (role: string) => {
-    const variants = { gestor: 'destructive', cuidador: 'default', responsavel: 'secondary' };
-    const labels = { gestor: 'Gestor', cuidador: 'Cuidador', responsavel: 'Responsável' };
-    return <Badge variant={variants[role as keyof typeof variants] as any}>{labels[role as keyof typeof labels]}</Badge>;
+    const variants = { gestor: 'destructive', cuidador: 'default', responsavel: 'secondary', professor: 'outline' };
+    const labels = { gestor: 'Gestor', cuidador: 'Cuidador', responsavel: 'Responsável', professor: 'Professor' };
+    return <Badge variant={variants[role as keyof typeof variants] || 'default'}>{labels[role as keyof typeof labels] || role}</Badge>;
   };
   
   const handleDownloadCsvTemplate = () => {
@@ -142,8 +145,27 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
     XLSX.writeFile(workbook, "modelo_importacao_usuarios.xlsx");
   };
 
+  // Adiciona uma verificação de segurança na entrada do componente
+  if (profile?.role !== 'gestor') {
+    return null; // Ou uma mensagem de "Acesso Negado"
+  }
+
   if (isLoading) {
-    return <Card><CardContent className="p-6 text-center">Carregando...</CardContent></Card>;
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -196,7 +218,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
                 <div className="flex justify-end space-x-2">
                   <Button variant="ghost" onClick={() => setImportOpen(false)}>Cancelar</Button>
                   <Button onClick={handleImport} disabled={isImporting || !importFile}>
-                    {isImporting ? "Importando..." : "Iniciar Importação"}
+                    {isImporting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Importando...</> : "Iniciar Importação"}
                   </Button>
                 </div>
               </DialogContent>
@@ -244,6 +266,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
                         <SelectContent>
                             <SelectItem value="gestor">Gestor</SelectItem>
                             <SelectItem value="cuidador">Cuidador</SelectItem>
+                            <SelectItem value="professor">Professor</SelectItem>
                             <SelectItem value="responsavel">Responsável</SelectItem>
                         </SelectContent>
                     </Select>
@@ -277,9 +300,13 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
                 <div className="flex justify-end space-x-2 pt-2">
                   <Button type="button" variant="ghost" onClick={() => handleDialogChange(false)}>Cancelar</Button>
                   <Button type="submit" disabled={createUser.isPending || updateUser.isPending}>
-                    {editingUser 
-                      ? <>{updateUser.isPending ? 'Salvando...' : <><Save className="mr-2 h-4 w-4" /> Salvar</>}</>
-                      : <>{createUser.isPending ? 'Criando...' : <><UserPlus className="mr-2 h-4 w-4" /> Criar</>}</>
+                    {editingUser
+                      ? (updateUser.isPending
+                        ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>
+                        : <><Save className="mr-2 h-4 w-4" /> Salvar</>)
+                      : (createUser.isPending
+                        ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando...</>
+                        : <><UserPlus className="mr-2 h-4 w-4" /> Criar</>)
                     }
                   </Button>
                 </div>
@@ -290,40 +317,48 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Perfil</TableHead>
-              <TableHead>Contato</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell>{getRoleBadge(user.role)}</TableCell>
-                <TableCell>{user.phone || 'N/A'}</TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(user)}><Edit className="h-4 w-4" /></Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader><AlertDialogTitle>Você tem certeza?</AlertDialogTitle><AlertDialogDescription>Esta ação não pode ser desfeita. Isso excluirá permanentemente o usuário e seus dados de nossos servidores.</AlertDialogDescription></AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => deleteUser.mutate(user.id)} disabled={deleteUser.isPending}>{deleteUser.isPending ? 'Excluindo...' : 'Excluir'}</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </TableCell>
+        {users.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Perfil</TableHead>
+                <TableHead>Contato</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableCell>{getRoleBadge(user.role)}</TableCell>
+                  <TableCell>{user.phone || 'N/A'}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(user)}><Edit className="h-4 w-4" /></Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader><AlertDialogTitle>Você tem certeza?</AlertDialogTitle><AlertDialogDescription>Esta ação não pode ser desfeita. Isso excluirá permanentemente o usuário e seus dados de nossos servidores.</AlertDialogDescription></AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deleteUser.mutate(user.id)} disabled={deleteUser.isPending}>{deleteUser.isPending ? 'Excluindo...' : 'Excluir'}</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="text-center py-12">
+            <Users2 className="mx-auto h-12 w-12 text-muted-foreground" />
+            <h3 className="mt-4 text-lg font-semibold">Nenhum usuário encontrado</h3>
+            <p className="mt-2 text-sm text-muted-foreground">Comece cadastrando um novo usuário para vê-lo aqui.</p>
+          </div>
+        )}
       </CardContent>
     </Card>
     </>

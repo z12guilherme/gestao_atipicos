@@ -1,132 +1,159 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { 
-  Users, 
-  UserCheck, 
-  UserCog, 
-  LogOut, 
+import { Input } from "@/components/ui/input";
+import {
+  Users,
+  UserCheck,
+  UserCog,
+  LogOut,
   GraduationCap,
-  Menu,
   Home,
   Bell,
-  Heart
+  Heart,
+  Code,
+  School,
+  Search,
+  HeartHandshake,
 } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { NavLink, Outlet } from "react-router-dom";
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-export function Layout({ children }: LayoutProps) {
+export function Layout() {
   const { profile, signOut } = useAuth();
-  const location = useLocation();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     try {
       await signOut();
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
     }
   };
 
-  const getUserInitials = (name?: string) => {
-    if (!name) return 'U';
-    return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
+  // Função atualizada para mostrar o ícone de código para o gestor
+  const getAvatarContent = (name?: string, role?: string) => {
+    if (role === "gestor") {
+      return <Code className="h-5 w-5" />;
+    }
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   const getRoleColor = (role?: string) => {
     switch (role) {
-      case 'gestor': return 'bg-gradient-to-r from-purple-600 to-blue-600';
-      case 'cuidador': return 'bg-gradient-to-r from-green-600 to-teal-600';
-      case 'responsavel': return 'bg-gradient-to-r from-orange-600 to-red-600';
-      default: return 'bg-gradient-to-r from-gray-600 to-gray-800';
+      case "gestor":
+        return "bg-gradient-to-r from-purple-600 to-blue-600";
+      case "cuidador":
+        return "bg-gradient-to-r from-green-600 to-teal-600";
+      case "responsavel":
+        return "bg-gradient-to-r from-orange-600 to-red-600";
+      default:
+        return "bg-gradient-to-r from-gray-600 to-gray-800";
     }
   };
 
-  const getRoleLabel = (role?: string) => {
+  // Função atualizada para mostrar "Administrador"
+  const getRoleName = (role?: string) => {
     switch (role) {
-      case 'gestor': return 'Gestor';
-      case 'cuidador': return 'Cuidador';
-      case 'responsavel': return 'Responsável';
-      default: return 'Usuário';
+      case "gestor":
+        return "root";
+      case "cuidador":
+        return "Cuidador";
+      case "responsavel":
+        return "Responsável";
+      default:
+        return "Usuário";
     }
   };
+
+  const navItems = [
+    { to: "/", icon: Home, label: "Dashboard" },
+    { to: "/students", icon: GraduationCap, label: "Alunos" },
+    { to: "/users", icon: Users, label: "Usuários" },
+    { to: "/classes", icon: School, label: "Turmas" },
+    { to: "/caregivers", icon: HeartHandshake, label: "Cuidadores" },
+    { to: "/guardians", icon: UserCheck, label: "Responsáveis" },
+    { to: "/settings", icon: UserCog, label: "Configurações" },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md supports-[backdrop-filter]:bg-white/60 dark:bg-slate-900/80 dark:supports-[backdrop-filter]:bg-slate-900/60">
-        <div className="container mx-auto flex h-16 max-w-screen-2xl items-center px-4 sm:px-6 lg:px-8">
-          <div className="mr-4 hidden md:flex">
-            <Link to="/" className="mr-6 flex items-center space-x-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
-                <Heart className="h-5 w-5" />
-              </div>
-              <div className="hidden font-bold sm:inline-block">
-                <span className="text-lg bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Gestão Atípicos
-                </span>
-              </div>
-            </Link>
+    <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
+      <div className="hidden border-r bg-muted/40 md:block">
+        <div className="flex h-full max-h-screen flex-col gap-2">
+          <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
+            <NavLink to="/" className="flex items-center gap-2 font-semibold">
+              <Heart className="h-6 w-6 text-blue-600" />
+              <span className="">Gestão Atípicos</span>
+            </NavLink>
           </div>
-
-          {/* User Menu */}
-          <div className="flex flex-1 items-center justify-end space-x-3">
-            {/* User Menu */}
-            <div className="flex items-center space-x-3">
-              <Button variant="ghost" size="sm" className="relative">
-                <Bell className="h-4 w-4" />
-                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500"></span>
-              </Button>
-              
-              <div className="flex items-center space-x-3">
-                <Avatar className="h-9 w-9 border-2 border-white shadow-lg">
-                  <AvatarFallback className={`text-white font-semibold ${getRoleColor(profile?.role)}`}>
-                    {getUserInitials(profile?.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="hidden md:block">
-                  <div className="text-sm font-medium leading-none">{profile?.name}</div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {getRoleLabel(profile?.role)}
-                  </div>
-                </div>
+          <div className="flex-1">
+            <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary ${
+                      isActive ? "bg-muted text-primary" : "text-muted-foreground"
+                    }`
+                  }
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-col">
+        <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
+          {/* Mobile menu can be added here later */}
+          <div className="w-full flex-1">
+            <form>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Buscar alunos, usuários..."
+                  className="w-full appearance-none bg-background pl-8 shadow-none md:w-2/3 lg:w-1/3"
+                />
               </div>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSignOut}
-                className="text-slate-600 hover:text-red-600 dark:text-slate-300 dark:hover:text-red-400"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="sr-only md:not-sr-only md:ml-2">Sair</span>
-              </Button>
+            </form>
+          </div>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" className="relative rounded-full">
+              <Bell className="h-5 w-5" />
+              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
+            </Button>
+            <div className="flex items-center gap-2">
+              <Avatar className="h-9 w-9">
+                <AvatarFallback className={`text-white font-semibold ${getRoleColor(profile?.role)}`}>
+                  {getAvatarContent(profile?.name, profile?.role)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-sm font-medium leading-none">
+                  {profile?.role === "gestor" ? "root" : profile?.name}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {getRoleName(profile?.role)}
+                </p>
+              </div>
             </div>
-
-            {/* Mobile menu button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              <Menu className="h-5 w-5" />
+            <Button variant="ghost" size="icon" onClick={handleSignOut} className="rounded-full">
+              <LogOut className="h-5 w-5" />
             </Button>
           </div>
-        </div>
-
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1">
-        <div className="container mx-auto max-w-screen-2xl p-4 sm:p-6 lg:p-8">
-          {children}
-        </div>
-      </main>
+        </header>
+        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-slate-50 dark:bg-slate-900">
+          <Outlet /> {/* react-router-dom will render nested routes here */}
+        </main>
+      </div>
     </div>
   );
 }

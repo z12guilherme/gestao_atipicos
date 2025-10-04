@@ -1,30 +1,10 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { Student } from "./useStudents";
 import { supabase } from "@/integrations/supabase/client";
-
-type UserRole = 'gestor' | 'cuidador' | 'responsavel';
-
-interface Profile {
-  id: string;
-  user_id: string;
-  name: string;
-  cpf?: string;
-  phone?: string;
-  role: UserRole;
-  function_title?: string;
-  work_schedule?: string;
-}
-
-interface GuardianStudent {
-  students: Student;
-}
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  profile: Profile | null;
-  guardianStudents: Student[];
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
@@ -36,56 +16,29 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [guardianStudents, setGuardianStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchSessionAndProfile = async () => {
+    const fetchSession = async () => {
       setLoading(true);
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
       if (sessionError) {
         console.error("Erro ao buscar sessão:", sessionError);
-        setLoading(false);
-        return;
       }
 
       setSession(session);
       setUser(session?.user ?? null);
-
-      if (session?.user) {
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .single();
-
-        if (profileError) console.error("Erro ao buscar perfil:", profileError);
-        setProfile(profileData as Profile | null);
-
-        if (profileData?.role === 'responsavel') {
-          const { data: studentsData } = await supabase
-            .from('guardians_students')
-            .select('students:student_id(*)') // Sintaxe de join correta
-            .eq('guardian_id', profileData.id);
-          
-          const students = (studentsData as GuardianStudent[] | null)?.map(item => item.students).filter(Boolean) as Student[] || [];
-          setGuardianStudents(students);
-        }
-      } else {
-        setProfile(null);
-        setGuardianStudents([]);
-      }
       setLoading(false);
     };
 
-    fetchSessionAndProfile();
+    fetchSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        // Recarrega os dados da sessão e perfil quando o estado de autenticação muda (login/logout)
-        fetchSessionAndProfile();
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        // A lógica de perfil será tratada em seu próprio hook, que reagirá à mudança de 'user'
       }
     );
 
@@ -122,8 +75,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     user,
     session,
-    profile,
-    guardianStudents,
     loading,
     signIn,
     signUp,

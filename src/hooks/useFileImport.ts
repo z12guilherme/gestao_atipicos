@@ -37,20 +37,27 @@ export function useFileImport({ supabaseFunction, invalidateQueryKey, entityName
 
     const processData = async (data: any[]) => {
       try {
-        // Filtro mais robusto: garante que a linha exista e que a coluna 'name' (obrigatória) esteja preenchida.
-        // Isso evita o processamento de linhas vazias ou mal formatadas que podem ser geradas por planilhas.
+        // Filtro robusto: garante que a linha seja um objeto e que a coluna 'name' (obrigatória) esteja preenchida.
+        // Isso evita o processamento de linhas vazias ou mal formatadas que são comuns em planilhas.
         const validData = data.filter(row => 
-          row && typeof row.name === 'string' && row.name.trim() !== ''
+          row && typeof row === 'object' && typeof row.name === 'string' && row.name.trim() !== ''
         );
 
         if (validData.length === 0) {
-          toast.error("Nenhum dado válido encontrado no arquivo.", { description: "Verifique se a planilha não está vazia e se a coluna 'name' está preenchida." });
+          toast.error("Nenhum dado válido encontrado no arquivo.", { 
+            description: "Verifique se a planilha não está vazia e se a coluna 'name' está preenchida." 
+          });
           return;
         }
 
         const { data: responseData, error } = await supabase.functions.invoke(supabaseFunction, {
           body: validData,
         });
+
+        if (error) {
+          // Trata erros de rede ou da própria função (ex: 500 Internal Server Error)
+          throw new Error(`Falha na comunicação com o servidor: ${error.message}`);
+        }
 
         const { successCount, errorCount, errors } = responseData;
 

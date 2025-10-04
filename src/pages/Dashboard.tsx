@@ -1,13 +1,14 @@
 import { Navigate } from "react-router-dom";
-import { Layout } from "@/components/Layout";
 import { GestorDashboard } from "@/pages/GestorDashboard";
 import { CuidadorDashboard } from "@/pages/CuidadorDashboard";
 import { ResponsavelDashboard } from "@/pages/ResponsavelDashboard";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 
 const Dashboard = () => {
-  const { user, profile, loading } = useAuth();
-
+  const { user, loading: authLoading } = useAuth();
+  const { profile, isLoading: profileLoading } = useProfile();
+  const loading = authLoading || profileLoading;
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -54,9 +55,7 @@ const Dashboard = () => {
   };
 
   return (
-    <Layout>
-      {getDashboardContent()} {/* Executa a função para renderizar o conteúdo */}
-    </Layout>
+    getDashboardContent()
   );
 };
 

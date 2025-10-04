@@ -3,14 +3,13 @@ import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Heart, Users, GraduationCap, Star } from "lucide-react";
+import { toast } from "sonner";
+import { Eye, EyeOff, Heart, Users, GraduationCap, Star, Loader2 } from "lucide-react";
 
 export default function Auth() {
-  const { user, signIn, signUp } = useAuth();
-  const { toast } = useToast();
+  const { user, signIn } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -31,22 +30,17 @@ export default function Auth() {
       const { error } = await signIn(loginForm.email, loginForm.password);
       
       if (error) {
-        toast({
-          title: "Erro no login",
-          description: error.message,
-          variant: "destructive",
+        toast.error("Erro no login", {
+          description: "Email ou senha inválidos. Por favor, verifique suas credenciais.",
         });
       } else {
-        toast({
-          title: "Login realizado com sucesso!",
-          description: "Redirecionando...",
+        toast.success("Login realizado com sucesso!", {
+          description: "Redirecionando para o painel...",
         });
       }
     } catch (error) {
-      toast({
-        title: "Erro inesperado",
-        description: "Tente novamente em alguns instantes.",
-        variant: "destructive",
+      toast.error("Erro inesperado", {
+        description: "Ocorreu uma falha. Tente novamente em alguns instantes.",
       });
     }
 
@@ -54,7 +48,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <div className="container mx-auto px-4 py-8 lg:py-16">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center min-h-[calc(100vh-8rem)]">
           {/* Left side - Branding and Features */}
@@ -125,7 +119,7 @@ export default function Auth() {
 
           {/* Right side - Auth Form */}
           <div className="w-full max-w-md mx-auto lg:mx-0">
-            <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+            <Card className="shadow-xl border-t-4 border-blue-600">
               <CardHeader className="text-center space-y-4 pb-8">
                 <div className="flex justify-center lg:hidden mb-6">
                   <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
@@ -188,15 +182,20 @@ export default function Auth() {
                     disabled={loading}
                   >
                     {loading ? (
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         <span>Entrando...</span>
-                      </div>
+                      </>
                     ) : (
                       "Entrar"
                     )}
                   </Button>
                 </form>
+                <CardFooter className="text-xs text-muted-foreground pt-6 justify-center">
+                  <p>
+                    Todos os Direitos Reservados &copy; {new Date().getFullYear()} | Dev: Marcos Guilherme
+                  </p>
+                </CardFooter>
               </CardContent>
             </Card>
           </div>
@@ -204,9 +203,6 @@ export default function Auth() {
       </div>
 
       <footer className="absolute bottom-0 left-0 right-0 py-4">
-        <p className="text-center text-sm text-muted-foreground">
-          Todos os Direitos Reservados &copy; {new Date().getFullYear()} | Dev: Marcos Guilherme
-        </p>
       </footer>
     </div>
   );

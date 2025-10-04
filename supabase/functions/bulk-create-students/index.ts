@@ -111,9 +111,12 @@ Deno.serve(async (req) => {
       const validation = studentSchema.safeParse(studentData);
       if (!validation.success) {
         results.errorCount++;
+        // Concatena todos os erros de validação para a linha atual
         const errorMessages = validation.error.flatten().fieldErrors;
-        const firstError = Object.values(errorMessages)[0]?.[0] || 'Dados inválidos';
-        results.errors.push({ line, error: `Linha ${line}: ${firstError}` });
+        const errorMessage = Object.entries(errorMessages)
+            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+            .join('; ');
+        results.errors.push({ line, error: errorMessage });
         continue;
       }
       
@@ -128,15 +131,14 @@ Deno.serve(async (req) => {
 
       if (insertError) {
         console.error('Supabase insert error:', insertError);
-        // Se a inserção em lote falhar, todos os estudantes na lista são considerados erros.
-        results.errorCount += studentsToInsert.length;
-        // Adiciona um erro para cada linha que falhou, usando o número da linha original.
-        studentsToInsert.forEach((item) => {
-          results.errors.push({ line: item.line, error: `Falha na inserção no banco de dados: ${insertError.message}` });
-        });
-        results.successCount = 0;
+        // Se a inserção em lote falhar, é um erro único para a operação.
+        // Não é um erro por linha, mas sim da transação.
+        results.errorCount = studentsToInsert.length; // Considera todas as linhas como falhas.
+        results.errors.push({ line: 0, error: `Falha ao salvar no banco de dados. Verifique se há CPFs duplicados ou outros dados inválidos. (Detalhe: ${insertError.message})` });
       } else {
         results.successCount = studentsToInsert.length;
+        // Limpa os erros de validação se a inserção for bem-sucedida, pois já foram tratados.
+        results.errors = results.errors.filter(e => e.line === 0 && e.error.startsWith('Falha'));
       }
     }
     

@@ -1,40 +1,50 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "@/hooks/useAuth";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import Auth from "@/pages/Auth";
-import NotFound from "@/pages/NotFound";
-import Dashboard from "@/pages/Dashboard";
+import { Layout } from "@/components/Layout";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
+
+import { AuthProvider } from "./hooks/useAuth";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+
+import AuthPage from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
+import NotFound from "./pages/NotFound";
+
+import { StudentManagement } from "./components/gestor/StudentManagement";
+import { UserManagement } from "./components/gestor/UserManagement";
+import { ClassManagement } from "./components/gestor/ClassManagement";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route 
-              path="/" 
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/auth" element={<AuthPage />} />
+
+              {/* Rotas Protegidas */}
+              <Route
+                element={<ProtectedRoute><Layout /></ProtectedRoute>}
+              >
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/students" element={<StudentManagement />} />
+                <Route path="/users" element={<UserManagement />} />
+                <Route path="/classes" element={<ClassManagement />} />
+                {/* Adicione outras rotas que devem usar o Layout aqui */}
+              </Route>
+
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <Toaster />
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;

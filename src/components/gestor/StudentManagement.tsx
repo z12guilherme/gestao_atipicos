@@ -1,15 +1,16 @@
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { Textarea } from "@/components/ui/textarea"; 
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { UserPlus, Edit, Save, Trash2, Stethoscope, FileText, BadgeInfo, Upload, FileDown } from "lucide-react";
+import { UserPlus, Edit, Save, Trash2, Stethoscope, FileText, BadgeInfo, Upload, FileDown, Loader2, FileX2 } from "lucide-react";
 import { useStudents, Student } from "@/hooks/useStudents"; // Hook para buscar estudantes
 import { useClasses } from "@/hooks/useClasses"; // Hook para buscar turmas
 import { useFileImport } from "@/hooks/useFileImport";
@@ -18,23 +19,28 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import * as XLSX from 'xlsx';
+import { useProfile } from "@/hooks/useProfile";
 import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog.tsx";
 import { calculateAge } from "@/lib/utils";
 
 // Schema de validação ATUALIZADO com todos os seus campos
-const studentSchema = z.object({
+const studentSchema = z.object({ // Validação mais precisa e com melhores mensagens de erro
   name: z.string({ required_error: "O nome é obrigatório." }).trim().min(3, "O nome deve ter pelo menos 3 caracteres."),
   birth_date: z.preprocess(
     (arg) => (arg === "" ? undefined : arg), // Transforma string vazia em undefined
-    z.string({ required_error: "A data de nascimento é obrigatória." }).min(1, "A data de nascimento é obrigatória.")
+    z.string({ required_error: "A data de nascimento é obrigatória." }).min(1, "A data de nascimento é obrigatória."),
   ),
   status: z.enum(['ativo', 'inativo', 'transferido'], { required_error: "O status é obrigatório." }),
   // Campos opcionais
-  cpf: z.string().trim().max(14, "CPF inválido").nullable().optional(),
+  cpf: z.string().trim().max(14, "CPF inválido").optional().nullable(),
   class_name: z.string().trim().nullable().optional(),
   diagnosis: z.string().trim().nullable().optional(),
   special_needs: z.string().trim().nullable().optional(),
   medical_info: z.string().trim().nullable().optional(),
+  // Adicionado para o upload de arquivo
+  report_file: z.instanceof(FileList).optional(),
+  // Adicionado para armazenar o caminho do arquivo no banco
+  report_path: z.string().nullable().optional(),
 });
 
 type StudentFormData = z.infer<typeof studentSchema>;
@@ -48,7 +54,8 @@ interface StudentManagementProps {
 
 export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent, setEditingStudent }: StudentManagementProps) {
 
-  const { students, isLoading, createStudent, updateStudent, deleteStudent } = useStudents();
+  const { profile } = useProfile();
+  const { students, isLoading, createStudent, updateStudent, deleteStudent, getReportUrl } = useStudents();
   const { classes } = useClasses();
   const {
     isImportOpen, setImportOpen,
@@ -93,15 +100,19 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
 
   // ATUALIZADO: Preenche todos os campos no formulário de edição
   const handleOpenEditModal = (student: Student) => {
+    // Usar `reset` é a forma recomendada pelo react-hook-form para preencher o formulário
+    reset({
+      name: student.name,
+      cpf: student.cpf || "",
+      birth_date: student.birth_date || "",
+      status: student.status,
+      class_name: student.class_name || "",
+      diagnosis: student.diagnosis || "",
+      special_needs: student.special_needs || "",
+      medical_info: student.medical_info || "",
+      report_path: student.report_path || "",
+    });
     setEditingStudent(student);
-    setValue("name", student.name);
-    setValue("cpf", student.cpf || "");
-    setValue("birth_date", student.birth_date || "");
-    setValue("status", student.status);
-    setValue("class_name", student.class_name || "");
-    setValue("diagnosis", student.diagnosis || "");
-    setValue("special_needs", student.special_needs || "");
-    setValue("medical_info", student.medical_info || "");
     setDialogOpen(true);
   };
   
@@ -128,8 +139,28 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
     }
   };
 
+  // Adiciona uma verificação de segurança na entrada do componente
+  if (profile?.role !== 'gestor') {
+    // Não renderiza nada se o usuário não for um gestor.
+    return null;
+  }
+
   if (isLoading) {
-    return <Card><CardContent className="p-6 text-center">Carregando estudantes...</CardContent></Card>;
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -273,12 +304,35 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                         <Textarea id="medical_info" {...register("medical_info")} placeholder="Alergias, medicamentos, contatos de emergência..."/>
                     </div>
 
+                    <div className="space-y-2">
+                        <Label htmlFor="report_file"><Upload className="inline mr-2 h-4 w-4"/>Anexar Laudo (PDF, Imagem)</Label>
+                        <Input id="report_file" type="file" {...register("report_file")} />
+                        {errors.report_file && <p className="text-sm text-destructive">{errors.report_file.message as string}</p>}
+                        
+                        {/* Mostra o link para download se já existir um laudo */}
+                        {editingStudent?.report_path && (
+                          <div className="mt-2">
+                            <a 
+                              href={getReportUrl(editingStudent.report_path)} 
+                              target="_blank" rel="noopener noreferrer" 
+                              className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                            >
+                              <FileDown className="h-4 w-4" /> Baixar Laudo Atual
+                            </a>
+                          </div>
+                        )}
+                    </div>
+
                     <div className="flex justify-end space-x-3 pt-4">
                         <Button type="button" variant="ghost" onClick={() => handleDialogChange(false)}>Cancelar</Button>
                         <Button type="submit" disabled={createStudent.isPending || updateStudent.isPending}>
                             {editingStudent 
-                                ? <><Save className="mr-2 h-4 w-4" />{updateStudent.isPending ? 'Salvando...' : 'Salvar Alterações'}</>
-                                : <><UserPlus className="mr-2 h-4 w-4" />{createStudent.isPending ? 'Criando...' : 'Criar Estudante'}</>
+                                ? (updateStudent.isPending 
+                                    ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> 
+                                    : <><Save className="mr-2 h-4 w-4" /> Salvar Alterações</>)
+                                : (createStudent.isPending 
+                                    ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando...</>
+                                    : <><UserPlus className="mr-2 h-4 w-4" /> Criar Estudante</>)
                             }
                         </Button>
                     </div>
@@ -290,45 +344,53 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
       </CardHeader>
       
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Turma</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Idade</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {students.map((student) => (
-              <TableRow key={student.id}>
-                <TableCell className="font-medium">{student.name}</TableCell>
-                <TableCell>{student.class_name || 'Não definida'}</TableCell>
-                <TableCell><Badge variant={student.status === 'ativo' ? 'default' : 'secondary'}>{student.status}</Badge></TableCell>
-                <TableCell>{student.birth_date ? calculateAge(student.birth_date) : 'Não informada'}</TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(student)}>
-                    <Edit className="h-4 w-4" />
-                    <span className="sr-only">Editar estudante</span>
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader><AlertDialogTitle>Você tem certeza?</AlertDialogTitle><AlertDialogDescription>Esta ação não pode ser desfeita. Isso excluirá permanentemente o estudante e seus dados de nossos servidores.</AlertDialogDescription></AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => deleteStudent.mutate(student.id)} disabled={deleteStudent.isPending}>Excluir</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </TableCell>
+        {students.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Turma</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Idade</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {students.map((student) => (
+                <TableRow key={student.id}>
+                  <TableCell className="font-medium">{student.name}</TableCell>
+                  <TableCell>{student.class_name || 'Não definida'}</TableCell>
+                  <TableCell><Badge variant={student.status === 'ativo' ? 'default' : 'secondary'}>{student.status}</Badge></TableCell>
+                  <TableCell>{student.birth_date ? calculateAge(student.birth_date) : 'Não informada'}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(student)}>
+                      <Edit className="h-4 w-4" />
+                      <span className="sr-only">Editar estudante</span>
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader><AlertDialogTitle>Você tem certeza?</AlertDialogTitle><AlertDialogDescription>Esta ação não pode ser desfeita. Isso excluirá permanentemente o estudante e seus dados de nossos servidores.</AlertDialogDescription></AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deleteStudent.mutate(student.id)} disabled={deleteStudent.isPending}>Excluir</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="text-center py-12">
+            <FileX2 className="mx-auto h-12 w-12 text-muted-foreground" />
+            <h3 className="mt-4 text-lg font-semibold">Nenhum estudante encontrado</h3>
+            <p className="mt-2 text-sm text-muted-foreground">Comece cadastrando um novo estudante para vê-lo aqui.</p>
+          </div>
+        )}
       </CardContent>
     </Card>
     </>
