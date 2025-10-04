@@ -6,11 +6,10 @@ import { getCorsHeaders } from "../_shared/cors.ts";
 const studentSchema = z.object({
   name: z.string({ required_error: "A coluna 'name' é obrigatória." }).trim().min(3, "O nome deve ter pelo menos 3 caracteres."),
   birth_date: z.preprocess((arg) => {
-    // Pré-processa o campo 'birth_date' antes da validação
     if (!arg) return undefined;
-    // Tenta converter a data usando a função parseDate
-    return parseDate(arg as string | number);
-  }, z.string({ required_error: "A coluna 'birth_date' é obrigatória e o formato é inválido." }).regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de data inválido. Use AAAA-MM-DD ou DD/MM/AAAA.")),
+    const parsed = parseDate(arg as string | number);
+    return parsed ? parsed.split('T')[0] : undefined;
+  }, z.string({ required_error: "A coluna 'birth_date' é obrigatória." }).regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de data inválido. Use AAAA-MM-DD, DD/MM/AAAA ou o formato de data do Excel.")),
   status: z.enum(['ativo', 'inativo', 'transferido'], { errorMap: () => ({ message: "O status deve ser 'ativo', 'inativo' ou 'transferido'." }) }),
   // Campos opcionais
   cpf: z.string().trim().max(14, "CPF inválido").nullable().optional(),
@@ -34,20 +33,24 @@ function parseDate(dateInput: string | number | undefined): string | undefined {
 
   let date: Date;
 
-  if (typeof dateInput === 'number') {
+  if (typeof dateInput === 'number' && dateInput > 0) {
     // Converte número serial do Excel para data
+    // O número 25569 é a diferença de dias entre 1970-01-01 (epoch do Unix) e 1900-01-01 (epoch do Excel)
     date = new Date(Math.round((dateInput - 25569) * 86400 * 1000));
   } else if (typeof dateInput === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(dateInput)) {
     // Converte formato DD/MM/AAAA para AAAA-MM-DD para evitar erros de fuso horário
     const [day, month, year] = dateInput.split('/');
     date = new Date(`${year}-${month}-${day}T00:00:00`);
+  } else if (typeof dateInput === 'string' && /^\d{4}-\d{2}-\d{2}/.test(dateInput)) {
+    // Garante que datas no formato AAAA-MM-DD sejam interpretadas corretamente
+    date = new Date(dateInput + 'T00:00:00');
   } else {
     date = new Date(dateInput);
   }
 
   // Verifica se a data resultante é válida
   if (isNaN(date.getTime())) {
-    return undefined; // Retorna undefined se a data for inválida
+    return undefined;
   }
 
   return date.toISOString().split('T')[0];
@@ -125,6 +128,29 @@ Deno.serve(async (req) => {
     }
 
     if (studentsToInsert.length > 0) {
+      // Validação extra: Garante que os `guardian_id`s pertencem a responsáveis.
+      const guardianIds = studentsToInsert
+        .map(item => item.data.guardian_id)
+        .filter((id): id is string => id !== null && id !== undefined);
+
+      if (guardianIds.length > 0) {
+        const { data: guardians, error: guardianError } = await supabaseAdmin
+          .from('profiles')
+          .select('id, role')
+          .in('id', guardianIds);
+
+        if (guardianError) throw new Error(`Falha ao verificar responsáveis: ${guardianError.message}`);
+
+        const validGuardianIds = new Set(guardians.filter(p => p.role === 'responsavel').map(p => p.id));
+        
+        studentsToInsert.forEach(item => {
+          if (item.data.guardian_id && !validGuardianIds.has(item.data.guardian_id)) {
+            results.errorCount++;
+            results.errors.push({ line: item.line, error: `O ID '${item.data.guardian_id}' fornecido para o responsável não pertence a um usuário com o perfil 'responsavel'.` });
+          }
+        });
+      }
+
       const { error: insertError } = await supabaseAdmin
         .from('students')
         .insert(studentsToInsert.map(item => item.data)); // Insere apenas os dados

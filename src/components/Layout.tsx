@@ -60,7 +60,7 @@ export function Layout() {
   const getRoleName = (role?: string) => {
     switch (role) {
       case "gestor":
-        return "root";
+        return "Administrador";
       case "cuidador":
         return "Cuidador";
       case "responsavel":
@@ -138,7 +138,7 @@ export function Layout() {
               </Avatar>
               <div>
                 <p className="text-sm font-medium leading-none">
-                  {profile?.role === "gestor" ? "root" : profile?.name}
+                  {profile?.name}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {getRoleName(profile?.role)}

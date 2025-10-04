@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import { StudentManagement } from "./components/gestor/StudentManagement";
 import { UserManagement } from "./components/gestor/UserManagement";
 import { ClassManagement } from "./components/gestor/ClassManagement";
+import { CaregiverManagement } from "./components/gestor/CaregiverManagement";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ function App() {
                 <Route path="/students" element={<StudentManagement />} />
                 <Route path="/users" element={<UserManagement />} />
                 <Route path="/classes" element={<ClassManagement />} />
+                <Route path="/caregivers" element={<CaregiverManagement />} />
                 {/* Adicione outras rotas que devem usar o Layout aqui */}
               </Route>
 

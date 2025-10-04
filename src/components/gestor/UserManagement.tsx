@@ -25,7 +25,7 @@ import { useProfile } from "@/hooks/useProfile";
 // Schema base para os dados do perfil, sem email e senha
 const profileSchema = z.object({
   name: z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres").max(100, "Nome muito longo"),
-  cpf: z.string().trim().max(14, "CPF inválido").optional(),
+  cpf: z.string().trim().max(14, "CPF inválido").optional().nullable(),
   phone: z.string().trim().max(20, "Telefone inválido").optional(),
   role: z.enum(['gestor', 'cuidador', 'responsavel', 'professor']),
   function_title: z.string().trim().max(100, "Função muito longa").optional(),
@@ -61,9 +61,9 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
     importFile, setImportFile,
     isImporting,
     importErrors,
-    isErrorsDialogOpen, setErrorsDialogOpen,
+    isErrorsDialogOpen, setErrorsDialogOpen, 
     handleImport,
-  } = useFileImport({ supabaseFunction: 'create-user', invalidateQueryKey: 'users', entityName: 'usuários' });
+  } = useFileImport({ supabaseFunction: 'bulk-create-users', invalidateQueryKey: 'users', entityName: 'usuários' });
 
   const currentSchema = useMemo(() => (editingUser ? updateUserSchema : createUserSchema), [editingUser]);
 
@@ -122,7 +122,8 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
   };
   
   const handleDownloadCsvTemplate = () => {
-    const csvContent = "name,email,password,role,cpf,phone\nExemplo Nome,exemplo@email.com,senhaSegura123,cuidador,123.456.789-00,(99) 99999-9999";
+    const csvContent = "name,email,password,role,cpf,phone,function_title,work_schedule\r\n" +
+      "Exemplo Cuidador,cuidador@email.com,senhaSegura123,cuidador,123.456.789-00,(99) 99999-9999,Cuidador de Apoio,Seg-Sex 8h-17h";
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -135,8 +136,8 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
 
   const handleDownloadXlsxTemplate = () => {
     const worksheetData = [
-      ["name", "email", "password", "role", "cpf", "phone"],
-      ["Exemplo Nome", "exemplo@email.com", "senhaSegura123", "cuidador", "123.456.789-00", "(99) 99999-9999"]
+      ["name", "email", "password", "role", "cpf", "phone", "function_title", "work_schedule"],
+      ["Exemplo Cuidador", "cuidador@email.com", "senhaSegura123", "cuidador", "123.456.789-00", "(99) 99999-9999", "Cuidador de Apoio", "Seg-Sex 8h-17h"]
     ];
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
@@ -197,8 +198,8 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <p className="text-sm text-muted-foreground">
-                    O arquivo deve conter as colunas: `name`, `email`, `password`, `role`.
-                    O perfil (`role`) deve ser `gestor`, `cuidador` ou `responsavel`.
+                    As colunas obrigatórias são: `name`, `email`, `password`, `role`.
+                    O perfil (`role`) deve ser `gestor`, `cuidador`, `responsavel` ou `professor`.
                   </p>
                   <div className="flex gap-2">
                     <Button variant="secondary" size="sm" onClick={handleDownloadCsvTemplate}>
