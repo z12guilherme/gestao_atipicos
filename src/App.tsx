@@ -15,6 +15,7 @@ import { StudentManagement } from "./components/gestor/StudentManagement";
 import { UserManagement } from "./components/gestor/UserManagement";
 import { ClassManagement } from "./components/gestor/ClassManagement";
 import { CaregiverManagement } from "./components/gestor/CaregiverManagement";
+import { GuardianManagement } from "./components/gestor/GuardianManagement";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ function App() {
                 <Route path="/users" element={<UserManagement />} />
                 <Route path="/classes" element={<ClassManagement />} />
                 <Route path="/caregivers" element={<CaregiverManagement />} />
+                <Route path="/guardians" element={<GuardianManagement />} />
                 {/* Adicione outras rotas que devem usar o Layout aqui */}
               </Route>
 
