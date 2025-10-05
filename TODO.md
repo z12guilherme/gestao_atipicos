@@ -1,5 +1,15 @@
 # TODO - Retomada do Projeto
 
+## ⚠️ Motivo da Pausa (Contexto de Hardware)
+
+O desenvolvimento foi pausado principalmente por uma limitação de hardware: **um SSD com pouco espaço de armazenamento**.
+
+Projetos modernos como este, que utilizam **Docker**, o ecossistema **Node.js** (`node_modules`) e diversas ferramentas de build, consomem uma quantidade significativa de espaço em disco. A constante necessidade de limpar caches e imagens Docker para liberar espaço tornou o fluxo de trabalho improdutivo e frustrante.
+
+A decisão de pausar é estratégica, visando um futuro upgrade de hardware (um SSD maior) para permitir um desenvolvimento mais fluido e eficiente.
+
+---
+
 ## Visão Geral do Status do Projeto
 
 Para facilitar a retomada, aqui está um resumo do estado atual da aplicação:

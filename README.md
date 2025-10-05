@@ -18,6 +18,24 @@
 >
 > O desenvolvimento deste projeto está temporariamente pausado. Fique à vontade para explorar o código, fazer um fork ou entrar em contato para futuras colaborações. A versão atual está funcional e pode ser acessada no link acima.
 
+### ⏸️ Motivo da Pausa: Limitação de Hardware
+
+O desenvolvimento foi pausado por uma limitação de hardware: **um SSD com pouco espaço de armazenamento**. Projetos modernos como este, que utilizam **Docker**, o ecossistema **Node.js** (`node_modules`) e diversas ferramentas de build, consomem uma quantidade significativa de espaço em disco. A constante necessidade de gerenciar o armazenamento tornou o fluxo de trabalho improdutivo.
+
+A decisão de pausar é estratégica, visando um futuro upgrade para permitir um desenvolvimento mais fluido e eficiente.
+
+### 🐳 A Importância do Docker neste Projeto
+
+Você pode se perguntar por que usar Docker se ele consome mais recursos. A resposta está na **confiabilidade e padronização**.
+
+O Docker resolve o clássico problema de engenharia de software: **"funciona na minha máquina, mas não na sua"**. Ele encapsula a aplicação e todas as suas dependências (versão do Node.js, bibliotecas do sistema, etc.) em um "container". Isso garante que o ambiente de desenvolvimento, teste e produção seja **idêntico**, resultando em:
+
+- **Menos bugs** relacionados a diferenças de ambiente.
+- **Configuração simplificada** para novos desenvolvedores.
+- **Implantações (deploys) mais rápidas e seguras**.
+
+O `Dockerfile` do projeto utiliza uma técnica de **múltiplos estágios** para criar uma imagem final pequena e otimizada, contendo apenas o necessário para a produção. Adotar o Docker é uma prática que eleva a qualidade e a manutenibilidade do projeto a longo prazo.
+
 <p align="center">
   <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
   <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
