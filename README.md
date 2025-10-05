@@ -14,6 +14,10 @@
   </p>
 </div>
 
+> **⚠️ Projeto Pausado ⚠️**
+>
+> O desenvolvimento deste projeto está temporariamente pausado. Fique à vontade para explorar o código, fazer um fork ou entrar em contato para futuras colaborações. A versão atual está funcional e pode ser acessada no link acima.
+
 <p align="center">
   <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
   <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
@@ -21,6 +25,21 @@
   <img src="https://img.shields.io/badge/Supabase-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
   <img src="https://img.shields.io/badge/shadcn/ui-000000?style=for-the-badge&logo=shadcnui&logoColor=white" alt="Shadcn/UI" />
 </p>
+
+## 🎯 Status Atual do Projeto
+
+O projeto encontra-se em um estágio avançado de desenvolvimento, com as principais funcionalidades já implementadas e operacionais.
+
+#### ✅ O que está funcionando:
+- **Autenticação:** Login e logout funcionam para todos os perfis de usuário (Gestor, Responsável, Cuidador).
+- **Painéis por Perfil:**
+  - **Gestor:** Visualização de estatísticas, gerenciamento completo (CRUD) de usuários, estudantes e atribuições.
+  - **Responsável:** Visualização restrita apenas aos estudantes vinculados ao seu perfil, garantindo a privacidade.
+  - **Cuidador:** Visualização dos estudantes sob sua responsabilidade.
+- **Importação em Massa:** A interface para importar usuários e estudantes via arquivos CSV/XLSX está pronta.
+
+#### ⚠️ Ponto de Atenção (Última tarefa em andamento):
+- A funcionalidade de **criação/importação de usuários** estava apresentando um erro de CORS ao se comunicar com a Edge Function do Supabase. A correção já foi aplicada no código (`supabase/functions/create-user/index.ts`), mas ainda precisa ser implantada no ambiente do Supabase para validar a solução.
 
 ---
 
@@ -82,6 +101,7 @@ Siga os passos abaixo para configurar e rodar a aplicação no seu ambiente de d
 1. **Node.js:** Versão 18.x ou superior.
 2. **Conta no Supabase:** Crie uma conta gratuita em [supabase.com](https://supabase.com).
 3. **Supabase CLI:** Instale a CLI do Supabase para gerenciar as Edge Functions localmente. Siga as [instruções de instalação](https://supabase.com/docs/guides/cli/getting-started).
+4. **Docker e Docker Compose:** (Recomendado) Para garantir um ambiente de execução consistente e facilitar o deploy.
 
 ### 1. Clonar o Repositório
 
@@ -158,7 +178,11 @@ O painel do cuidador foi projetado para focar nas suas atividades diárias e no 
 
 ---
 
-## 🐳 Docker
+## 🐳 Executando com Docker
+
+O uso de Docker é **altamente recomendado** para este projeto, pois ele resolve o clássico problema de "funciona na minha máquina". Ao encapsular a aplicação e suas dependências em um container, garantimos que o ambiente de desenvolvimento, teste e produção seja idêntico, evitando inconsistências.
+
+O `Dockerfile` do projeto utiliza uma abordagem de múltiplos estágios para criar uma imagem otimizada e segura, servindo a aplicação React com Nginx.
 
 Para facilitar a implantação e garantir um ambiente consistente, o projeto pode ser executado em um container Docker.
 
