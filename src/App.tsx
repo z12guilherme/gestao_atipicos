@@ -13,7 +13,7 @@ import NotFound from "./pages/NotFound";
 
 // Importe a nova página de estudantes
 import { StudentsPage } from "./pages/StudentsPage";
-import { UserManagement } from "./components/gestor/UserManagement";
+import { UsersPage } from "./pages/UsersPage";
 import { ClassManagement } from "./components/gestor/ClassManagement";
 import { CaregiverManagement } from "./components/gestor/CaregiverManagement";
 import { GuardianManagement } from "./components/gestor/GuardianManagement";
@@ -35,9 +35,8 @@ function App() {
                 element={<ProtectedRoute><Layout /></ProtectedRoute>}
               >
                 <Route path="/" element={<Dashboard />} />
-                {/* Altere esta linha para usar a StudentsPage */}
                 <Route path="/students" element={<StudentsPage />} />
-                <Route path="/users" element={<UserManagement />} />
+                <Route path="/users" element={<UsersPage />} />
                 <Route path="/classes" element={<ClassManagement />} />
                 <Route path="/caregivers" element={<CaregiverManagement />} />
                 <Route path="/guardians" element={<GuardianManagement />} />

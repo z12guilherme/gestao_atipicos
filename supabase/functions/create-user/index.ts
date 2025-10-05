@@ -58,13 +58,13 @@ serve(async (req) => {
 
     if (!Array.isArray(records)) {
       return new Response(JSON.stringify({ successCount: 0, errorCount: 1, errors: [{ line: 0, error: "O corpo da requisição é inválido. Esperava-se um array de usuários." }] }), {
-        headers: responseHeaders, status: 400
+        headers: { ...responseHeaders, "Content-Type": "application/json" }, status: 400
       });
     }
 
     if (records.length === 0) {
       return new Response(JSON.stringify({ successCount: 0, errorCount: 1, errors: [{ line: 0, error: "O arquivo enviado está vazio ou não contém dados válidos." }] }), {
-        headers: responseHeaders, status: 400
+        headers: { ...responseHeaders, "Content-Type": "application/json" }, status: 400
       });
     }
 
@@ -170,7 +170,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ successCount, errorCount, errors: importErrors }),
-      { headers: responseHeaders, status: 200 },
+      { headers: { ...responseHeaders, "Content-Type": "application/json" }, status: 200 },
     );
   } catch (error) {
     console.error(`[${new Date().toISOString()}] Critical error in create-user:`, error.message);
@@ -180,7 +180,7 @@ serve(async (req) => {
         errorCount: 1,
         errors: [{ line: 0, error: `Erro inesperado no servidor: ${error.message}` }],
       }),
-      { headers: responseHeaders, status: 500 }
+      { headers: { ...responseHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
 });
