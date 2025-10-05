@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"; 
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { UserPlus, Edit, Save, Trash2, Stethoscope, FileText, BadgeInfo, Upload, FileDown, Loader2, FileX2 } from "lucide-react";
+import { UserPlus, Edit, Save, Trash2, Stethoscope, FileText, BadgeInfo, Upload, FileDown, Loader2, FileX2, Link } from "lucide-react";
 import { useStudents, Student } from "@/hooks/useStudents"; // Hook para buscar estudantes
 import { useClasses } from "@/hooks/useClasses"; // Hook para buscar turmas
 import { useFileImport } from "@/hooks/useFileImport";
@@ -39,8 +39,6 @@ const studentSchema = z.object({ // Validação mais precisa e com melhores mens
   medical_info: z.string().trim().nullable().optional(),
   // Adicionado para o upload de arquivo
   report_file: z.instanceof(FileList).optional(),
-  // Adicionado para armazenar o caminho do arquivo no banco
-  report_path: z.string().nullable().optional(),
 });
 
 type StudentFormData = z.infer<typeof studentSchema>;
@@ -55,7 +53,7 @@ interface StudentManagementProps {
 export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent, setEditingStudent }: StudentManagementProps) {
 
   const { profile } = useProfile();
-  const { students, isLoading, createStudent, updateStudent, deleteStudent, getReportUrl } = useStudents();
+  const { students, isLoading, createStudent, updateStudent, deleteStudent, createDocument, supabase } = useStudents();
   const { classes } = useClasses();
   const {
     isImportOpen, setImportOpen,
@@ -110,24 +108,57 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
       diagnosis: student.diagnosis || "",
       special_needs: student.special_needs || "",
       medical_info: student.medical_info || "",
-      report_path: student.report_path || "",
     });
     setEditingStudent(student);
     setDialogOpen(true);
   };
   
   const onSubmit = async (data: StudentFormData) => {
+    // Separa o arquivo dos outros dados do estudante
+    const { report_file, ...studentData } = data;
+    let studentId = editingStudent?.id;
+
     try {
+      // 1. Salva ou atualiza os dados do estudante PRIMEIRO para garantir que temos um ID
       if (editingStudent) {
-        await updateStudent.mutateAsync({ id: editingStudent.id, ...data });
+        await updateStudent.mutateAsync({ id: editingStudent.id, ...studentData });
       } else {
-        await createStudent.mutateAsync(data);
+        const newStudent = await createStudent.mutateAsync(studentData);
+        studentId = newStudent.id; // Pega o ID do novo estudante
       }
+
+      // 2. Se houver um arquivo de laudo, faz o upload e cria o registro na tabela 'documents'
+      if (studentId && report_file && report_file.length > 0) {
+        const file = report_file[0];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${studentId}-${Date.now()}.${fileExt}`;
+        const filePath = `laudos/${fileName}`;
+
+        // 2a. Faz o upload para o Supabase Storage
+        const { error: uploadError } = await supabase
+          .storage
+          .from('laudos')
+          .upload(filePath, file, { upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        // 2b. Cria o registro na tabela 'documents'
+        await createDocument.mutateAsync({
+          student_id: studentId,
+          title: `Laudo de ${studentData.name}`,
+          file_path: filePath,
+          file_name: file.name,
+          document_type: 'laudo',
+        });
+      }
+
+      // 3. Limpa o formulário e fecha o diálogo
       reset();
       setEditingStudent(null);
       setDialogOpen(false);
     } catch (error) {
-      console.error('Falha ao salvar estudante:', error);
+      // As mensagens de erro já são tratadas pelos hooks (react-query)
+      console.error("Falha no processo de salvar estudante/documento:", error);
     }
   };
 
@@ -221,18 +252,10 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
               </Dialog>
               
               <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
-                setDialogOpen(isOpen);
-                if (!isOpen) {
-                  reset();
-                  setEditingStudent(null);
-                }
+                handleDialogChange(isOpen);
               }}>
                 <DialogTrigger asChild>
-                  <Button onClick={() => {
-                    setEditingStudent(null);
-                    reset({ name: '', birth_date: '', status: 'ativo', cpf: '', class_name: '', diagnosis: '', special_needs: '', medical_info: '' });
-                    setDialogOpen(true);
-                  }}>
+                  <Button>
                     <UserPlus className="mr-2 h-4 w-4" />
                     Novo Estudante
                   </Button>
@@ -308,19 +331,6 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                         <Label htmlFor="report_file"><Upload className="inline mr-2 h-4 w-4"/>Anexar Laudo (PDF, Imagem)</Label>
                         <Input id="report_file" type="file" {...register("report_file")} />
                         {errors.report_file && <p className="text-sm text-destructive">{errors.report_file.message as string}</p>}
-                        
-                        {/* Mostra o link para download se já existir um laudo */}
-                        {editingStudent?.report_path && (
-                          <div className="mt-2">
-                            <a 
-                              href={getReportUrl(editingStudent.report_path)} 
-                              target="_blank" rel="noopener noreferrer" 
-                              className="text-sm text-blue-600 hover:underline flex items-center gap-1"
-                            >
-                              <FileDown className="h-4 w-4" /> Baixar Laudo Atual
-                            </a>
-                          </div>
-                        )}
                     </div>
 
                     <div className="flex justify-end space-x-3 pt-4">

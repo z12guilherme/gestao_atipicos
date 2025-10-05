@@ -1,17 +1,20 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GraduationCap, Users, School, HeartHandshake } from "lucide-react";
+import { GraduationCap, Users, School, HeartHandshake, Loader2 } from "lucide-react";
 import { useUsers } from '@/hooks/useUsers';
 import { useStudents } from '@/hooks/useStudents';
 import { useClasses } from '@/hooks/useClasses';
 import { useProfile } from '@/hooks/useProfile';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, PieChart, Pie, Cell, Tooltip } from "recharts";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function GestorDashboard() {
   // Hooks para buscar os dados e popular os cards
   const { profile } = useProfile();
-  const { users } = useUsers();
-  const { students } = useStudents();
-  const { classes } = useClasses();
+  const { users, isLoading: isLoadingUsers } = useUsers();
+  const { students, isLoading: isLoadingStudents } = useStudents();
+  const { classes, isLoading: isLoadingClasses } = useClasses();
+
+  const isLoading = isLoadingUsers || isLoadingStudents || isLoadingClasses;
 
   const stats = {
     totalStudents: students.length,
@@ -54,6 +57,15 @@ export function GestorDashboard() {
 
       {/* Cards de Estatísticas */}
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+        {isLoading ? (
+          <>
+            <Skeleton className="h-[126px]" />
+            <Skeleton className="h-[126px]" />
+            <Skeleton className="h-[126px]" />
+            <Skeleton className="h-[126px]" />
+          </>
+        ) : (
+          <>
         <Card className="border-0 bg-gradient-to-r from-blue-50 to-indigo-100 dark:from-blue-950/50 dark:to-indigo-900/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-blue-800 dark:text-blue-200">Total de Alunos</CardTitle>
@@ -94,6 +106,8 @@ export function GestorDashboard() {
             <p className="text-xs text-orange-700 dark:text-orange-300">Turmas cadastradas</p>
           </CardContent>
         </Card>
+          </>
+        )}
       </div>
 
       {/* Gráficos */}
@@ -104,32 +118,38 @@ export function GestorDashboard() {
             <CardDescription>Distribuição de estudantes nas turmas cadastradas.</CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={chartDataStudents}>
-                <defs>
-                  <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#8884d8" stopOpacity={0.1}/>
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="name"
-                  stroke="#888888"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  stroke="#888888"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => `${value}`}
-                />
-                <Tooltip cursor={{fill: 'rgba(150, 150, 150, 0.1)'}} />
-                <Bar dataKey="total" fill="url(#colorUv)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {isLoading ? (
+              <div className="flex items-center justify-center h-[350px]">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={chartDataStudents}>
+                  <defs>
+                    <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#8884d8" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="name"
+                    stroke="#888888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    stroke="#888888"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => `${value}`}
+                  />
+                  <Tooltip cursor={{fill: 'rgba(150, 150, 150, 0.1)'}} />
+                  <Bar dataKey="total" fill="url(#colorUv)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
         <Card className="col-span-1 md:col-span-2 lg:col-span-3">
@@ -138,9 +158,14 @@ export function GestorDashboard() {
             <CardDescription>Proporção de cada perfil no sistema.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
-              <PieChart>
-                  content={({ active, payload }) => {
+            {isLoading ? (
+              <div className="flex items-center justify-center h-[350px]">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={350}>
+                <PieChart>
+                  <Tooltip content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       return (
                         <div className="p-2 bg-background border rounded-md shadow-lg">
@@ -149,21 +174,13 @@ export function GestorDashboard() {
                       );
                     }
                     return null;
-                  }}
-                />
-                <Pie data={chartDataUsers} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={120} labelLine={false} label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}>
-                  {chartDataUsers.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-}
-              </PieChart>
-            </ResponsiveContainer>
+                  }} />
+                  <Pie data={chartDataUsers} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={120} labelLine={false} label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}>
+                    {chartDataUsers.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>

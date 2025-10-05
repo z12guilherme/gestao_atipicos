@@ -11,11 +11,13 @@ import AuthPage from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
-import { StudentManagement } from "./components/gestor/StudentManagement";
+// Importe a nova página de estudantes
+import { StudentsPage } from "./pages/StudentsPage";
 import { UserManagement } from "./components/gestor/UserManagement";
 import { ClassManagement } from "./components/gestor/ClassManagement";
 import { CaregiverManagement } from "./components/gestor/CaregiverManagement";
 import { GuardianManagement } from "./components/gestor/GuardianManagement";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -33,11 +35,13 @@ function App() {
                 element={<ProtectedRoute><Layout /></ProtectedRoute>}
               >
                 <Route path="/" element={<Dashboard />} />
-                <Route path="/students" element={<StudentManagement />} />
+                {/* Altere esta linha para usar a StudentsPage */}
+                <Route path="/students" element={<StudentsPage />} />
                 <Route path="/users" element={<UserManagement />} />
                 <Route path="/classes" element={<ClassManagement />} />
                 <Route path="/caregivers" element={<CaregiverManagement />} />
                 <Route path="/guardians" element={<GuardianManagement />} />
+                <Route path="/settings" element={<Settings />} />
                 {/* Adicione outras rotas que devem usar o Layout aqui */}
               </Route>
 

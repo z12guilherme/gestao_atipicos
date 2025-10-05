@@ -12,6 +12,7 @@ export interface Student {
   special_needs?: string;
   medical_info?: string;
   guardian_id?: string | null;
+  report_path?: string | null; // Manteremos para consistência da interface, mas a lógica mudará
   status: 'ativo' | 'inativo' | 'transferido';
   created_at: string;
   updated_at: string;
@@ -110,11 +111,39 @@ export function useStudents() {
     },
   });
 
+  const createDocument = useMutation({
+    mutationFn: async (docData: {
+      student_id: string;
+      title: string;
+      file_path: string;
+      file_name: string;
+      document_type: 'laudo';
+    }) => {
+      const { data, error } = await supabase
+        .from('documents')
+        .insert(docData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Laudo anexado com sucesso!');
+      // Pode ser útil invalidar queries relacionadas a documentos se houver uma
+    },
+    onError: (error: any) => {
+      toast.error(`Erro ao anexar laudo: ${error.message}`);
+    },
+  });
+
   return {
     students: students || [],
     isLoading,
     createStudent,
     updateStudent,
     deleteStudent,
+    createDocument,
+    supabase, // Expor o cliente supabase para o upload
   };
 }

@@ -67,26 +67,29 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
 
   const currentSchema = useMemo(() => (editingUser ? updateUserSchema : createUserSchema), [editingUser]);
 
+  // Use `values` para resetar o formulário declarativamente quando `editingUser` mudar.
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<UserFormData>({
     resolver: zodResolver(currentSchema),
-    // Redefine os valores padrão quando o formulário muda de "criar" para "editar" e vice-versa
-    defaultValues: editingUser ? { name: editingUser.name, role: editingUser.role, cpf: editingUser.cpf || "", phone: editingUser.phone || "", function_title: editingUser.function_title || "", work_schedule: editingUser.work_schedule || "" } : { name: "", email: "", password: "", role: "responsavel", student_ids: [] },
+    values: editingUser ? {
+      name: editingUser.name,
+      role: editingUser.role,
+      cpf: editingUser.cpf || "",
+      phone: editingUser.phone || "",
+      function_title: editingUser.function_title || "",
+      work_schedule: editingUser.work_schedule || "",
+      student_ids: editingUser.student_ids || [],
+      // Adicione email e senha vazios para satisfazer o tipo, eles não serão usados na edição.
+      email: '',
+      password: ''
+    } : {
+      name: "", email: "", password: "", role: "responsavel", student_ids: []
+    },
   });
 
   const selectedRole = watch("role");
 
   const handleOpenEditModal = (user: User) => {
     setEditingUser(user);
-    setValue("name", user.name);
-    setValue("role", user.role);
-    setValue("cpf", user.cpf || "");
-    setValue("phone", user.phone || "");
-    setValue("function_title", user.function_title || "");
-    setValue("work_schedule", user.work_schedule || "");
-    // Garante que os estudantes vinculados sejam carregados no formulário de edição
-    if (user.role === 'responsavel') {
-      setValue("student_ids", user.student_ids || []);
-    }
     setDialogOpen(true);
   };
   
@@ -99,7 +102,6 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
       } else {
         await createUser.mutateAsync(data);
       }
-      reset();
       setEditingUser(null);
       setDialogOpen(false);
     } catch (error) {
@@ -109,8 +111,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
 
   const handleDialogChange = (isOpen: boolean) => {
     setDialogOpen(isOpen);
-    if (!isOpen) {
-      reset();
+    if (!isOpen) {      
       setEditingUser(null);
     }
   };
@@ -226,11 +227,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
             </Dialog>
 
             <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
-              setDialogOpen(isOpen);
-              if (!isOpen) {
-                reset();
-                setEditingUser(null);
-              }
+              handleDialogChange(isOpen);
             }}>
               <DialogTrigger asChild>
                 <Button><UserPlus className="mr-2 h-4 w-4" />Novo Usuário</Button>
@@ -262,7 +259,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="role">Tipo de Perfil *</Label>
-                    <Select onValueChange={(value) => setValue("role", value as any)} defaultValue={editingUser?.role || 'responsavel'}>
+                    <Select onValueChange={(value) => setValue("role", value as any, { shouldValidate: true })} value={watch('role')}>
                         <SelectTrigger><SelectValue placeholder="Selecione o perfil" /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="gestor">Gestor</SelectItem>
