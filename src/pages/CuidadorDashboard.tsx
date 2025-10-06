@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { 
   Users, 
@@ -16,17 +18,26 @@ import {
   Star
 } from "lucide-react";
 import { useCaregiverData } from "@/hooks/useCaregiverData";
+import { useCaregiverDashboardData } from "@/hooks/useCaregiverDashboardData";
 import { useProfile } from "@/hooks/useProfile";
 import { ScheduleManagement } from "@/pages/ScheduleManagement";
+import { NewNoteDialog } from "@/pages/NewNoteDialog";
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export function CuidadorDashboard() {
   const { profile } = useProfile();
-  const { students: assignedStudents, isLoading } = useCaregiverData();
+  const [isNoteDialogOpen, setNoteDialogOpen] = useState(false);
 
-  // DADOS MOCK (a serem substituídos por dados reais)
-  const todayScheduleLength = 0; // TODO: Buscar dados reais da agenda
-  const recentNotes: { student: string, note: string, time: string }[] = []; // TODO: Buscar dados reais de observações
+  const { students: assignedStudents, isLoading: isLoadingStudents } = useCaregiverData();
+  const { data: dashboardData, isLoading: isLoadingDashboard } = useCaregiverDashboardData();
+
+  const isLoading = isLoadingStudents || isLoadingDashboard;
+
+  const recentNotes = dashboardData?.recentNotes || [];
+  const todayScheduleCount = dashboardData?.todayScheduleCount || 0;
   const averageRating = "N/A"; // TODO: Buscar dados reais de avaliação
+
   const hasStudents = assignedStudents.length > 0;
   const hasRecentNotes = recentNotes.length > 0;
 
@@ -36,10 +47,6 @@ export function CuidadorDashboard() {
     if (hour < 18) return "Boa tarde";
     return "Boa noite";
   };
-
-  if (isLoading) {
-    return <div className="p-6 text-center">Carregando dados do cuidador...</div>;
-  }
 
   return (
     <div className="space-y-8">
@@ -58,16 +65,26 @@ export function CuidadorDashboard() {
             <p className="text-sm text-muted-foreground">Hoje</p>
             <p className="text-sm font-medium">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
           </div>
-          <Button size="sm" className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700">
+          <Button onClick={() => setNoteDialogOpen(true)} size="sm" className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700">
             <MessageSquare className="mr-2 h-4 w-4" />
             Nova Observação
           </Button>
         </div>
       </div>
 
+
       {/* Quick Stats Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950/50 dark:to-emerald-900/50">
+        {isLoading ? (
+          <>
+            <Skeleton className="h-[120px]" />
+            <Skeleton className="h-[120px]" />
+            <Skeleton className="h-[120px]" />
+            <Skeleton className="h-[120px]" />
+          </>
+        ) : (
+          <>
+          <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950/50 dark:to-emerald-900/50">
           <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-emerald-500/10" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
             <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">
@@ -96,7 +113,7 @@ export function CuidadorDashboard() {
             </div>
           </CardHeader>
           <CardContent className="relative">
-            <div className="text-3xl font-bold text-blue-900 dark:text-blue-100">{todayScheduleLength > 0 ? todayScheduleLength : '-'}</div>
+            <div className="text-3xl font-bold text-blue-900 dark:text-blue-100">{todayScheduleCount > 0 ? todayScheduleCount : '-'}</div>
             <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
               Programadas para hoje
             </p>
@@ -138,6 +155,8 @@ export function CuidadorDashboard() {
             </p>
           </CardContent>
         </Card>
+        </>
+        )}
       </div>
 
       {/* Main Content Grid */}
@@ -159,7 +178,12 @@ export function CuidadorDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {!hasStudents ? (
+              {isLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-16 w-full" />
+                  <Skeleton className="h-16 w-full" />
+                </div>
+              ) : !hasStudents ? (
                 <div className="text-center py-4 px-2">
                   <Heart className="mx-auto h-8 w-8 text-muted-foreground" />
                   <p className="mt-2 text-sm text-muted-foreground">Você ainda não tem estudantes sob seus cuidados.</p>
@@ -195,21 +219,25 @@ export function CuidadorDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {!hasRecentNotes ? (
+              {isLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-16 w-full" />
+                </div>
+              ) : !hasRecentNotes ? (
                  <div className="text-center py-4 px-2">
                   <MessageSquare className="mx-auto h-8 w-8 text-muted-foreground" />
                   <p className="mt-2 text-sm text-muted-foreground">Nenhuma observação registrada hoje.</p>
                 </div>
               ) : (
                 recentNotes.map((note, index) => (
-                  <div key={index} className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                  <div key={note.id} className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-medium">{note.student}</p>
-                      <span className="text-xs text-muted-foreground">{note.time}</span>
+                      <p className="text-sm font-medium">{note.student_name}</p>
+                      <span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(note.created_at), { addSuffix: true, locale: ptBR })}</span>
                     </div>
                     <p className="text-xs text-muted-foreground">{note.note}</p>
                   </div>
-              ))}
+                )))}
             </CardContent>
           </Card>
 
@@ -219,7 +247,7 @@ export function CuidadorDashboard() {
               <CardTitle className="text-sm">Ações Rápidas</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full justify-start">
+              <Button onClick={() => setNoteDialogOpen(true)} variant="outline" className="w-full justify-start">
                 <MessageSquare className="mr-2 h-4 w-4" />
                 Nova Observação
               </Button>
@@ -235,6 +263,12 @@ export function CuidadorDashboard() {
           </Card>
         </div>
       </div>
+
+      <NewNoteDialog
+        isOpen={isNoteDialogOpen}
+        onOpenChange={setNoteDialogOpen}
+        students={assignedStudents}
+      />
     </div>
   );
 }

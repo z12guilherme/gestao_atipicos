@@ -94,7 +94,7 @@ export function ScheduleManagement() {
             {/* Formulário para adicionar nova atividade */}
             <div className="flex items-center gap-2 pt-4 border-t">
               <Input placeholder="Hora (HH:MM)" value={newActivity.time} onChange={e => setNewActivity({ ...newActivity, time: e.target.value })} />
-              <Input placeholder="Atividade" value={newActivity.activity} onChange={e => setNewActivity({ ...new-Activity, activity: e.target.value })} />
+              <Input placeholder="Atividade" value={newActivity.activity} onChange={e => setNewActivity({ ...newActivity, activity: e.target.value })} />
               <Input placeholder="Estudante" value={newActivity.student} onChange={e => setNewActivity({ ...newActivity, student: e.target.value })} />
               <Button onClick={handleAddActivity} size="icon">
                 <PlusCircle className="h-5 w-5" />
