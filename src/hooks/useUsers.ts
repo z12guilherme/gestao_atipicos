@@ -89,16 +89,16 @@ export function useUsers() {
       const student_ids = payload.student_ids || [];
 
       // 1. Atualiza os dados do perfil na tabela 'profiles'
-      const { error: profileError } = await supabase
+      const { data: updatedProfile, error: profileError } = await supabase
         .from('profiles')
         .update(profileData)
         .eq('id', userId)
         .select('role') // Retorna o 'role' para a lógica condicional
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError || !updatedProfile) throw profileError || new Error("Perfil não encontrado após atualização.");
 
-      const userRole = profileData.role || profileError.role;
+      const userRole = updatedProfile.role;
 
       // 2. Lógica condicional para atualizar a tabela de vínculo correta
       if (userRole === 'cuidador') {
