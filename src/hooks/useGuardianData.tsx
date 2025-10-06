@@ -1,7 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
-import { Student } from "./useStudents";
+
+// Estendemos a interface para incluir os relatórios
+export interface StudentWithReports extends Student {
+  reports: {
+    id: string;
+    content: string;
+    created_at: string;
+    profiles: { name: string } | null; // Perfil do cuidador que escreveu a nota
+  }[];
+}
 
 interface GuardianData {
   students: Student[];
@@ -22,7 +31,8 @@ export function useGuardianData() {
 
       const { data, error } = await supabase
         .from('guardians_students')
-        .select('*, students(*)') // CORREÇÃO: Busca todos os dados do estudante vinculado
+        // MELHORIA: Busca os estudantes e, para cada um, seus relatórios e o nome do cuidador que o escreveu.
+        .select('*, students(*, reports(*, profiles:caregiver_id(name)))')
         .eq('guardian_id', user.id);
 
       if (error) {
@@ -30,8 +40,9 @@ export function useGuardianData() {
         return { students: [] };
       }
 
-      // Extrai apenas os dados dos estudantes da resposta, que vêm aninhados.
-      const students = data.map(item => item.students).filter(Boolean) as Student[];
+      // Extrai e formata os dados dos estudantes da resposta, que vêm aninhados.
+      // Ordena os relatórios por data, do mais recente para o mais antigo.
+      const students = data.map(item => ({ ...item.students, reports: item.students.reports.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) })).filter(Boolean) as StudentWithReports[];
       return { students };
     },
     enabled: !!user,

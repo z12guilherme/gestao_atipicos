@@ -17,6 +17,7 @@ import { UsersPage } from "./pages/UsersPage";
 import { ClassManagement } from "./components/gestor/ClassManagement";
 import { AssignmentManagement } from "@/components/gestor/AssignmentManagement";
 import Settings from "./pages/Settings";
+import UpdatePasswordPage from "./pages/UpdatePasswordPage"; // Importa a nova página
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ function App() {
           <AuthProvider>
             <Routes>
               <Route path="/auth" element={<AuthPage />} />
+              <Route path="/update-password" element={<UpdatePasswordPage />} />
 
               {/* Rotas Protegidas */}
               <Route

@@ -31,7 +31,11 @@ export function AssignmentTabContent({
     if (!assignments || assignments.length === 0) {
       return "Nenhum estudante vinculado";
     }
-    return assignments.map((item: any) => item.students.name).join(', ');
+    // CORREÇÃO DEFINITIVA: Acessa o nome do estudante através do objeto aninhado 'students'.
+    // O 'filter(Boolean)' remove quaisquer entradas nulas ou indefinidas antes do 'join'.
+    const studentNames = assignments.map((item: any) => item.students?.name).filter(Boolean);
+    if (studentNames.length === 0) return "Nenhum estudante vinculado";
+    return studentNames.join(', ');
   };
 
   return (

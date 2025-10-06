@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useProfile } from '@/hooks/useProfile';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -46,11 +46,17 @@ interface NewNoteDialogProps {
   onOpenChange: (isOpen: boolean) => void;
   students: Student[];
 }
-
-const createNote = async ({ studentId, studentName, note, userId }: { studentId: string; studentName: string; note: string; userId: string }) => {
+ 
+// CORREÇÃO: A função agora insere na tabela 'reports' com as colunas corretas.
+const createNote = async ({ studentId, note, caregiverProfileId }: { studentId: string; note: string; caregiverProfileId: string }) => {
   const { data, error } = await supabase
-    .from('notes')
-    .insert([{ student_id: studentId, student_name: studentName, note, user_id: userId }])
+    .from('reports')
+    .insert([{ 
+      student_id: studentId, 
+      content: note, // 'note' agora é 'content'
+      caregiver_id: caregiverProfileId, // Usa o ID do perfil, não o ID de autenticação
+      title: `Observação de ${new Date().toLocaleDateString('pt-BR')}` // Adiciona um título padrão
+    }])
     .select();
 
   if (error) {
@@ -60,7 +66,7 @@ const createNote = async ({ studentId, studentName, note, userId }: { studentId:
 };
 
 export function NewNoteDialog({ isOpen, onOpenChange, students }: NewNoteDialogProps) {
-  const { user } = useAuth();
+  const { profile } = useProfile(); // Usa o useProfile para obter o ID do perfil
   const queryClient = useQueryClient();
 
   const form = useForm<NoteFormValues>({
@@ -82,15 +88,14 @@ export function NewNoteDialog({ isOpen, onOpenChange, students }: NewNoteDialogP
   });
 
   function onSubmit(values: NoteFormValues) {
-    if (!user) return;
+    if (!profile) return;
     const selectedStudent = students.find(s => s.id === values.studentId);
     if (!selectedStudent) return;
 
     mutation.mutate({
       studentId: values.studentId,
-      studentName: selectedStudent.name,
       note: values.note,
-      userId: user.id,
+      caregiverProfileId: profile.id, // Passa o ID do perfil do cuidador
     });
   }
 

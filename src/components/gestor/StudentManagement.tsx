@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -45,7 +46,7 @@ interface StudentManagementProps {
 
 export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent, setEditingStudent }: StudentManagementProps) {
   const { profile } = useProfile();
-  const { students, isLoading, upsertStudent, deleteStudent } = useStudents(); // Hook de estudantes
+  const { students, isLoading, createStudent, updateStudent, deleteStudent } = useStudents(); // Hook de estudantes
   const { users: allUsers } = useUsers(); // Hook para buscar cuidadores e responsáveis
 
   const caregivers = useMemo(() => allUsers.filter(u => u.role === 'cuidador'), [allUsers]);
@@ -86,7 +87,46 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
 
   const onSubmit = async (data: StudentFormData) => {
     try {
-      await upsertStudent.mutateAsync({ id: editingStudent?.id, ...data });
+      const { caregiver_ids, guardian_ids, ...studentInfo } = data;
+
+      if (editingStudent) {
+        // Lógica de atualização
+        const studentId = editingStudent.id;
+        await updateStudent.mutateAsync({ id: studentId, ...studentInfo });
+
+        // Atualiza vínculos de cuidadores
+        if (caregiver_ids !== undefined) {
+          await supabase.from('caregivers_students').delete().eq('student_id', studentId);
+          if (caregiver_ids.length > 0) {
+            const caregiverAssignments = caregiver_ids.map(caregiver_id => ({ student_id: studentId, caregiver_id }));
+            await supabase.from('caregivers_students').insert(caregiverAssignments);
+          }
+        }
+
+        // Atualiza vínculos de responsáveis
+        if (guardian_ids !== undefined) {
+          await supabase.from('guardians_students').delete().eq('student_id', studentId);
+          if (guardian_ids.length > 0) {
+            const guardianAssignments = guardian_ids.map(guardian_id => ({ student_id: studentId, guardian_id, relationship: 'Responsável' }));
+            await supabase.from('guardians_students').insert(guardianAssignments);
+          }
+        }
+
+      } else {
+        // Lógica de criação
+        const savedStudent = await createStudent.mutateAsync(studentInfo);
+        if (!savedStudent) throw new Error("Falha ao criar estudante.");
+
+        const studentId = savedStudent.id;
+        if (caregiver_ids && caregiver_ids.length > 0) {
+          const caregiverAssignments = caregiver_ids.map(caregiver_id => ({ student_id: studentId, caregiver_id }));
+          await supabase.from('caregivers_students').insert(caregiverAssignments);
+        }
+        if (guardian_ids && guardian_ids.length > 0) {
+          const guardianAssignments = guardian_ids.map(guardian_id => ({ student_id: studentId, guardian_id, relationship: 'Responsável' }));
+          await supabase.from('guardians_students').insert(guardianAssignments);
+        }
+      }
       setEditingStudent(null);
       setDialogOpen(false);
     } catch (error) {
@@ -285,10 +325,10 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
 
                     <div className="flex justify-end space-x-2 pt-2">
                       <Button type="button" variant="ghost" onClick={() => handleDialogChange(false)}>Cancelar</Button>
-                      <Button type="submit" disabled={upsertStudent.isPending}>
+                      <Button type="submit" disabled={createStudent.isPending || updateStudent.isPending}>
                         {editingStudent
-                          ? (upsertStudent.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : <><Save className="mr-2 h-4 w-4" /> Salvar</>)
-                          : (upsertStudent.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando...</> : <><UserPlus className="mr-2 h-4 w-4" /> Criar</>)
+                          ? (updateStudent.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : <><Save className="mr-2 h-4 w-4" /> Salvar</>)
+                          : (createStudent.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando...</> : <><UserPlus className="mr-2 h-4 w-4" /> Criar</>)
                         }
                       </Button>
                     </div>

@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useMemo } from "react";
+import { Dispatch, SetStateAction, useMemo, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { UserPlus, Edit, Save, Trash2, Upload, FileDown, Loader2, Users2 } from "lucide-react";
+import { UserPlus, Edit, Save, Trash2, Upload, FileDown, Loader2, Users2, KeyRound } from "lucide-react";
 import { useUsers, User } from "@/hooks/useUsers"; // Hook para buscar usuários
 import { useFileImport } from "@/hooks/useFileImport";
 import { useForm } from "react-hook-form";
@@ -25,7 +25,7 @@ const profileSchema = z.object({
   name: z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres").max(100, "Nome muito longo"),
   cpf: z.string().trim().max(14, "CPF inválido").optional().nullable(),
   phone: z.string().trim().max(20, "Telefone inválido").optional(),
-  role: z.enum(['gestor', 'cuidador', 'responsavel', 'professor']),
+  role: z.enum(['gestor', 'cuidador', 'responsavel']),
   function_title: z.string().trim().max(100, "Função muito longa").optional(),
   work_schedule: z.string().trim().max(500, "Horário muito longo").optional(),
 })
@@ -51,7 +51,7 @@ interface UserManagementProps {
 export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEditingUser }: UserManagementProps) {
 
   const { profile } = useProfile();
-  const { users, isLoading, createUser, updateUser, deleteUser } = useUsers();
+  const { users, isLoading, createUser, updateUser, deleteUser, sendPasswordReset } = useUsers();
   const {
     isImportOpen, setImportOpen,
     importFile, setImportFile,
@@ -63,23 +63,26 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
 
   const currentSchema = useMemo(() => (editingUser ? updateUserSchema : createUserSchema), [editingUser]);
 
-  // Use `values` para resetar o formulário declarativamente quando `editingUser` mudar.
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<UserFormData>({
     resolver: zodResolver(currentSchema),
-    values: editingUser ? {
-      name: editingUser.name,
-      role: editingUser.role,
-      cpf: editingUser.cpf || "",
-      phone: editingUser.phone || "",
-      function_title: editingUser.function_title || "",
-      work_schedule: editingUser.work_schedule || "",
-      // Adicione email e senha vazios para satisfazer o tipo, eles não serão usados na edição.
-      email: '',
-      password: ''
-    } : {
-      name: "", email: "", password: "", role: "responsavel"
-    },
+    defaultValues: { name: "", email: "", password: "", role: "responsavel" },
   });
+
+  // Efeito para resetar o formulário quando o usuário a ser editado muda.
+  useEffect(() => {
+    if (editingUser) {
+      reset({
+        name: editingUser.name,
+        role: editingUser.role,
+        cpf: editingUser.cpf || "",
+        phone: editingUser.phone || "",
+        function_title: editingUser.function_title || "",
+        work_schedule: editingUser.work_schedule || "",
+      });
+    } else {
+      reset({ name: "", email: "", password: "", role: "responsavel" });
+    }
+  }, [editingUser, reset]);
 
   const selectedRole = watch("role");
 
@@ -111,7 +114,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
 
   const getRoleBadge = (role: string) => {
     const variants = { gestor: 'destructive', cuidador: 'default', responsavel: 'secondary', professor: 'outline' };
-    const labels = { gestor: 'Gestor', cuidador: 'Cuidador', responsavel: 'Responsável', professor: 'Professor' };
+    const labels = { gestor: 'Gestor', cuidador: 'Cuidador', responsavel: 'Responsável' };
     return <Badge variant={variants[role as keyof typeof variants] || 'default'}>{labels[role as keyof typeof labels] || role}</Badge>;
   };
   
@@ -257,7 +260,6 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
                         <SelectContent>
                             <SelectItem value="gestor">Gestor</SelectItem>
                             <SelectItem value="cuidador">Cuidador</SelectItem>
-                            <SelectItem value="professor">Professor</SelectItem>
                             <SelectItem value="responsavel">Responsável</SelectItem>
                         </SelectContent>
                     </Select>
@@ -300,8 +302,8 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead>Perfil</TableHead>
-                <TableHead>Contato</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -309,10 +311,22 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
               {users.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableCell className="text-muted-foreground">{user.email || 'N/A'}</TableCell>
                   <TableCell>{getRoleBadge(user.role)}</TableCell>
-                  <TableCell>{user.phone || 'N/A'}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right space-x-1">
                     <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(user)}><Edit className="h-4 w-4" /></Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" disabled={!user.email}><KeyRound className="h-4 w-4 text-yellow-600" /></Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader><AlertDialogTitle>Redefinir Senha</AlertDialogTitle><AlertDialogDescription>Um e-mail será enviado para **{user.email}** com instruções para criar uma nova senha. Deseja continuar?</AlertDialogDescription></AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => sendPasswordReset?.mutate(user.email!)} disabled={sendPasswordReset?.isPending ?? false}>{sendPasswordReset?.isPending ? 'Enviando...' : 'Enviar E-mail'}</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
@@ -321,7 +335,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
                         <AlertDialogHeader><AlertDialogTitle>Você tem certeza?</AlertDialogTitle><AlertDialogDescription>Esta ação não pode ser desfeita. Isso excluirá permanentemente o usuário e seus dados de nossos servidores.</AlertDialogDescription></AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => deleteUser.mutate(user.user_id)} disabled={deleteUser.isPending}>{deleteUser.isPending ? 'Excluindo...' : 'Excluir'}</AlertDialogAction>
+                          <AlertDialogAction onClick={() => deleteUser?.mutate(user.user_id)} disabled={deleteUser?.isPending ?? false}>{deleteUser?.isPending ? 'Excluindo...' : 'Excluir'}</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>

@@ -56,56 +56,35 @@ export function useStudents() {
     },
   });
 
-  // --- MUTATION: criar/atualizar estudante e seus vínculos ---
-  const upsertStudent = useMutation({
-    mutationFn: async (studentData: Partial<Student> & { id?: string }) => {
-      const { caregiver_ids, guardian_ids, ...studentInfo } = studentData;
-
-      // 1. Cria ou atualiza o estudante
-      const { data: savedStudent, error: studentError } = await supabase
-        .from('students')
-        .upsert(studentInfo)
-        .select()
-        .single();
-
-      if (studentError) throw studentError;
-      if (!savedStudent) throw new Error("Falha ao salvar estudante.");
-
-      const studentId = savedStudent.id;
-
-      // 2. Atualiza os vínculos de cuidadores (se fornecido)
-      if (caregiver_ids !== undefined) {
-        await supabase.from('caregivers_students').delete().eq('student_id', studentId);
-        if (caregiver_ids.length > 0) {
-          const caregiverAssignments = caregiver_ids.map(caregiver_id => ({ student_id: studentId, caregiver_id }));
-          const { error: caregiverError } = await supabase.from('caregivers_students').insert(caregiverAssignments);
-          if (caregiverError) throw caregiverError;
-        }
-      }
-
-      // 3. Atualiza os vínculos de responsáveis (se fornecido)
-      if (guardian_ids !== undefined) {
-        await supabase.from('guardians_students').delete().eq('student_id', studentId);
-        if (guardian_ids.length > 0) {
-          const guardianAssignments = guardian_ids.map(guardian_id => ({
-            student_id: studentId,
-            guardian_id: guardian_id,
-            relationship: 'Responsável', // CORREÇÃO: Adiciona o campo obrigatório
-          }));
-          const { error: guardianError } = await supabase.from('guardians_students').insert(guardianAssignments);
-          if (guardianError) throw guardianError;
-        }
-      }
-
-      return savedStudent;
+  // --- MUTATION: criar estudante ---
+  const createStudent = useMutation({
+    mutationFn: async (studentData: Partial<Student>) => {
+      const { data, error } = await supabase.from('students').insert(studentData).select().single();
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['students'] });
-      queryClient.invalidateQueries({ queryKey: ['users'] }); // Invalida usuários para atualizar a lista de vínculos
-      toast.success('Estudante e seus vínculos foram salvos com sucesso!');
+      toast.success('Estudante criado com sucesso!');
     },
     onError: (error: any) => {
-      toast.error(`Erro ao salvar estudante: ${error.message}`);
+      toast.error(`Erro ao criar estudante: ${error.message}`);
+    },
+  });
+
+  // --- MUTATION: atualizar estudante ---
+  const updateStudent = useMutation({
+    mutationFn: async (studentData: Partial<Student> & { id: string }) => {
+      const { id, ...updateData } = studentData;
+      const { error } = await supabase.from('students').update(updateData).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+      toast.success('Estudante atualizado com sucesso!');
+    },
+    onError: (error: any) => {
+      toast.error(`Erro ao atualizar estudante: ${error.message}`);
     },
   });
 
@@ -129,7 +108,8 @@ export function useStudents() {
     studentsWithoutCaregiver: students?.noCaregiver || [],
     studentsWithoutGuardian: students?.noGuardian || [],
     isLoading,
-    upsertStudent,
+    createStudent,
+    updateStudent,
     deleteStudent,
   };
 }

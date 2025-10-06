@@ -23,19 +23,19 @@ export function useUsers() {
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      // CORREÇÃO: A consulta agora busca os detalhes dos estudantes aninhados.
+      // CORREÇÃO: A query foi simplificada para buscar os dados aninhados
+      // e retorná-los diretamente, sem o processamento que estava causando o bug.
       const { data, error } = await supabase
         .from('profiles')
         .select(`
           *,
-          caregivers_students!inner(students(id, name)),
-          guardians_students!inner(students(id, name))
+          caregivers_students ( students ( id, name ) ),
+          guardians_students ( students ( id, name ) )
         `)
-        .in('role', ['cuidador', 'responsavel', 'professor', 'gestor'])
+        .in('role', ['cuidador', 'responsavel'])
         .order('name', { ascending: true });
       
       if (error) throw new Error(error.message);
-
       return (data as any[]) || [];
     },
   });
@@ -78,61 +78,13 @@ export function useUsers() {
 
   // --- MUTATION: atualizar usuário ---
   const updateUser = useMutation({
-    mutationFn: async ({ id, profileData, student_ids }: { id: string, profileData: Partial<User>, student_ids?: string[] }) => {
-      // 1️⃣ Atualiza os dados do perfil
-      const { data: updatedProfile, error: profileError } = await supabase
+    mutationFn: async ({ id, profileData }: { id: string, profileData: Partial<User> }) => {
+      const { error } = await supabase
         .from('profiles')
         .update(profileData)
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
 
-      if (profileError) throw profileError;
-
-      // 2️⃣ Se for responsável, atualiza estudantes vinculados
-      if (profileData.role === 'responsavel' && student_ids) {
-        // Remove associações antigas
-        const { error: deleteError } = await supabase
-          .from('guardians_students')
-          .delete()
-          .eq('guardian_id', id); // CORREÇÃO: Usar o ID do perfil
-        if (deleteError) throw deleteError;
-
-        // Cria novas associações
-        if (student_ids.length > 0) {
-          const newAssignments = student_ids.map(student_id => ({
-            guardian_id: id, // CORREÇÃO: Usar o ID do perfil
-            student_id,
-            relationship: 'responsavel'
-          }));
-          const { error: insertError } = await supabase.from('guardians_students').insert(newAssignments);
-          if (insertError) throw insertError;
-        }
-      }
-
-      // 3️⃣ Se for cuidador, atualiza estudantes vinculados
-      if (profileData.role === 'cuidador' && student_ids) {
-        // Remove associações antigas
-        const { error: deleteError } = await supabase
-          .from('caregivers_students')
-          .delete()
-          .eq('caregiver_id', id); // CORREÇÃO: Usar o ID do perfil
-        if (deleteError) throw deleteError;
-
-        // Cria novas associações
-        if (student_ids.length > 0) {
-          const newAssignments = student_ids.map(student_id => ({
-            caregiver_id: id, // CORREÇÃO: Usar o ID do perfil
-            student_id,
-            relationship: 'cuidador'
-          }));
-          const { error: insertError } = await supabase.from('caregivers_students').insert(newAssignments);
-          if (insertError) throw insertError;
-        }
-      }
-
-
-      return updatedProfile;
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
@@ -165,11 +117,29 @@ export function useUsers() {
     },
   });
 
+  // --- MUTATION: enviar email de redefinição de senha ---
+  const sendPasswordReset = useMutation({
+    mutationFn: async (email: string) => {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/update-password`,
+      });
+      if (error) throw error;
+    },
+    onSuccess: (data, email) => {
+      toast.success(`E-mail de redefinição enviado para ${email}`);
+    },
+    onError: (error: any) => {
+      toast.error(`Falha ao enviar e-mail: ${error.message}`);
+    },
+  });
+
+
   return {
     users: users || [],
     isLoading,
     createUser,
     updateUser,
     deleteUser,
+    sendPasswordReset,
   };
 }
