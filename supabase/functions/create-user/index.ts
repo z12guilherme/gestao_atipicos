@@ -144,6 +144,27 @@ serve(async (req) => {
         }
       });
 
+      // ETAPA 2.5: Validação dos Vínculos (se houver)
+      if (assignmentsToInsert.length > 0) {
+        const studentIdsToValidate = [...new Set(assignmentsToInsert.map(a => a.student_id))];
+        const { data: existingStudents, error: studentCheckError } = await supabaseAdmin
+          .from('students')
+          .select('id')
+          .in('id', studentIdsToValidate);
+
+        if (studentCheckError) {
+          throw new Error(`Falha ao verificar estudantes: ${studentCheckError.message}`);
+        }
+
+        const existingStudentIds = new Set(existingStudents.map(s => s.id));
+        const invalidStudentIds = studentIdsToValidate.filter(id => !existingStudentIds.has(id));
+
+        if (invalidStudentIds.length > 0) {
+          // Se algum ID de estudante for inválido, a operação inteira falha para garantir a consistência dos dados.
+          throw new Error(`Criação de usuário falhou. Os seguintes IDs de estudante são inválidos ou não foram encontrados: ${invalidStudentIds.join(', ')}`);
+        }
+      }
+
       // Executa a atualização em lote. Para cada perfil, atualiza onde o ID corresponde.
       const { error: batchUpdateError } = await supabaseAdmin
         .from('profiles')
