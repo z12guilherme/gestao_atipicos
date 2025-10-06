@@ -15,23 +15,16 @@ import {
   FileText,
   Star
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { useStudents } from "@/hooks/useStudents";
+import { useCaregiverData } from "@/hooks/useCaregiverData";
+import { useProfile } from "@/hooks/useProfile";
+import { ScheduleManagement } from "@/components/caregiver/ScheduleManagement";
 
 export function CuidadorDashboard() {
-  const { profile } = useAuth();
-  const { students } = useStudents();
+  const { profile } = useProfile();
+  const { students: assignedStudents, isLoading } = useCaregiverData();
 
-  // Mock data - in real app, this would come from API
-  const assignedStudents = students.slice(0, 3); // Simulate assigned students
-  const todaySchedule = [
-    { time: "08:00", activity: "Acolhimento matinal", student: "Ana Silva" },
-    { time: "09:30", activity: "Atividade sensorial", student: "João Santos" },
-    { time: "11:00", activity: "Apoio pedagógico", student: "Maria Costa" },
-    { time: "14:00", activity: "Terapia ocupacional", student: "Ana Silva" },
-    { time: "15:30", activity: "Recreação dirigida", student: "João Santos" }
-  ];
-
+  // Mock data para funcionalidades ainda não implementadas
+  const todayScheduleLength = 5; // Simula o número de atividades
   const recentNotes = [
     { student: "Ana Silva", note: "Ótimo progresso na comunicação hoje", time: "10:30" },
     { student: "João Santos", note: "Precisa de mais apoio nas atividades motoras", time: "09:45" },
@@ -44,6 +37,10 @@ export function CuidadorDashboard() {
     if (hour < 18) return "Boa tarde";
     return "Boa noite";
   };
+
+  if (isLoading) {
+    return <div className="p-6 text-center">Carregando dados do cuidador...</div>;
+  }
 
   return (
     <div className="space-y-8">
@@ -100,7 +97,7 @@ export function CuidadorDashboard() {
             </div>
           </CardHeader>
           <CardContent className="relative">
-            <div className="text-3xl font-bold text-blue-900 dark:text-blue-100">{todaySchedule.length}</div>
+            <div className="text-3xl font-bold text-blue-900 dark:text-blue-100">{todayScheduleLength}</div>
             <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
               Programadas para hoje
             </p>
@@ -148,41 +145,8 @@ export function CuidadorDashboard() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Today's Schedule */}
         <div className="lg:col-span-2">
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Clock className="h-5 w-5 text-blue-600" />
-                <span>Cronograma de Hoje</span>
-              </CardTitle>
-              <CardDescription>
-                Suas atividades programadas para hoje
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {todaySchedule.map((item, index) => (
-                <div key={index} className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-                  <div className="flex items-center space-x-4">
-                    <div className="text-center">
-                      <div className="text-sm font-bold text-blue-600">{item.time}</div>
-                    </div>
-                    <div className="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
-                    <div>
-                      <p className="font-medium">{item.activity}</p>
-                      <p className="text-sm text-muted-foreground">Com {item.student}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700">
-                      Agendado
-                    </Badge>
-                    <Button variant="ghost" size="sm">
-                      <CheckCircle className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          {/* Componente de gerenciamento de cronograma inserido aqui */}
+          <ScheduleManagement />
         </div>
 
         {/* Sidebar */}
