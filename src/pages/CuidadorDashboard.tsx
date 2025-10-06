@@ -29,7 +29,6 @@ export function CuidadorDashboard() {
   const averageRating = "N/A"; // TODO: Buscar dados reais de avaliação
   const hasStudents = assignedStudents.length > 0;
   const hasRecentNotes = recentNotes.length > 0;
-  ];
 
   const getWelcomeMessage = () => {
     const hour = new Date().getHours();
