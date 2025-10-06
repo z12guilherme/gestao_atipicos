@@ -24,7 +24,7 @@ export function useGuardianData() {
       // a consulta não falha, retornando o perfil com uma lista vazia de estudantes.
       const { data, error } = await supabase
         .from('profiles')
-        .select('*, guardians_students!inner(students(*))')
+        .select('*, guardians_students(students(*))')
         .eq('user_id', user.id)
         .single();
 
