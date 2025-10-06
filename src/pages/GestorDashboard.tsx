@@ -5,6 +5,7 @@ import { useStudents } from '@/hooks/useStudents';
 import { useClasses } from '@/hooks/useClasses';
 import { useProfile } from '@/hooks/useProfile';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, PieChart, Pie, Cell, Tooltip } from "recharts";
+import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function GestorDashboard() {
@@ -104,6 +105,18 @@ export function GestorDashboard() {
           <CardContent>
             <div className="text-2xl font-bold text-orange-900 dark:text-orange-50">{stats.totalClasses}</div>
             <p className="text-xs text-orange-700 dark:text-orange-300">Turmas cadastradas</p>
+          </CardContent>
+        </Card>
+        {/* MELHORIA: Adicionado um card para a nova funcionalidade de vínculos */}
+        <Card className="border-0 bg-gradient-to-r from-cyan-50 to-sky-100 dark:from-cyan-950/50 dark:to-sky-900/50 col-span-1 md:col-span-2 lg:col-span-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-cyan-800 dark:text-cyan-200">Gerenciar Vínculos</CardTitle>
+            <Link to="/gestor/assignments">
+              <HeartHandshake className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+            </Link>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-cyan-700 dark:text-cyan-300">Acesse a nova tela para vincular estudantes a cuidadores e responsáveis.</p>
           </CardContent>
         </Card>
           </>
