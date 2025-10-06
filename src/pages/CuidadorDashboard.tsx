@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useCaregiverData } from "@/hooks/useCaregiverData";
 import { useProfile } from "@/hooks/useProfile";
-import { ScheduleManagement } from "@/components/caregiver/ScheduleManagement";
+import { ScheduleManagement } from "@/pages/ScheduleManagement";
 
 export function CuidadorDashboard() {
   const { profile } = useProfile();
