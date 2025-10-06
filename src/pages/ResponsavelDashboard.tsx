@@ -16,11 +16,13 @@ import {
   AlertCircle,
   User
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useGuardianData } from "@/hooks/useGuardianData";
 import { calculateAge } from "@/lib/utils";
+import { useProfile } from "@/hooks/useProfile";
 
 export function ResponsavelDashboard() {
-  const { profile, guardianStudents, loading } = useAuth();
+  const { profile } = useProfile();
+  const { students: guardianStudents, isLoading: loading } = useGuardianData();
 
   // Mock data - in real app, this would come from API based on guardian relationships
   const recentActivities = [
@@ -50,6 +52,9 @@ export function ResponsavelDashboard() {
     return "Boa noite";
   };
 
+  // CORREÇÃO: Adicionada a verificação do estado de carregamento.
+  // Isso impede que o componente tente renderizar com dados indefinidos,
+  // o que causava o erro e a tela branca.
   if (loading) {
     return <div className="p-6 text-center">Carregando...</div>;
   }

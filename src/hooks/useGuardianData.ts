@@ -18,21 +18,21 @@ export function useGuardianData() {
     queryFn: async () => {
       if (!user) return null;
 
-      // CORREÇÃO: A consulta foi alterada de um 'inner join' para um 'left join'.
-      // 'guardians_students(students(*))' (sem o !inner) busca o perfil do responsável
+      // A consulta busca o perfil do responsável
       // e, se existirem, os estudantes vinculados. Se não houver estudantes,
       // a consulta não falha, retornando o perfil com uma lista vazia de estudantes.
       const { data, error } = await supabase
         .from('profiles')
         .select('*, guardians_students(students(*))')
         .eq('user_id', user.id)
+        .limit(1) // Garante que apenas um perfil seja retornado
         .single();
 
       if (error) {
-        // Um erro aqui pode indicar um problema de permissão ou de rede,
-        // mas não mais uma falha por falta de estudantes vinculados.
-        console.warn("Could not fetch guardian data:", error.message);
-        return null;
+        // Se o .single() falhar (ex: usuário não é responsável), o erro é capturado.
+        // Retornar null em vez de lançar o erro evita que a aplicação quebre.
+        console.warn(`[useGuardianData] Could not fetch data for user ${user.id}: ${error.message}`);
+        return null; // Retorna null para que a UI possa tratar o estado de "sem dados".
       }
       return data;
     },
