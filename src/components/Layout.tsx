@@ -70,15 +70,21 @@ export function Layout() {
     }
   };
 
-  const navItems = [
+  const baseNavItems = [
     { to: "/", icon: Home, label: "Dashboard" },
     { to: "/students", icon: GraduationCap, label: "Alunos" },
     { to: "/users", icon: Users, label: "Usuários" },
     { to: "/classes", icon: School, label: "Turmas" },
-    { to: "/caregivers", icon: HeartHandshake, label: "Cuidadores" },
-    { to: "/guardians", icon: UserCheck, label: "Responsáveis" },
     { to: "/settings", icon: UserCog, label: "Configurações" },
   ];
+
+  // Adiciona itens de menu específicos para o gestor
+  const navItems = [...baseNavItems];
+  if (profile?.role === 'gestor') {
+    navItems.splice(4, 0, { to: "/gestor/assignments", icon: HeartHandshake, label: "Gestão de Vínculos" });
+  }
+
+
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
