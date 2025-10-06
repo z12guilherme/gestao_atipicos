@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useUsers } from "@/hooks/useUsers";
+import { useUsers, UserProfile } from "@/hooks/useUsers";
 import { useStudents } from "@/hooks/useStudents";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MultiSelect } from "@/components/ui/MultiSelect";
-import { Loader2, Save, UserPlus, Users2 } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function AssignmentManagement() {
@@ -14,22 +14,29 @@ export function AssignmentManagement() {
   const { students, isLoading: isLoadingStudents } = useStudents();
 
   const [isModalOpen, setModalOpen] = useState(false);
-  const [selectedCaregiver, setSelectedCaregiver] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
 
   const caregivers = users.filter(u => u.role === 'cuidador');
-  const assignedStudentIds = new Set(caregivers.flatMap(c => c.caregivers_students.map((cs: any) => cs.student_id)));
-  const unassignedStudents = students.filter(s => !assignedStudentIds.has(s.id));
+  const guardians = users.filter(u => u.role === 'responsavel');
 
-  const handleOpenModal = (caregiver: any) => {
-    setSelectedCaregiver(caregiver);
+  // Lógica para estudantes não vinculados a cuidadores
+  const assignedToCaregiverIds = new Set(caregivers.flatMap(c => c.caregivers_students.map((cs: any) => cs.student_id)));
+  const unassignedToCaregiver = students.filter(s => !assignedToCaregiverIds.has(s.id));
+
+  // Lógica para estudantes não vinculados a responsáveis
+  const assignedToGuardianIds = new Set(guardians.flatMap(g => g.guardians_students.map((gs: any) => gs.student_id)));
+  const unassignedToGuardian = students.filter(s => !assignedToGuardianIds.has(s.id));
+
+  const handleOpenModal = (user: UserProfile) => {
+    setSelectedUser(user);
     setModalOpen(true);
   };
 
   const handleSaveChanges = async (studentIds: string[]) => {
-    if (!selectedCaregiver) return;
+    if (!selectedUser) return;
     await updateUser.mutateAsync({
-      id: selectedCaregiver.id,
-      profileData: { role: 'cuidador' }, // Role é necessário para a lógica do hook
+      id: selectedUser.id,
+      profileData: { role: selectedUser.role }, // Role é necessário para a lógica do hook
       student_ids: studentIds,
     });
     setModalOpen(false);
@@ -50,7 +57,7 @@ export function AssignmentManagement() {
       <Tabs defaultValue="caregivers-students">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="caregivers-students">Cuidadores e Alunos</TabsTrigger>
-          <TabsTrigger value="guardians-students" disabled>Responsáveis e Alunos</TabsTrigger>
+          <TabsTrigger value="guardians-students">Responsáveis e Alunos</TabsTrigger>
           <TabsTrigger value="teachers-classes" disabled>Professores e Turmas</TabsTrigger>
           <TabsTrigger value="students-classes" disabled>Alunos e Turmas</TabsTrigger>
         </TabsList>
@@ -80,7 +87,7 @@ export function AssignmentManagement() {
                         </p>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => handleOpenModal(caregiver)}>Editar Vínculos</Button>
+                    <Button variant="outline" size="sm" onClick={() => handleOpenModal(caregiver)}>Editar</Button>
                   </div>
                 )) : !isLoading && <p className="text-muted-foreground text-center py-4">Nenhum cuidador encontrado.</p>}
               </CardContent>
@@ -94,13 +101,62 @@ export function AssignmentManagement() {
               </CardHeader>
               <CardContent>
                 {isLoading && <p>Carregando...</p>}
-                {unassignedStudents.length > 0 ? (
+                {unassignedToCaregiver.length > 0 ? (
                   <ul className="space-y-2">
-                    {unassignedStudents.map(student => (
+                    {unassignedToCaregiver.map(student => (
                       <li key={student.id} className="text-sm p-2 border rounded-md">{student.name}</li>
                     ))}
                   </ul>
                 ) : !isLoading && <p className="text-muted-foreground text-center py-4">Todos os estudantes estão vinculados.</p>}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="guardians-students">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {/* Coluna de Responsáveis */}
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle>Vínculos Atuais (Responsáveis)</CardTitle>
+                <CardDescription>Visualize os estudantes atribuídos a cada responsável.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {isLoading && <p>Carregando responsáveis...</p>}
+                {guardians.length > 0 ? guardians.map(guardian => (
+                  <div key={guardian.id} className="flex items-center justify-between p-2 rounded-lg border">
+                    <div className="flex items-center gap-4">
+                      <Avatar><AvatarFallback>{guardian.name.charAt(0)}</AvatarFallback></Avatar>
+                      <div>
+                        <p className="font-semibold">{guardian.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {guardian.guardians_students.length > 0
+                            ? guardian.guardians_students.map((gs: any) => gs.students.name).join(', ')
+                            : "Nenhum estudante vinculado"}
+                        </p>
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => handleOpenModal(guardian)}>Editar</Button>
+                  </div>
+                )) : !isLoading && <p className="text-muted-foreground text-center py-4">Nenhum responsável encontrado.</p>}
+              </CardContent>
+            </Card>
+
+            {/* Coluna de Alunos não vinculados a responsáveis */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Estudantes sem Responsável</CardTitle>
+                <CardDescription>Estudantes que aguardam a atribuição de um responsável.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoading && <p>Carregando...</p>}
+                {unassignedToGuardian.length > 0 ? (
+                  <ul className="space-y-2">
+                    {unassignedToGuardian.map(student => (
+                      <li key={student.id} className="text-sm p-2 border rounded-md">{student.name}</li>
+                    ))}
+                  </ul>
+                ) : !isLoading && <p className="text-muted-foreground text-center py-4">Todos os estudantes têm um responsável.</p>}
               </CardContent>
             </Card>
           </div>
@@ -111,12 +167,12 @@ export function AssignmentManagement() {
       <Dialog open={isModalOpen} onOpenChange={setModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar Vínculos de {selectedCaregiver?.name}</DialogTitle>
+            <DialogTitle>Editar Vínculos de {selectedUser?.name}</DialogTitle>
           </DialogHeader>
-          <p className="text-muted-foreground text-sm">Selecione os estudantes que este cuidador irá acompanhar.</p>
+          <p className="text-muted-foreground text-sm">Selecione os estudantes que este {selectedUser?.role === 'cuidador' ? 'cuidador' : 'responsável'} irá acompanhar.</p>
           <MultiSelect
             options={students.map(s => ({ value: s.id, label: s.name }))}
-            selected={selectedCaregiver?.caregivers_students.map((cs: any) => cs.student_id) || []}
+            selected={selectedUser?.role === 'cuidador' ? selectedUser?.caregivers_students.map((cs: any) => cs.student_id) : selectedUser?.guardians_students.map((gs: any) => gs.student_id) || []}
             onChange={handleSaveChanges}
             placeholder="Selecione os estudantes..."
             actionButton={
