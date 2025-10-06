@@ -6,7 +6,7 @@ import { getCorsHeaders } from "../_shared/cors.ts";
 const userRecordSchema = z.object({
   name: z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres"),
   email: z.string().trim().email("Email inválido"),
-  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").optional(),
   role: z.enum(['gestor', 'cuidador', 'responsavel', 'professor']),
   // Campos opcionais
   cpf: z.string().trim().max(14, "CPF inválido").optional().nullable(),
@@ -92,13 +92,15 @@ serve(async (req) => {
           throw new Error(errorMessage);
         }
 
-        const { email, password } = validation.data;
+        const { email } = validation.data;
+        // Se a senha não for fornecida, gera uma segura e aleatória para o convite.
+        const password = validation.data.password || crypto.randomUUID() + crypto.randomUUID();
 
         // Cria o usuário no serviço de autenticação
         const { data: authData, error: authUserError } = await supabaseAdmin.auth.admin.createUser({
           email,
           password,
-          email_confirm: true,
+          email_confirm: true, // O usuário precisará confirmar o email
         });
 
         if (authUserError) throw authUserError;
@@ -108,7 +110,10 @@ serve(async (req) => {
 
       } catch (error) {
         errorCount++;
-        importErrors.push({ line: lineNumber, error: error.message.replace("string:", "") });
+        // Garante que a mensagem de erro seja uma string.
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        importErrors.push({ line: lineNumber, error: errorMessage.replace("string:", "") });
+        continue; // Pula para a próxima iteração em caso de erro
       }
     }
     
