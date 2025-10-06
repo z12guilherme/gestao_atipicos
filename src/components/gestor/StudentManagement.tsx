@@ -13,8 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { UserPlus, Edit, Save, Trash2, Upload, FileDown, Loader2, GraduationCap, X } from "lucide-react";
 import { useStudents, Student } from "@/hooks/useStudents"; // Hook para buscar estudantes
 import { useFileImport } from "@/hooks/useFileImport";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod"; 
 import { z } from "zod";
 import * as XLSX from 'xlsx';
 import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog.tsx";
@@ -59,7 +59,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
     importErrors,
     isErrorsDialogOpen, setErrorsDialogOpen,
     handleImport,
-  } = useFileImport({ supabaseFunction: 'bulk-create-students', invalidateQueryKey: 'students', entityName: 'estudantes' });
+  } = useFileImport({ supabaseFunction: 'bulk-create-students', invalidateQueryKey: 'students', entityName: 'estudantes' }); 
 
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<StudentFormData>({
     resolver: zodResolver(studentSchema),
@@ -264,31 +264,43 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="status">Status *</Label>
-                        <Select onValueChange={(value) => reset({ ...watch(), status: value as any })} defaultValue={editingStudent?.status || 'ativo'}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="ativo">Ativo</SelectItem>
-                            <SelectItem value="inativo">Inativo</SelectItem>
-                            <SelectItem value="aguardando">Aguardando</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <Controller
+                          name="status"
+                          control={control}
+                          render={({ field }) => (
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="ativo">Ativo</SelectItem>
+                                <SelectItem value="inativo">Inativo</SelectItem>
+                                <SelectItem value="aguardando">Aguardando</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                        <div className="space-y-2">
                         <Label htmlFor="class_name">Turma</Label>
-                        <Input id="class_name" {...register("class_name")} />
+                        <Input id="class_name" {...register("class_name")} /> 
                       </div>
                        <div className="space-y-2">
                         <Label htmlFor="period">Período</Label>
-                         <Select onValueChange={(value) => reset({ ...watch(), period: value as any })} defaultValue={editingStudent?.period}>
-                          <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Manhã">Manhã</SelectItem>
-                            <SelectItem value="Tarde">Tarde</SelectItem>
-                            <SelectItem value="Integral">Integral</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <Controller
+                          name="period"
+                          control={control}
+                          render={({ field }) => (
+                            <Select onValueChange={field.onChange} value={field.value ?? undefined}>
+                              <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Manhã">Manhã</SelectItem>
+                                <SelectItem value="Tarde">Tarde</SelectItem>
+                                <SelectItem value="Integral">Integral</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
                       </div>
                     </div>
                      <div className="space-y-2">
