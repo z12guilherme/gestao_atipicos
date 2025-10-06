@@ -41,9 +41,22 @@ Nesta seção, você pode criar, visualizar, editar e excluir perfis de gestores
 #### Importando Usuários em Massa
 Para agilizar o cadastro, você pode importar múltiplos usuários de uma vez.
 1. Clique no botão **"Importar"**.
-2. Baixe o modelo **CSV** ou **XLSX** para ver a estrutura correta.
-3. Preencha a planilha com os dados dos usuários. As colunas obrigatórias são `name`, `email`, `password` e `role`.
+2. Baixe o modelo de planilha no formato **CSV** ou **XLSX**.
+3. Preencha a planilha com os dados dos usuários, seguindo as observações abaixo.
 4. Selecione o arquivo preenchido e clique em **"Iniciar Importação"**.
+
+**Observações para o Preenchimento da Planilha de Usuários:**
+
+| Coluna           | Obrigatório? | Descrição                                                                                             | Exemplo                               |
+|------------------|:------------:|-------------------------------------------------------------------------------------------------------|---------------------------------------|
+| `name`           |      Sim     | Nome completo do usuário.                                                                             | `João da Silva`                       |
+| `email`          |      Sim     | Email único do usuário, que será usado para o login.                                                  | `joao.silva@email.com`                |
+| `password`       |      Sim     | Senha de acesso com no mínimo 6 caracteres.                                                           | `senhaSegura123`                      |
+| `role`           |      Sim     | Perfil do usuário. Deve ser um dos seguintes valores (exatamente como escrito): `gestor`, `cuidador`, `responsavel`, `professor`. | `cuidador`                            |
+| `cpf`            |      Não     | CPF do usuário.                                                                                       | `123.456.789-00`                      |
+| `phone`          |      Não     | Telefone de contato.                                                                                  | `(99) 99999-9999`                     |
+| `function_title` |      Não     | Título da função (relevante para cuidadores e professores).                                           | `Cuidador de Apoio`                   |
+| `work_schedule`  |      Não     | Horário de trabalho (relevante para cuidadores e professores).                                        | `Seg-Sex, 8h-17h`                     |
 
 ### Gerenciamento de Estudantes
 
@@ -51,10 +64,9 @@ Centralize todas as informações dos estudantes atípicos.
 
 #### Cadastrando um Novo Estudante
 1. Clique em **"Gerenciar Estudantes"** e depois em **"Novo Estudante"**.
-2. Preencha as informações do estudante, como:
-   - **Nome Completo**, **Data de Nascimento** e **Status**.
-   - Informações adicionais como **Turma**, **Diagnóstico**, **Necessidades Especiais** e **Informações Médicas**.
-3. Clique em **"Criar Estudante"**.
+2. Preencha as informações do estudante.
+3. **Vínculos:** Na mesma tela, você pode selecionar um ou mais **responsáveis** e **cuidadores** da lista para vincular ao estudante.
+4. Clique em **"Criar"** ou **"Salvar"**.
 
 #### Importando Estudantes em Massa
 1. Na tela de gerenciamento de estudantes, clique em **"Importar"**.
@@ -62,16 +74,12 @@ Centralize todas as informações dos estudantes atípicos.
 3. Preencha a planilha com os dados. As colunas obrigatórias são `name`, `birth_date` e `status`.
 4. Selecione o arquivo e inicie a importação.
 
-### Gerenciamento de Atribuições
+### Gerenciamento de Vínculos
 
-Vincule cuidadores aos estudantes que eles irão acompanhar.
-
-1. Acesse a seção **"Atribuições de Estudantes"**.
-2. Clique em **"Nova Atribuição"**.
-3. Na janela que abrir, selecione um **cuidador** e um **estudante** da lista.
-4. Clique em **"Criar Atribuição"**.
-
-O painel mostrará os estudantes agrupados por cuidador, facilitando a visualização. Você também verá uma lista de estudantes que ainda não foram atribuídos.
+A gestão de vínculos foi centralizada no **cadastro do estudante** para um fluxo mais intuitivo. No entanto, a tela de **"Gestão de Vínculos"** ainda está disponível no menu lateral e serve como um painel de visualização e edição rápida. Nela, você pode:
+- Visualizar rapidamente quais estudantes estão associados a cada cuidador e responsável.
+- Identificar estudantes que ainda não possuem um cuidador ou responsável atribuído.
+- Clicar em "Editar" para ajustar os vínculos de um usuário específico.
 
 ---
 

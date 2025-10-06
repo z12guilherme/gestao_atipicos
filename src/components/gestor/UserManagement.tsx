@@ -10,15 +10,13 @@ import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { UserPlus, Edit, Save, Trash2, Upload, FileDown, Loader2, Users2, X } from "lucide-react";
+import { UserPlus, Edit, Save, Trash2, Upload, FileDown, Loader2, Users2 } from "lucide-react";
 import { useUsers, User } from "@/hooks/useUsers"; // Hook para buscar usuários
 import { useFileImport } from "@/hooks/useFileImport";
 import { useForm } from "react-hook-form";
-import { useStudents } from "@/hooks/useStudents"; // Hook para buscar estudantes
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import * as XLSX from 'xlsx';
-import { MultiSelect } from "@/components/ui/MultiSelect";
 import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog.tsx";
 import { useProfile } from "@/hooks/useProfile";
 
@@ -30,7 +28,6 @@ const profileSchema = z.object({
   role: z.enum(['gestor', 'cuidador', 'responsavel', 'professor']),
   function_title: z.string().trim().max(100, "Função muito longa").optional(),
   work_schedule: z.string().trim().max(500, "Horário muito longo").optional(),
-  student_ids: z.array(z.string()).default([]), // Para vincular estudantes
 })
 
 // Schema para criar um novo usuário (email e senha são obrigatórios)
@@ -55,7 +52,6 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
 
   const { profile } = useProfile();
   const { users, isLoading, createUser, updateUser, deleteUser } = useUsers();
-  const { students } = useStudents();
   const {
     isImportOpen, setImportOpen,
     importFile, setImportFile,
@@ -77,12 +73,11 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
       phone: editingUser.phone || "",
       function_title: editingUser.function_title || "",
       work_schedule: editingUser.work_schedule || "",
-      student_ids: editingUser.student_ids || [],
       // Adicione email e senha vazios para satisfazer o tipo, eles não serão usados na edição.
       email: '',
       password: ''
     } : {
-      name: "", email: "", password: "", role: "responsavel", student_ids: []
+      name: "", email: "", password: "", role: "responsavel"
     },
   });
 
@@ -96,9 +91,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
   const onSubmit = async (data: UserFormData) => {
     try {
       if (editingUser) {
-        // Na edição, separamos os dados do perfil dos student_ids
-        const { student_ids, ...profileData } = data;
-        await updateUser.mutateAsync({ id: editingUser.id, profileData, student_ids });
+        await updateUser.mutateAsync({ id: editingUser.id, profileData: data });
       } else {
         await createUser.mutateAsync(data);
       }
@@ -123,7 +116,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
   };
   
   const handleDownloadCsvTemplate = () => {
-    const csvContent = "name,email,password,role,cpf,phone,function_title,work_schedule\r\n" +
+    const csvContent = "name,email,password,role,cpf,phone,function_title,work_schedule\r\n" + // Coluna student_ids removida
       "Exemplo Cuidador,cuidador@email.com,senhaSegura123,cuidador,123.456.789-00,(99) 99999-9999,Cuidador de Apoio,Seg-Sex 8h-17h";
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
@@ -137,7 +130,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
 
   const handleDownloadXlsxTemplate = () => {
     const worksheetData = [
-      ["name", "email", "password", "role", "cpf", "phone", "function_title", "work_schedule"],
+      ["name", "email", "password", "role", "cpf", "phone", "function_title", "work_schedule"], // Coluna student_ids removida
       ["Exemplo Cuidador", "cuidador@email.com", "senhaSegura123", "cuidador", "123.456.789-00", "(99) 99999-9999", "Cuidador de Apoio", "Seg-Sex 8h-17h"]
     ];
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
@@ -281,34 +274,6 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
                         <Input id="work_schedule" {...register("work_schedule")} />
                     </div>
                   </>
-                )}
-                {selectedRole === 'responsavel' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="student_ids">Estudantes Vinculados</Label>
-                    <MultiSelect
-                      options={students.map(s => ({ value: s.id, label: s.name }))}
-                      selected={watch('student_ids') || []}
-                      onChange={(selected) => setValue('student_ids', selected)}
-                      placeholder="Selecione os estudantes..."
-                      className="w-full"
-                    />
-                    {/* MELHORIA: Exibe os estudantes selecionados como badges para melhor visualização */}
-                    <div className="flex flex-wrap gap-1 pt-2">
-                      {watch('student_ids')?.map(studentId => {
-                        const student = students.find(s => s.id === studentId);
-                        if (!student) return null;
-                        return (
-                          <Badge key={student.id} variant="secondary" className="flex items-center gap-1">
-                            {student.name}
-                            <button type="button" onClick={() => setValue('student_ids', watch('student_ids').filter(id => id !== studentId))} className="rounded-full hover:bg-muted-foreground/20 p-0.5">
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        );
-                      })}
-                    </div>
-                    {errors.student_ids && <p className="text-sm text-destructive">{errors.student_ids.message}</p>}
-                  </div>
                 )}
                 <div className="flex justify-end space-x-2 pt-2">
                   <Button type="button" variant="ghost" onClick={() => handleDialogChange(false)}>Cancelar</Button>
