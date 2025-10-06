@@ -1,5 +1,5 @@
-import { Dispatch, SetStateAction } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dispatch, SetStateAction, useMemo } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -7,38 +7,31 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea"; 
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { UserPlus, Edit, Save, Trash2, Stethoscope, FileText, BadgeInfo, Upload, FileDown, Loader2, FileX2, Link } from "lucide-react";
+import { UserPlus, Edit, Save, Trash2, Upload, FileDown, Loader2, GraduationCap, X } from "lucide-react";
 import { useStudents, Student } from "@/hooks/useStudents"; // Hook para buscar estudantes
-import { useClasses } from "@/hooks/useClasses"; // Hook para buscar turmas
 import { useFileImport } from "@/hooks/useFileImport";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { toast } from "sonner";
 import * as XLSX from 'xlsx';
-import { useProfile } from "@/hooks/useProfile";
 import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog.tsx";
-import { calculateAge } from "@/lib/utils";
+import { useProfile } from "@/hooks/useProfile";
+import { useUsers } from "@/hooks/useUsers"; // 1. Importa o hook de usuários
+import { MultiSelect } from "@/components/ui/MultiSelect"; // 2. Importa o MultiSelect
+import { Textarea } from "../ui/textarea";
 
-// Schema de validação ATUALIZADO com todos os seus campos
-const studentSchema = z.object({ // Validação mais precisa e com melhores mensagens de erro
-  name: z.string({ required_error: "O nome é obrigatório." }).trim().min(3, "O nome deve ter pelo menos 3 caracteres."),
-  birth_date: z.preprocess(
-    (arg) => (arg === "" ? undefined : arg), // Transforma string vazia em undefined
-    z.string({ required_error: "A data de nascimento é obrigatória." }).min(1, "A data de nascimento é obrigatória."),
-  ),
-  status: z.enum(['ativo', 'inativo', 'transferido'], { required_error: "O status é obrigatório." }),
-  // Campos opcionais
-  cpf: z.string().trim().max(14, "CPF inválido").optional().nullable(),
-  class_name: z.string().trim().nullable().optional(),
-  diagnosis: z.string().trim().nullable().optional(),
-  special_needs: z.string().trim().nullable().optional(),
-  medical_info: z.string().trim().nullable().optional(),
-  // Adicionado para o upload de arquivo
-  report_file: z.instanceof(FileList).optional(),
+const studentSchema = z.object({
+  name: z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres").max(100, "Nome muito longo"),
+  birth_date: z.string().min(1, "Data de nascimento é obrigatória"),
+  status: z.enum(['ativo', 'inativo', 'aguardando']),
+  class_name: z.string().optional().nullable(),
+  period: z.enum(['Manhã', 'Tarde', 'Integral']).optional().nullable(),
+  diagnosis: z.string().optional().nullable(),
+  medical_info: z.string().optional().nullable(), // CORREÇÃO: Nome do campo alinhado com o banco de dados
+  caregiver_ids: z.array(z.string()).optional(), // 3. Adiciona os campos de vínculo ao schema
+  guardian_ids: z.array(z.string()).optional(),
 });
 
 type StudentFormData = z.infer<typeof studentSchema>;
@@ -51,10 +44,13 @@ interface StudentManagementProps {
 }
 
 export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent, setEditingStudent }: StudentManagementProps) {
-
   const { profile } = useProfile();
-  const { students, isLoading, createStudent, updateStudent, deleteStudent, createDocument, supabase } = useStudents();
-  const { classes } = useClasses();
+  const { students, isLoading, upsertStudent, deleteStudent } = useStudents(); // Hook de estudantes
+  const { users: allUsers } = useUsers(); // Hook para buscar cuidadores e responsáveis
+
+  const caregivers = useMemo(() => allUsers.filter(u => u.role === 'cuidador'), [allUsers]);
+  const guardians = useMemo(() => allUsers.filter(u => u.role === 'responsavel'), [allUsers]);
+
   const {
     isImportOpen, setImportOpen,
     importFile, setImportFile,
@@ -64,115 +60,75 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
     handleImport,
   } = useFileImport({ supabaseFunction: 'bulk-create-students', invalidateQueryKey: 'students', entityName: 'estudantes' });
 
-  const handleDownloadCsvTemplate = () => {
-    const csvContent = "name,birth_date,status,class_name,cpf,diagnosis,special_needs,medical_info\r\n" +
-      "Exemplo Aluno,2010-05-15,ativo,Turma A,123.456.789-00,TDAH,Apoio pedagógico,Alergia a amendoim";
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", "modelo_importacao_estudantes.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleDownloadXlsxTemplate = () => {
-    const worksheetData = [
-      ["name", "birth_date", "status", "class_name", "cpf", "diagnosis", "special_needs", "medical_info"],
-      ["Exemplo Aluno", "2010-05-15", "ativo", "Turma A", "123.456.789-00", "TDAH", "Apoio pedagógico", "Alergia a amendoim"]
-    ];
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Estudantes");
-    // Gera o arquivo e força o download
-    XLSX.writeFile(workbook, "modelo_importacao_estudantes.xlsx");
-  };
-  
-  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<StudentFormData>({
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<StudentFormData>({
     resolver: zodResolver(studentSchema),
-    defaultValues: {
-      status: 'ativo', // Garante que o status sempre tenha um valor padrão
-    }
+    values: editingStudent ? {
+      name: editingStudent.name,
+      birth_date: editingStudent.birth_date,
+      status: editingStudent.status,
+      class_name: editingStudent.class_name || "",
+      period: editingStudent.period || undefined,
+      diagnosis: editingStudent.diagnosis || "",
+      medical_info: editingStudent.medical_info || "", // CORREÇÃO: Nome do campo alinhado com o banco de dados
+      caregiver_ids: (editingStudent.caregivers_students || []).map((cs: any) => cs.caregiver_id),
+      guardian_ids: (editingStudent.guardians_students || []).map((gs: any) => gs.guardian_id),
+    } : {
+      name: "",
+      birth_date: "",
+      status: "ativo",
+    },
   });
 
-  // ATUALIZADO: Preenche todos os campos no formulário de edição
   const handleOpenEditModal = (student: Student) => {
-    // Usar `reset` é a forma recomendada pelo react-hook-form para preencher o formulário
-    reset({
-      name: student.name,
-      cpf: student.cpf || "",
-      birth_date: student.birth_date || "",
-      status: student.status,
-      class_name: student.class_name || "",
-      diagnosis: student.diagnosis || "",
-      special_needs: student.special_needs || "",
-      medical_info: student.medical_info || "",
-    });
     setEditingStudent(student);
     setDialogOpen(true);
   };
-  
+
   const onSubmit = async (data: StudentFormData) => {
-    // Separa o arquivo dos outros dados do estudante
-    const { report_file, ...studentData } = data;
-    let studentId = editingStudent?.id;
-
     try {
-      // 1. Salva ou atualiza os dados do estudante PRIMEIRO para garantir que temos um ID
-      if (editingStudent) {
-        await updateStudent.mutateAsync({ id: editingStudent.id, ...studentData });
-      } else {
-        const newStudent = await createStudent.mutateAsync(studentData);
-        studentId = newStudent.id; // Pega o ID do novo estudante
-      }
-
-      // 2. Se houver um arquivo de laudo, faz o upload e cria o registro na tabela 'documents'
-      if (studentId && report_file && report_file.length > 0) {
-        const file = report_file[0];
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${studentId}-${Date.now()}.${fileExt}`;
-        const filePath = `laudos/${fileName}`;
-
-        // 2a. Faz o upload para o Supabase Storage
-        const { error: uploadError } = await supabase
-          .storage
-          .from('laudos')
-          .upload(filePath, file, { upsert: true });
-
-        if (uploadError) throw uploadError;
-
-        // 2b. Cria o registro na tabela 'documents'
-        await createDocument.mutateAsync({
-          student_id: studentId,
-          title: `Laudo de ${studentData.name}`,
-          file_path: filePath,
-          file_name: file.name,
-          document_type: 'laudo',
-        });
-      }
-
-      // 3. Limpa o formulário e fecha o diálogo
-      reset();
+      await upsertStudent.mutateAsync({ id: editingStudent?.id, ...data });
       setEditingStudent(null);
       setDialogOpen(false);
     } catch (error) {
-      // As mensagens de erro já são tratadas pelos hooks (react-query)
-      console.error("Falha no processo de salvar estudante/documento:", error);
+      console.error('Falha ao salvar estudante:', error);
     }
   };
 
   const handleDialogChange = (isOpen: boolean) => {
     setDialogOpen(isOpen);
     if (!isOpen) {
-      reset();
       setEditingStudent(null);
     }
   };
 
-  // Adiciona uma verificação de segurança na entrada do componente
+  const getStatusBadge = (status: string) => {
+    const variants = { ativo: 'default', inativo: 'destructive', aguardando: 'secondary' };
+    return <Badge variant={variants[status as keyof typeof variants] || 'outline'}>{status}</Badge>;
+  };
+
+  const handleDownloadTemplate = (format: 'csv' | 'xlsx') => {
+    const headers = ["name", "birth_date", "status", "class_name", "period", "diagnosis", "medical_info"];
+    const example = ["Exemplo Aluno", "2015-08-20", "ativo", "Turma A", "3º Ano", "Manhã", "TEA", "Alergia a amendoim"];
+    
+    if (format === 'csv') {
+      const csvContent = [headers.join(','), example.join(',')].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", "modelo_importacao_estudantes.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      const worksheet = XLSX.utils.aoa_to_sheet([headers, example]);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Estudantes");
+      XLSX.writeFile(workbook, "modelo_importacao_estudantes.xlsx");
+    }
+  };
+
   if (profile?.role !== 'gestor') {
-    // Não renderiza nada se o usuário não for um gestor.
     return null;
   }
 
@@ -196,21 +152,20 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
 
   return (
     <>
-    <ImportErrorsDialog
-      isOpen={isErrorsDialogOpen}
-      onOpenChange={setErrorsDialogOpen}
-      errors={importErrors}
-      fileName={importFile?.name || ''}
-    />
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
+      <ImportErrorsDialog
+        isOpen={isErrorsDialogOpen}
+        onOpenChange={setErrorsDialogOpen}
+        errors={importErrors}
+        fileName={importFile?.name || ''}
+      />
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
             <div>
               <CardTitle>Gerenciar Estudantes</CardTitle>
-              <CardDescription>Cadastre e gerencie informações dos estudantes</CardDescription>
+              <CardDescription>Cadastre e gerencie os estudantes da instituição.</CardDescription>
             </div>
             <div className="flex space-x-2">
-              {/* Botão de Importar */}
               <Dialog open={isImportOpen} onOpenChange={setImportOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline"><Upload className="mr-2 h-4 w-4" />Importar</Button>
@@ -218,191 +173,178 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Importar Estudantes em Massa</DialogTitle>
-                    <DialogDescription>
-                      Envie um arquivo CSV para cadastrar múltiplos estudantes de uma vez.
-                    </DialogDescription>
+                    <DialogDescription>Envie um arquivo para cadastrar múltiplos estudantes.</DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
                     <p className="text-sm text-muted-foreground">
-                      As colunas obrigatórias são: <strong>name</strong>, <strong>birth_date</strong>, <strong>status</strong>.
-                      O status deve ser `ativo`, `inativo` ou `transferido`.
+                      As colunas obrigatórias são: `name`, `birth_date`, `status`.
                     </p>
                     <div className="flex gap-2">
-                      <Button variant="secondary" size="sm" onClick={handleDownloadCsvTemplate}>
-                        <FileDown className="mr-2 h-4 w-4" />
-                        Baixar modelo CSV
+                      <Button variant="secondary" size="sm" onClick={() => handleDownloadTemplate('csv')}>
+                        <FileDown className="mr-2 h-4 w-4" /> Baixar modelo CSV
                       </Button>
-                      <Button variant="secondary" size="sm" onClick={handleDownloadXlsxTemplate}>
-                        <FileDown className="mr-2 h-4 w-4" />
-                        Baixar modelo XLSX
+                      <Button variant="secondary" size="sm" onClick={() => handleDownloadTemplate('xlsx')}>
+                        <FileDown className="mr-2 h-4 w-4" /> Baixar modelo XLSX
                       </Button>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="import-file">Selecione o arquivo</Label>
+                      <Label htmlFor="import-file">Arquivo (CSV ou XLSX)</Label>
                       <Input id="import-file" type="file" accept=".csv,.xlsx" onChange={(e) => setImportFile(e.target.files ? e.target.files[0] : null)} />
                     </div>
                   </div>
                   <div className="flex justify-end space-x-2">
                     <Button variant="ghost" onClick={() => setImportOpen(false)}>Cancelar</Button>
                     <Button onClick={handleImport} disabled={isImporting || !importFile}>
-                      {isImporting ? "Importando..." : "Iniciar Importação"}
+                      {isImporting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Importando...</> : "Iniciar Importação"}
                     </Button>
                   </div>
                 </DialogContent>
               </Dialog>
-              
-              <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
-                handleDialogChange(isOpen);
-              }}>
+
+              <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
                 <DialogTrigger asChild>
-                  <Button>
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Novo Estudante
-                  </Button>
+                  <Button><UserPlus className="mr-2 h-4 w-4" />Novo Estudante</Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>{editingStudent ? 'Editar Estudante' : 'Cadastrar Novo Estudante'}</DialogTitle>
-                  <DialogDescription>Preencha os campos abaixo para {editingStudent ? 'atualizar os dados do' : 'cadastrar um novo'} estudante.</DialogDescription>
-                </DialogHeader>
-                
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>{editingStudent ? 'Editar Estudante' : 'Cadastrar Novo Estudante'}</DialogTitle>
+                    <DialogDescription>Preencha os campos abaixo.</DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="name">Nome Completo *</Label>
-                        <Input id="name" {...register("name")} />
-                        {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+                      <Label htmlFor="name">Nome Completo *</Label>
+                      <Input id="name" {...register("name")} />
+                      {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="birth_date">Data de Nascimento *</Label>
-                            <Input id="birth_date" type="date" {...register("birth_date")} />
-                            {errors.birth_date && <p className="text-sm text-destructive">{errors.birth_date.message}</p>}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="cpf">CPF</Label>
-                            <Input id="cpf" {...register("cpf")} placeholder="000.000.000-00" />
-                        </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="birth_date">Data de Nascimento *</Label>
+                        <Input id="birth_date" type="date" {...register("birth_date")} />
+                        {errors.birth_date && <p className="text-sm text-destructive">{errors.birth_date.message}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="status">Status *</Label>
+                        <Select onValueChange={(value) => reset({ ...watch(), status: value as any })} defaultValue={editingStudent?.status || 'ativo'}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="ativo">Ativo</SelectItem>
+                            <SelectItem value="inativo">Inativo</SelectItem>
+                            <SelectItem value="aguardando">Aguardando</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="class_name">Turma</Label>                            
-                            <Select onValueChange={(value) => setValue("class_name", value)} value={watch("class_name") || ""}>
-                                <SelectTrigger><SelectValue placeholder="Selecione uma turma" /></SelectTrigger>
-                                <SelectContent>
-                                    {classes.map((c) => (
-                                        <SelectItem key={c.id} value={c.name}>
-                                            {c.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="status">Status *</Label>
-                            <Select onValueChange={(value) => setValue("status", value as any)} value={watch('status') || 'ativo'}>
-                                <SelectTrigger><SelectValue placeholder="Selecione o status" /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="ativo">Ativo</SelectItem>
-                                    <SelectItem value="inativo">Inativo</SelectItem>
-                                    <SelectItem value="transferido">Transferido</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+                    <div className="grid grid-cols-2 gap-4">
+                       <div className="space-y-2">
+                        <Label htmlFor="class_name">Turma</Label>
+                        <Input id="class_name" {...register("class_name")} />
+                      </div>
+                       <div className="space-y-2">
+                        <Label htmlFor="period">Período</Label>
+                         <Select onValueChange={(value) => reset({ ...watch(), period: value as any })} defaultValue={editingStudent?.period}>
+                          <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Manhã">Manhã</SelectItem>
+                            <SelectItem value="Tarde">Tarde</SelectItem>
+                            <SelectItem value="Integral">Integral</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                     <div className="space-y-2">
+                      <Label htmlFor="diagnosis">Diagnóstico</Label>
+                      <Input id="diagnosis" {...register("diagnosis")} />
+                    </div>
+                     <div className="space-y-2">
+                      <Label htmlFor="medical_info">Informações Médicas Relevantes</Label>
+                      <Textarea id="medical_info" {...register("medical_info")} />
                     </div>
                     
+                    {/* 4. Adiciona os campos de seleção ao formulário */}
                     <div className="space-y-2">
-                        <Label htmlFor="diagnosis"><FileText className="inline mr-2 h-4 w-4"/>Diagnóstico</Label>
-                        <Textarea id="diagnosis" {...register("diagnosis")} placeholder="Descreva o diagnóstico, se houver"/>
+                      <Label htmlFor="guardian_ids">Responsáveis Vinculados</Label>
+                      <MultiSelect
+                        options={guardians.map(g => ({ value: g.id, label: g.name }))}
+                        selected={watch('guardian_ids') || []}
+                        onChange={(selected) => setValue('guardian_ids', selected)}
+                        placeholder="Selecione os responsáveis..."
+                        className="w-full"
+                      />
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="special_needs"><BadgeInfo className="inline mr-2 h-4 w-4"/>Necessidades Especiais</Label>
-                        <Textarea id="special_needs" {...register("special_needs")} placeholder="Descreva as necessidades especiais do estudante"/>
+                      <Label htmlFor="caregiver_ids">Cuidadores Vinculados</Label>
+                      <MultiSelect
+                        options={caregivers.map(c => ({ value: c.id, label: c.name }))}
+                        selected={watch('caregiver_ids') || []}
+                        onChange={(selected) => setValue('caregiver_ids', selected)}
+                        placeholder="Selecione os cuidadores..."
+                        className="w-full"
+                      />
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="medical_info"><Stethoscope className="inline mr-2 h-4 w-4"/>Informações Médicas Adicionais</Label>
-                        <Textarea id="medical_info" {...register("medical_info")} placeholder="Alergias, medicamentos, contatos de emergência..."/>
+                    <div className="flex justify-end space-x-2 pt-2">
+                      <Button type="button" variant="ghost" onClick={() => handleDialogChange(false)}>Cancelar</Button>
+                      <Button type="submit" disabled={upsertStudent.isPending}>
+                        {editingStudent
+                          ? (upsertStudent.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : <><Save className="mr-2 h-4 w-4" /> Salvar</>)
+                          : (upsertStudent.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando...</> : <><UserPlus className="mr-2 h-4 w-4" /> Criar</>)
+                        }
+                      </Button>
                     </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="report_file"><Upload className="inline mr-2 h-4 w-4"/>Anexar Laudo (PDF, Imagem)</Label>
-                        <Input id="report_file" type="file" {...register("report_file")} />
-                        {errors.report_file && <p className="text-sm text-destructive">{errors.report_file.message as string}</p>}
-                    </div>
-
-                    <div className="flex justify-end space-x-3 pt-4">
-                        <Button type="button" variant="ghost" onClick={() => handleDialogChange(false)}>Cancelar</Button>
-                        <Button type="submit" disabled={createStudent.isPending || updateStudent.isPending}>
-                            {editingStudent 
-                                ? (updateStudent.isPending 
-                                    ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> 
-                                    : <><Save className="mr-2 h-4 w-4" /> Salvar Alterações</>)
-                                : (createStudent.isPending 
-                                    ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando...</>
-                                    : <><UserPlus className="mr-2 h-4 w-4" /> Criar Estudante</>)
-                            }
-                        </Button>
-                    </div>
-                </form>
-              </DialogContent>
-            </Dialog>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
-        </div>
-      </CardHeader>
-      
-      <CardContent>
-        {students.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Turma</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Idade</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {students.map((student) => (
-                <TableRow key={student.id}>
-                  <TableCell className="font-medium">{student.name}</TableCell>
-                  <TableCell>{student.class_name || 'Não definida'}</TableCell>
-                  <TableCell><Badge variant={student.status === 'ativo' ? 'default' : 'secondary'}>{student.status}</Badge></TableCell>
-                  <TableCell>{student.birth_date ? calculateAge(student.birth_date) : 'Não informada'}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(student)}>
-                      <Edit className="h-4 w-4" />
-                      <span className="sr-only">Editar estudante</span>
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader><AlertDialogTitle>Você tem certeza?</AlertDialogTitle><AlertDialogDescription>Esta ação não pode ser desfeita. Isso excluirá permanentemente o estudante e seus dados de nossos servidores.</AlertDialogDescription></AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => deleteStudent.mutate(student.id)} disabled={deleteStudent.isPending}>Excluir</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        ) : (
-          <div className="text-center py-12">
-            <FileX2 className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-4 text-lg font-semibold">Nenhum estudante encontrado</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Comece cadastrando um novo estudante para vê-lo aqui.</p>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          {students.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Turma</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {students.map((student) => (
+                  <TableRow key={student.id}>
+                    <TableCell className="font-medium">{student.name}</TableCell>
+                    <TableCell>{student.class_name || 'N/A'}</TableCell>
+                    <TableCell>{getStatusBadge(student.status)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenEditModal(student)}><Edit className="h-4 w-4" /></Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader><AlertDialogTitle>Você tem certeza?</AlertDialogTitle><AlertDialogDescription>Esta ação não pode ser desfeita. Isso excluirá permanentemente o estudante.</AlertDialogDescription></AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteStudent.mutate(student.id)} disabled={deleteStudent.isPending}>
+                              {deleteStudent.isPending ? 'Excluindo...' : 'Excluir'}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-12">
+              <GraduationCap className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h3 className="mt-4 text-lg font-semibold">Nenhum estudante encontrado</h3>
+              <p className="mt-2 text-sm text-muted-foreground">Comece cadastrando um novo estudante para vê-lo aqui.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </>
   );
 }

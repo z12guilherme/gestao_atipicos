@@ -1,31 +1,23 @@
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUsers, UserProfile } from "@/hooks/useUsers";
-import { useStudents } from "@/hooks/useStudents";
+import { useStudents, Student } from "@/hooks/useStudents";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MultiSelect } from "@/components/ui/MultiSelect";
-import { Loader2, Save } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Loader2, Save, HeartHandshake } from "lucide-react";
+import { AssignmentTabContent } from "./AssignmentTabContent";
 
 export function AssignmentManagement() {
   const { users, isLoading: isLoadingUsers, updateUser } = useUsers();
-  const { students, isLoading: isLoadingStudents } = useStudents();
+  const { students, studentsWithoutCaregiver, studentsWithoutGuardian, isLoading: isLoadingStudents } = useStudents();
 
   const [isModalOpen, setModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
 
   const caregivers = users.filter(u => u.role === 'cuidador');
   const guardians = users.filter(u => u.role === 'responsavel');
-
-  // Lógica para estudantes não vinculados a cuidadores
-  const assignedToCaregiverIds = new Set(caregivers.flatMap(c => c.caregivers_students.map((cs: any) => cs.student_id)));
-  const unassignedToCaregiver = students.filter(s => !assignedToCaregiverIds.has(s.id));
-
-  // Lógica para estudantes não vinculados a responsáveis
-  const assignedToGuardianIds = new Set(guardians.flatMap(g => g.guardians_students.map((gs: any) => gs.student_id)));
-  const unassignedToGuardian = students.filter(s => !assignedToGuardianIds.has(s.id));
 
   const handleOpenModal = (user: UserProfile) => {
     setSelectedUser(user);
@@ -45,11 +37,38 @@ export function AssignmentManagement() {
 
   const isLoading = isLoadingUsers || isLoadingStudents;
 
+  /**
+   * Retorna a lista de estudantes que podem ser vinculados ao usuário selecionado.
+   * Inclui os estudantes já vinculados a este usuário e os que ainda não têm vínculo.
+   */
+  const getModalOptions = () => {
+    // CORREÇÃO: Busca o usuário completo da lista para garantir que os dados de vínculo estejam presentes.
+    const fullSelectedUser = users.find(u => u.id === selectedUser?.id);
+    if (!fullSelectedUser) return [];
+
+    const isCaregiver = fullSelectedUser.role === 'cuidador';
+    const unassignedStudents = isCaregiver ? studentsWithoutCaregiver : studentsWithoutGuardian;
+
+    const currentlyAssignedToUser = students.filter(student => {
+      const assignments = isCaregiver
+        ? fullSelectedUser.caregivers_students
+        : fullSelectedUser.guardians_students;
+      // CORREÇÃO: Acessa o ID do estudante através do objeto aninhado `students`.
+      return (assignments || []).some((assignment: any) => assignment.students?.id === student.id);
+    });
+
+    const availableStudents = [...currentlyAssignedToUser, ...unassignedStudents];
+    return [...new Map(availableStudents.map(item => [item.id, item])).values()].map(s => ({ value: s.id, label: s.name }));
+  };
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Gestão de Vínculos</h2>
+          <div className="flex items-center gap-2 mb-2">
+            <HeartHandshake className="h-8 w-8 text-blue-600" />
+            <h2 className="text-3xl font-bold tracking-tight">Gestão de Vínculos</h2>
+          </div>
           <p className="text-muted-foreground">Gerencie os vínculos entre cuidadores, estudantes, professores e turmas.</p>
         </div>
       </div>
@@ -63,103 +82,23 @@ export function AssignmentManagement() {
         </TabsList>
 
         <TabsContent value="caregivers-students">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {/* Coluna de Cuidadores */}
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Vínculos Atuais</CardTitle>
-                <CardDescription>Visualize os estudantes atribuídos a cada cuidador.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {isLoading && <p>Carregando cuidadores...</p>}
-                {caregivers.length > 0 ? caregivers.map(caregiver => (
-                  <div key={caregiver.id} className="flex items-center justify-between p-2 rounded-lg border">
-                    <div className="flex items-center gap-4">
-                      <Avatar>
-                        <AvatarFallback>{caregiver.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold">{caregiver.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {caregiver.caregivers_students.length > 0
-                            ? caregiver.caregivers_students.map((cs: any) => cs.students.name).join(', ')
-                            : "Nenhum estudante vinculado"}
-                        </p>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={() => handleOpenModal(caregiver)}>Editar</Button>
-                  </div>
-                )) : !isLoading && <p className="text-muted-foreground text-center py-4">Nenhum cuidador encontrado.</p>}
-              </CardContent>
-            </Card>
-
-            {/* Coluna de Alunos não vinculados */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Estudantes não Vinculados</CardTitle>
-                <CardDescription>Estudantes que aguardam a atribuição de um cuidador.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isLoading && <p>Carregando...</p>}
-                {unassignedToCaregiver.length > 0 ? (
-                  <ul className="space-y-2">
-                    {unassignedToCaregiver.map(student => (
-                      <li key={student.id} className="text-sm p-2 border rounded-md">{student.name}</li>
-                    ))}
-                  </ul>
-                ) : !isLoading && <p className="text-muted-foreground text-center py-4">Todos os estudantes estão vinculados.</p>}
-              </CardContent>
-            </Card>
-          </div>
+          <AssignmentTabContent
+            users={caregivers}
+            unassignedStudents={studentsWithoutCaregiver}
+            userRole="cuidador"
+            onEdit={handleOpenModal}
+            isLoading={isLoading}
+          />
         </TabsContent>
 
         <TabsContent value="guardians-students">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {/* Coluna de Responsáveis */}
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Vínculos Atuais (Responsáveis)</CardTitle>
-                <CardDescription>Visualize os estudantes atribuídos a cada responsável.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {isLoading && <p>Carregando responsáveis...</p>}
-                {guardians.length > 0 ? guardians.map(guardian => (
-                  <div key={guardian.id} className="flex items-center justify-between p-2 rounded-lg border">
-                    <div className="flex items-center gap-4">
-                      <Avatar><AvatarFallback>{guardian.name.charAt(0)}</AvatarFallback></Avatar>
-                      <div>
-                        <p className="font-semibold">{guardian.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {guardian.guardians_students.length > 0
-                            ? guardian.guardians_students.map((gs: any) => gs.students.name).join(', ')
-                            : "Nenhum estudante vinculado"}
-                        </p>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={() => handleOpenModal(guardian)}>Editar</Button>
-                  </div>
-                )) : !isLoading && <p className="text-muted-foreground text-center py-4">Nenhum responsável encontrado.</p>}
-              </CardContent>
-            </Card>
-
-            {/* Coluna de Alunos não vinculados a responsáveis */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Estudantes sem Responsável</CardTitle>
-                <CardDescription>Estudantes que aguardam a atribuição de um responsável.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isLoading && <p>Carregando...</p>}
-                {unassignedToGuardian.length > 0 ? (
-                  <ul className="space-y-2">
-                    {unassignedToGuardian.map(student => (
-                      <li key={student.id} className="text-sm p-2 border rounded-md">{student.name}</li>
-                    ))}
-                  </ul>
-                ) : !isLoading && <p className="text-muted-foreground text-center py-4">Todos os estudantes têm um responsável.</p>}
-              </CardContent>
-            </Card>
-          </div>
+          <AssignmentTabContent
+            users={guardians}
+            unassignedStudents={studentsWithoutGuardian}
+            userRole="responsavel"
+            onEdit={handleOpenModal}
+            isLoading={isLoading}
+          />
         </TabsContent>
       </Tabs>
 
@@ -167,12 +106,21 @@ export function AssignmentManagement() {
       <Dialog open={isModalOpen} onOpenChange={setModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar Vínculos de {selectedUser?.name}</DialogTitle>
+            <DialogTitle>{`Editar Vínculos de ${selectedUser?.name}`}</DialogTitle>
           </DialogHeader>
           <p className="text-muted-foreground text-sm">Selecione os estudantes que este {selectedUser?.role === 'cuidador' ? 'cuidador' : 'responsável'} irá acompanhar.</p>
           <MultiSelect
-            options={students.map(s => ({ value: s.id, label: s.name }))}
-            selected={selectedUser?.role === 'cuidador' ? selectedUser?.caregivers_students.map((cs: any) => cs.student_id) : selectedUser?.guardians_students.map((gs: any) => gs.student_id) || []}
+            options={getModalOptions()}
+            selected={(() => {
+              // CORREÇÃO: Busca o usuário completo da lista para obter os vínculos corretos.
+              const fullUser = users.find(u => u.id === selectedUser?.id);
+              if (!fullUser) return [];
+              if (fullUser.role === 'cuidador') {
+                return (fullUser.caregivers_students || []).map((cs: any) => cs.students?.id).filter(Boolean);
+              }
+              return (fullUser.guardians_students || []).map((gs: any) => gs.students?.id).filter(Boolean);
+            })()
+            }
             onChange={handleSaveChanges}
             placeholder="Selecione os estudantes..."
             actionButton={

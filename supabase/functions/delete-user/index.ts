@@ -25,7 +25,7 @@ serve(async (req) => {
     }
 
     // 2. Verifica se o requisitante é um gestor
-    const { data: profile, error: profileError } = await supabaseAdmin.from('profiles').select('role').eq('id', requester.id).single();
+    const { data: profile, error: profileError } = await supabaseAdmin.from('profiles').select('role').eq('user_id', requester.id).single();
     if (profileError || profile?.role !== 'gestor') {
       throw new Error("Apenas gestores podem excluir usuários.");
     }

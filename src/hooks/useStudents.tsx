@@ -1,22 +1,30 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { z } from "zod";
 
 export interface Student {
   id: string;
   name: string;
-  cpf?: string;
-  birth_date?: string;
+  birth_date: string;
+  status: 'ativo' | 'inativo' | 'aguardando';
   class_name?: string;
+  period?: 'Manhã' | 'Tarde' | 'Integral';
   diagnosis?: string;
-  special_needs?: string;
-  medical_info?: string;
-  guardian_id?: string | null;
-  report_path?: string | null; // Manteremos para consistência da interface, mas a lógica mudará
-  status: 'ativo' | 'inativo' | 'transferido';
+  medical_info?: string; // CORREÇÃO: Nome do campo alinhado com o banco de dados
   created_at: string;
-  updated_at: string;
+  caregivers_students?: any[];
+  guardians_students?: any[];
+  caregiver_ids?: string[]; // Adicionado para o formulário
+  guardian_ids?: string[]; // Adicionado para o formulário
 }
+
+const studentSchema = z.object({
+  name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
+  birth_date: z.string().min(1, "Data de nascimento é obrigatória"),
+  status: z.enum(['ativo', 'inativo', 'aguardando']),
+  // Adicione outras validações conforme necessário
+});
 
 export function useStudents() {
   const queryClient = useQueryClient();
@@ -24,82 +32,87 @@ export function useStudents() {
   const { data: students, isLoading } = useQuery({
     queryKey: ['students'],
     queryFn: async () => {
+      // 🔍 Fetch students along with their current caregiver and guardian links
       const { data, error } = await supabase
         .from('students')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
+        .select(`
+          *,
+          caregivers_students ( caregiver_id ),
+          guardians_students ( guardian_id )
+        `)
+        .order('name', { ascending: true });
+
       if (error) throw error;
-      return data as Student[];
+
+      // 🔍 Separate students who don't have a caregiver or guardian
+      const noCaregiver = data.filter(s => !s.caregivers_students || s.caregivers_students.length === 0);
+      const noGuardian = data.filter(s => !s.guardians_students || s.guardians_students.length === 0);
+
+      return {
+        all: data as Student[],
+        noCaregiver: noCaregiver as Student[],
+        noGuardian: noGuardian as Student[],
+      };
     },
   });
 
-  const createStudent = useMutation({
-    mutationFn: async (studentData: {
-      name: string;
-      cpf?: string;
-      birth_date?: string;
-      class_name?: string;
-      diagnosis?: string;
-      special_needs?: string;
-      medical_info?: string;
-      guardian_id?: string | null;
-      status: 'ativo' | 'inativo' | 'transferido';
-    }) => {
-      const { data, error } = await supabase
+  // --- MUTATION: criar/atualizar estudante e seus vínculos ---
+  const upsertStudent = useMutation({
+    mutationFn: async (studentData: Partial<Student> & { id?: string }) => {
+      const { caregiver_ids, guardian_ids, ...studentInfo } = studentData;
+
+      // 1. Cria ou atualiza o estudante
+      const { data: savedStudent, error: studentError } = await supabase
         .from('students')
-        .insert(studentData)
+        .upsert(studentInfo)
         .select()
         .single();
 
-      if (error) throw error;
-      return data;
+      if (studentError) throw studentError;
+      if (!savedStudent) throw new Error("Falha ao salvar estudante.");
+
+      const studentId = savedStudent.id;
+
+      // 2. Atualiza os vínculos de cuidadores (se fornecido)
+      if (caregiver_ids !== undefined) {
+        await supabase.from('caregivers_students').delete().eq('student_id', studentId);
+        if (caregiver_ids.length > 0) {
+          const caregiverAssignments = caregiver_ids.map(caregiver_id => ({ student_id: studentId, caregiver_id }));
+          const { error: caregiverError } = await supabase.from('caregivers_students').insert(caregiverAssignments);
+          if (caregiverError) throw caregiverError;
+        }
+      }
+
+      // 3. Atualiza os vínculos de responsáveis (se fornecido)
+      if (guardian_ids !== undefined) {
+        await supabase.from('guardians_students').delete().eq('student_id', studentId);
+        if (guardian_ids.length > 0) {
+          const guardianAssignments = guardian_ids.map(guardian_id => ({
+            student_id: studentId,
+            guardian_id: guardian_id,
+            relationship: 'Responsável', // CORREÇÃO: Adiciona o campo obrigatório
+          }));
+          const { error: guardianError } = await supabase.from('guardians_students').insert(guardianAssignments);
+          if (guardianError) throw guardianError;
+        }
+      }
+
+      return savedStudent;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['students'] });
-      toast.success('Estudante cadastrado com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['users'] }); // Invalida usuários para atualizar a lista de vínculos
+      toast.success('Estudante e seus vínculos foram salvos com sucesso!');
     },
     onError: (error: any) => {
-      if (error.message?.includes('duplicate key value violates unique constraint "students_cpf_key"')) {
-        toast.error('Erro ao cadastrar: Já existe um estudante com este CPF.');
-      } else {
-        toast.error(`Erro ao cadastrar estudante: ${error.message}`);
-      }
+      toast.error(`Erro ao salvar estudante: ${error.message}`);
     },
   });
 
-  const updateStudent = useMutation({
-    mutationFn: async ({ id, ...studentData }: Partial<Student> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('students')
-        .update(studentData)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['students'] });
-      toast.success('Estudante atualizado com sucesso!');
-    },
-    onError: (error: any) => {
-      if (error.message?.includes('duplicate key value violates unique constraint "students_cpf_key"')) {
-        toast.error('Erro ao atualizar: Já existe um estudante com este CPF.');
-      } else {
-        toast.error(`Erro ao atualizar estudante: ${error.message}`);
-      }
-    },
-  });
-
+  // --- MUTATION: deletar estudante ---
   const deleteStudent = useMutation({
-    mutationFn: async (studentId: string) => {
-      const { error } = await supabase
-        .from('students')
-        .delete()
-        .eq('id', studentId);
-
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('students').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -111,39 +124,12 @@ export function useStudents() {
     },
   });
 
-  const createDocument = useMutation({
-    mutationFn: async (docData: {
-      student_id: string;
-      title: string;
-      file_path: string;
-      file_name: string;
-      document_type: 'laudo';
-    }) => {
-      const { data, error } = await supabase
-        .from('documents')
-        .insert(docData)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      toast.success('Laudo anexado com sucesso!');
-      // Pode ser útil invalidar queries relacionadas a documentos se houver uma
-    },
-    onError: (error: any) => {
-      toast.error(`Erro ao anexar laudo: ${error.message}`);
-    },
-  });
-
   return {
-    students: students || [],
+    students: students?.all || [],
+    studentsWithoutCaregiver: students?.noCaregiver || [],
+    studentsWithoutGuardian: students?.noGuardian || [],
     isLoading,
-    createStudent,
-    updateStudent,
+    upsertStudent,
     deleteStudent,
-    createDocument,
-    supabase, // Expor o cliente supabase para o upload
   };
 }

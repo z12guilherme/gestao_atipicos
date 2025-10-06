@@ -15,8 +15,7 @@ import NotFound from "./pages/NotFound";
 import { StudentsPage } from "./pages/StudentsPage";
 import { UsersPage } from "./pages/UsersPage";
 import { ClassManagement } from "./components/gestor/ClassManagement";
-import { CaregiverManagement } from "./components/gestor/CaregiverManagement";
-import { GuardianManagement } from "./components/gestor/GuardianManagement";
+import { AssignmentManagement } from "@/components/gestor/AssignmentManagement";
 import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
@@ -34,14 +33,14 @@ function App() {
               <Route
                 element={<ProtectedRoute><Layout /></ProtectedRoute>}
               >
-                <Route path="/" element={<Dashboard />} />
+                {/* Rotas mais específicas primeiro */}
+                <Route path="/gestor/assignments" element={<AssignmentManagement />} />
                 <Route path="/students" element={<StudentsPage />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/classes" element={<ClassManagement />} />
-                <Route path="/caregivers" element={<CaregiverManagement />} />
-                <Route path="/guardians" element={<GuardianManagement />} />
                 <Route path="/settings" element={<Settings />} />
-                {/* Adicione outras rotas que devem usar o Layout aqui */}
+                {/* Rota raiz (genérica) por último */}
+                <Route path="/" element={<Dashboard />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />

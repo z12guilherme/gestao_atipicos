@@ -30,7 +30,7 @@ const Dashboard = () => {
 
     switch (profile.role) {
       case 'gestor':
-        return <GestorDashboard />;
+        return <GestorDashboard />; // O redirecionamento foi removido daqui
         
       case 'cuidador':
         return <CuidadorDashboard />;

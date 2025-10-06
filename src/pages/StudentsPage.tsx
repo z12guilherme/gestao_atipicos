@@ -3,18 +3,25 @@ import { StudentManagement } from '@/components/gestor/StudentManagement';
 import { Student } from '@/hooks/useStudents';
 
 export function StudentsPage() {
-  // Estado para controlar se o diálogo está aberto ou fechado
   const [isDialogOpen, setDialogOpen] = useState(false);
-  
-  // Estado para armazenar os dados do estudante que está sendo editado
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
 
+  // Este componente agora atua como um "container" para o estado do modal,
+  // permitindo que o botão "Novo Estudante" e a ação de "Editar" na tabela
+  // controlem o mesmo Dialog.
+
   return (
-    <StudentManagement
-      isDialogOpen={isDialogOpen}
-      setDialogOpen={setDialogOpen}
-      editingStudent={editingStudent}
-      setEditingStudent={setEditingStudent}
-    />
+    <div className="flex-1 space-y-4">
+      {/* O componente de gerenciamento de estudantes é renderizado aqui */}
+      {/* Ele contém a tabela, os botões e a lógica do modal */}
+      <StudentManagement
+        isDialogOpen={isDialogOpen}
+        setDialogOpen={setDialogOpen}
+        editingStudent={editingStudent}
+        setEditingStudent={setEditingStudent}
+      />
+
+      {/* Você pode adicionar outros componentes relacionados a estudantes aqui, se necessário */}
+    </div>
   );
 }

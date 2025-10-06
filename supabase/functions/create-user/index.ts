@@ -124,23 +124,23 @@ serve(async (req) => {
       }
     }
     
-    // ETAPA 2: Inserção em Lote dos Perfis e Vínculos
+    // ETAPA 2: Atualização dos Perfis e Preparação dos Vínculos
     if (createdAuthUsers.length > 0) {
       // Prepara os dados para a atualização. O perfil já foi criado pelo trigger.
       const profileUpdates = createdAuthUsers.map(({ authUser, validatedData }) => ({
+        user_id: authUser.id, // Chave para o 'eq'
         name: validatedData.name,
         role: validatedData.role,
         cpf: validatedData.cpf,
         phone: validatedData.phone,
         function_title: validatedData.function_title,
         work_schedule: validatedData.work_schedule,
-      }));
+      }));      
 
-      createdAuthUsers.forEach(({ authUser, validatedData }) => {
+      createdAuthUsers.forEach(({ authUser, validatedData }, index) => {
         // Se houver IDs de estudantes, prepara os vínculos
         if (validatedData.student_ids && validatedData.student_ids.length > 0) {
-          // Vínculo para Responsáveis
-          if (validatedData.role === 'responsavel') {
+          if (validatedData.role === 'responsavel') { // Vínculo para Responsáveis
           const assignments = validatedData.student_ids.map(student_id => ({
             guardian_id: authUser.id, // O vínculo é com o ID de autenticação
             student_id,
@@ -148,8 +148,7 @@ serve(async (req) => {
           }));
           guardianAssignments.push(...assignments);
           }
-          // Vínculo para Cuidadores (adicionado)
-          else if (validatedData.role === 'cuidador') {
+          else if (validatedData.role === 'cuidador') { // Vínculo para Cuidadores
             const assignments = validatedData.student_ids.map(student_id => ({
               caregiver_id: authUser.id, // O vínculo é com o ID de autenticação
               student_id,
@@ -159,41 +158,12 @@ serve(async (req) => {
         }
       });
 
-      // ETAPA 2.5: Validação dos Vínculos (se houver)
-      const allAssignments = [...guardianAssignments, ...caregiverAssignments];
-      if (allAssignments.length > 0) {
-        const studentIdsToValidate = [...new Set(allAssignments.map(a => a.student_id))];
-        const { data: existingStudents, error: studentCheckError } = await supabaseAdmin
-          .from('students')
-          .select('id')
-          .in('id', studentIdsToValidate);
-
-        if (studentCheckError) {
-          throw new Error(`Falha ao verificar estudantes: ${studentCheckError.message}`);
-        }
-
-        const existingStudentIds = new Set(existingStudents.map(s => s.id));
-        const invalidStudentIds = studentIdsToValidate.filter(id => !existingStudentIds.has(id));
-
-        if (invalidStudentIds.length > 0) {
-          // Se algum ID de estudante for inválido, a operação inteira falha para garantir a consistência dos dados.
-          throw new Error(`Criação de usuário falhou. Os seguintes IDs de estudante são inválidos ou não foram encontrados: ${invalidStudentIds.join(', ')}`);
-        }
-      }
-
-      // CORREÇÃO: Executa as atualizações uma a uma.
-      // O upsert em lote com a estrutura atual da tabela causa conflitos de constraint.
-      // Um loop de 'update' individual é mais seguro neste cenário.
-      let batchUpdateError: Error | null = null;
-      for (let i = 0; i < createdAuthUsers.length; i++) {
-        const { authUser } = createdAuthUsers[i];
-        const profileData = profileUpdates[i];
-        const { error } = await supabaseAdmin.from('profiles').update(profileData).eq('user_id', authUser.id);
-        if (error) {
-          batchUpdateError = new Error(error.message);
-          break; // Interrompe o loop no primeiro erro
-        }
-      }
+      // ETAPA 2.1: Atualiza os perfis em lote para obter os IDs dos perfis
+      // Esta etapa é crucial para obter os IDs dos perfis que foram criados pelo trigger.
+      const { data: updatedProfiles, error: batchUpdateError } = await supabaseAdmin
+        .from('profiles')
+        .upsert(profileUpdates, { onConflict: 'user_id' })
+        .select('id, user_id');
 
       if (batchUpdateError) {
         // Rollback: Se a atualização de qualquer perfil falhar, deleta os usuários de autenticação criados.
@@ -201,30 +171,56 @@ serve(async (req) => {
         for (const { authUser } of createdAuthUsers) {
           await supabaseAdmin.auth.admin.deleteUser(authUser.id);
         }
+        throw new Error(`Falha crítica ao salvar perfis. A importação foi revertida. Erro: ${batchUpdateError.message}`);
+      }
 
-        // Limpa erros individuais, pois a operação em lote falhou como um todo.
-        importErrors.length = 0;
-        // Adiciona uma única mensagem de erro clara para o usuário.
-        importErrors.push({ line: 0, error: `Falha crítica ao salvar perfis. A importação foi revertida. Erro: ${batchUpdateError.message}` });
-        // Garante que a contagem de erros reflita o número de registros que falharam.
-        errorCount += createdAuthUsers.length;
-      } else {
-        // Se a inserção dos perfis foi bem-sucedida, insere os vínculos
+      // Mapeia o auth_id para o profile_id
+      const authIdToProfileId = new Map(updatedProfiles.map(p => [p.user_id, p.id]));
+
+      // CORREÇÃO: Substitui o auth_id pelo profile_id nos vínculos
+      guardianAssignments.forEach(a => { a.guardian_id = authIdToProfileId.get(a.guardian_id) });
+      caregiverAssignments.forEach(a => { a.caregiver_id = authIdToProfileId.get(a.caregiver_id) });
+
+      // Filtra vínculos que não conseguiram encontrar um profile_id (caso raro)
+      const finalGuardianAssignments = guardianAssignments.filter(a => a.guardian_id);
+      const finalCaregiverAssignments = caregiverAssignments.filter(a => a.caregiver_id);
+
+      // ETAPA 2.5: Validação e filtragem dos Vínculos (se houver)
+      let validGuardianAssignments = [...guardianAssignments];
+      let validCaregiverAssignments = [...caregiverAssignments];
+      const allStudentIdsToValidate = [...new Set([...guardianAssignments.map(a => a.student_id), ...caregiverAssignments.map(a => a.student_id)])];
+
+      if (allStudentIdsToValidate.length > 0) {
+        const { data: existingStudents, error: studentCheckError } = await supabaseAdmin
+          .from('students')
+          .select('id')
+          .in('id', allStudentIdsToValidate);
+
+        if (studentCheckError) {
+          throw new Error(`Falha ao verificar estudantes: ${studentCheckError.message}`);
+        }
+
+        const existingStudentIds = new Set(existingStudents.map(s => s.id));
+        
+        // Filtra para manter apenas os vínculos com estudantes que existem
+        validGuardianAssignments = guardianAssignments.filter(a => existingStudentIds.has(a.student_id));
+        validCaregiverAssignments = caregiverAssignments.filter(a => existingStudentIds.has(a.student_id));
+        // Nota: Seria possível adicionar os IDs inválidos à lista de 'importErrors' para notificar o usuário.
+      }
+
+      // ETAPA 3: Inserção dos Vínculos Válidos
+      if (updatedProfiles.length > 0) {
         successCount = createdAuthUsers.length;
-        if (guardianAssignments.length > 0) {
-          const { error: assignmentError } = await supabaseAdmin.from('guardians_students').insert(guardianAssignments);
+        if (finalGuardianAssignments.length > 0) {
+          const { error: assignmentError } = await supabaseAdmin.from('guardians_students').insert(finalGuardianAssignments);
           if (assignmentError) {
-            // Idealmente, um erro aqui também deveria acionar um rollback mais complexo.
-            // Por enquanto, apenas registramos o erro.
             console.error("Erro ao vincular responsáveis a estudantes:", assignmentError);
             importErrors.push({ line: 0, error: `Usuários criados, mas falha ao vincular responsáveis: ${assignmentError.message}` });
           }
         }
-        // CORREÇÃO: Adiciona a inserção dos vínculos de cuidadores
-        if (caregiverAssignments.length > 0) {
-          const { error: assignmentError } = await supabaseAdmin.from('caregivers_students').insert(caregiverAssignments);
+        if (finalCaregiverAssignments.length > 0) {
+          const { error: assignmentError } = await supabaseAdmin.from('caregivers_students').insert(finalCaregiverAssignments);
           if (assignmentError) {
-            // Idealmente, um erro aqui também deveria acionar um rollback mais complexo.
             console.error("Erro ao vincular cuidadores a estudantes:", assignmentError);
             importErrors.push({ line: 0, error: `Usuários criados, mas falha ao vincular cuidadores: ${assignmentError.message}` });
           }

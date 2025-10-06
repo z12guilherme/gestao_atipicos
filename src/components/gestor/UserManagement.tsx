@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { UserPlus, Edit, Save, Trash2, Upload, FileDown, Loader2, Users2 } from "lucide-react";
+import { UserPlus, Edit, Save, Trash2, Upload, FileDown, Loader2, Users2, X } from "lucide-react";
 import { useUsers, User } from "@/hooks/useUsers"; // Hook para buscar usuários
 import { useFileImport } from "@/hooks/useFileImport";
 import { useForm } from "react-hook-form";
@@ -292,6 +292,21 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
                       placeholder="Selecione os estudantes..."
                       className="w-full"
                     />
+                    {/* MELHORIA: Exibe os estudantes selecionados como badges para melhor visualização */}
+                    <div className="flex flex-wrap gap-1 pt-2">
+                      {watch('student_ids')?.map(studentId => {
+                        const student = students.find(s => s.id === studentId);
+                        if (!student) return null;
+                        return (
+                          <Badge key={student.id} variant="secondary" className="flex items-center gap-1">
+                            {student.name}
+                            <button type="button" onClick={() => setValue('student_ids', watch('student_ids').filter(id => id !== studentId))} className="rounded-full hover:bg-muted-foreground/20 p-0.5">
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        );
+                      })}
+                    </div>
                     {errors.student_ids && <p className="text-sm text-destructive">{errors.student_ids.message}</p>}
                   </div>
                 )}
@@ -341,7 +356,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
                         <AlertDialogHeader><AlertDialogTitle>Você tem certeza?</AlertDialogTitle><AlertDialogDescription>Esta ação não pode ser desfeita. Isso excluirá permanentemente o usuário e seus dados de nossos servidores.</AlertDialogDescription></AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => deleteUser.mutate(user.id)} disabled={deleteUser.isPending}>{deleteUser.isPending ? 'Excluindo...' : 'Excluir'}</AlertDialogAction>
+                          <AlertDialogAction onClick={() => deleteUser.mutate(user.user_id)} disabled={deleteUser.isPending}>{deleteUser.isPending ? 'Excluindo...' : 'Excluir'}</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>

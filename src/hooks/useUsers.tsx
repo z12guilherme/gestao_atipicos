@@ -23,9 +23,20 @@ export function useUsers() {
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_profiles_with_email');
-      if (error) throw error;
-      return data as User[];
+      // CORREÇÃO: A consulta agora busca os detalhes dos estudantes aninhados.
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          caregivers_students!inner(students(id, name)),
+          guardians_students!inner(students(id, name))
+        `)
+        .in('role', ['cuidador', 'responsavel', 'professor', 'gestor'])
+        .order('name', { ascending: true });
+      
+      if (error) throw new Error(error.message);
+
+      return (data as any[]) || [];
     },
   });
 
@@ -46,6 +57,10 @@ export function useUsers() {
       if (!session) throw new Error('Você precisa estar autenticado');
 
       const response = await supabase.functions.invoke('create-user', {
+        // CORREÇÃO: Adiciona o token de autenticação no cabeçalho da requisição.
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
         body: { records: [userData] },
       });
 
@@ -80,13 +95,13 @@ export function useUsers() {
         const { error: deleteError } = await supabase
           .from('guardians_students')
           .delete()
-          .eq('guardian_id', id);
+          .eq('guardian_id', id); // CORREÇÃO: Usar o ID do perfil
         if (deleteError) throw deleteError;
 
         // Cria novas associações
         if (student_ids.length > 0) {
           const newAssignments = student_ids.map(student_id => ({
-            guardian_id: id,
+            guardian_id: id, // CORREÇÃO: Usar o ID do perfil
             student_id,
             relationship: 'responsavel'
           }));
@@ -94,6 +109,28 @@ export function useUsers() {
           if (insertError) throw insertError;
         }
       }
+
+      // 3️⃣ Se for cuidador, atualiza estudantes vinculados
+      if (profileData.role === 'cuidador' && student_ids) {
+        // Remove associações antigas
+        const { error: deleteError } = await supabase
+          .from('caregivers_students')
+          .delete()
+          .eq('caregiver_id', id); // CORREÇÃO: Usar o ID do perfil
+        if (deleteError) throw deleteError;
+
+        // Cria novas associações
+        if (student_ids.length > 0) {
+          const newAssignments = student_ids.map(student_id => ({
+            caregiver_id: id, // CORREÇÃO: Usar o ID do perfil
+            student_id,
+            relationship: 'cuidador'
+          }));
+          const { error: insertError } = await supabase.from('caregivers_students').insert(newAssignments);
+          if (insertError) throw insertError;
+        }
+      }
+
 
       return updatedProfile;
     },
@@ -108,8 +145,15 @@ export function useUsers() {
 
   // --- MUTATION: deletar usuário ---
   const deleteUser = useMutation({
-    mutationFn: async (userId: string) => {
-      const { error } = await supabase.functions.invoke('delete-user', { body: { userId } });
+    mutationFn: async (user_id: string) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Você precisa estar autenticado');
+
+      const { error } = await supabase.functions.invoke('delete-user', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ userId: user_id }) }); // CORREÇÃO: Envia o corpo como uma string JSON
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {
