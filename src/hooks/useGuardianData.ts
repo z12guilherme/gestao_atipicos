@@ -42,7 +42,11 @@ export function useGuardianData() {
 
   return {
     guardianData,
-    students: guardianData?.guardians_students.map(gs => gs.students) || [],
+    // CORREÇÃO: Garante que 'students' seja sempre um array.
+    // 1. Usa optional chaining `?.` para acessar 'guardians_students' de forma segura.
+    // 2. O `|| []` garante que, se 'guardians_students' for undefined, o map opere sobre um array vazio.
+    // 3. O `filter(Boolean)` remove quaisquer entradas nulas ou indefinidas resultantes do map.
+    students: (guardianData?.guardians_students || []).map(gs => gs.students).filter(Boolean),
     isLoading,
     error,
   };
