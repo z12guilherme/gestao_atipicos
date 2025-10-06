@@ -40,7 +40,7 @@ export function AssignmentManagement() {
       student_ids: studentIds,
     });
     setModalOpen(false);
-    setSelectedCaregiver(null);
+    setSelectedUser(null);
   };
 
   const isLoading = isLoadingUsers || isLoadingStudents;
@@ -91,7 +91,7 @@ export function AssignmentManagement() {
                   </div>
                 )) : !isLoading && <p className="text-muted-foreground text-center py-4">Nenhum cuidador encontrado.</p>}
               </CardContent>
-            </Card>>
+            </Card>
 
             {/* Coluna de Alunos não vinculados */}
             <Card>
