@@ -114,11 +114,11 @@ serve(async (req) => {
     
     // ETAPA 2: Inserção em Lote dos Perfis e Vínculos
     if (createdAuthUsers.length > 0) {
-      const profilesToInsert = createdAuthUsers.map(({ authUser, validatedData }) => ({
-        id: authUser.id,
-        user_id: authUser.id,
+      // CORREÇÃO: Em vez de inserir, vamos atualizar os perfis que foram criados automaticamente pelo trigger.
+      const profilesToUpdate = createdAuthUsers.map(({ authUser, validatedData }) => ({
+        id: authUser.id, // A condição para o WHERE na atualização
         name: validatedData.name,
-        role: validatedData.role,
+        role: validatedData.role, // O campo a ser atualizado
         cpf: validatedData.cpf,
         phone: validatedData.phone,
         function_title: validatedData.function_title,
@@ -136,13 +136,14 @@ serve(async (req) => {
         }
       });
 
-      const { error: batchInsertError } = await supabaseAdmin
+      // Executa a atualização em lote. Para cada perfil, atualiza onde o ID corresponde.
+      const { error: batchUpdateError } = await supabaseAdmin
         .from('profiles')
-        .insert(profilesToInsert);
+        .upsert(profilesToUpdate); // Usamos upsert para garantir que os dados sejam inseridos/atualizados.
 
-      if (batchInsertError) {
-        // Rollback: Se a inserção dos perfis falhar, tenta deletar os usuários de autenticação criados.
-        console.error("Erro na inserção em lote de perfis, iniciando rollback:", batchInsertError);
+      if (batchUpdateError) {
+        // Rollback: Se a atualização dos perfis falhar, tenta deletar os usuários de autenticação criados.
+        console.error("Erro na atualização em lote de perfis, iniciando rollback:", batchUpdateError);
         for (const { authUser } of createdAuthUsers) {
           await supabaseAdmin.auth.admin.deleteUser(authUser.id);
         }
@@ -150,7 +151,7 @@ serve(async (req) => {
         // Limpa erros individuais, pois a operação em lote falhou como um todo.
         importErrors.length = 0;
         // Adiciona uma única mensagem de erro clara para o usuário.
-        importErrors.push({ line: 0, error: `Falha crítica ao salvar perfis. A importação foi revertida. Erro: ${batchInsertError.message}` });
+        importErrors.push({ line: 0, error: `Falha crítica ao salvar perfis. A importação foi revertida. Erro: ${batchUpdateError.message}` });
         // Garante que a contagem de erros reflita o número de registros que falharam.
         errorCount += createdAuthUsers.length;
       } else {
