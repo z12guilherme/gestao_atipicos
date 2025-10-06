@@ -3,10 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export interface User {
-  id: string;
+  id: string; // ID do perfil (profile)
+  user_id: string; // ID de autenticação (auth.users)
   name: string;
   email: string;
-  role: 'gestor' | 'cuidador' | 'responsavel';
+  role: 'gestor' | 'cuidador' | 'responsavel' | 'professor';
   phone?: string | null;
   cpf?: string | null;
   // Campos específicos de cuidador
@@ -18,10 +19,10 @@ export interface User {
 
 interface ProfileData {
   name: string;
-  email: string;
+  email?: string; // Email não é atualizável diretamente no perfil
   password?: string;
-  role: 'gestor' | 'cuidador' | 'responsavel';
-  phone?: string;
+  role: 'gestor' | 'cuidador' | 'responsavel' | 'professor';
+  phone?: string | null;
   cpf?: string;
   function_title?: string;
   work_schedule?: string;
@@ -33,7 +34,7 @@ interface CreateUserPayload extends ProfileData {
 
 interface UpdateUserPayload {
   id: string;
-  profileData: Partial<ProfileData>;
+  profileData: Partial<Omit<ProfileData, 'email' | 'password'>>;
   student_ids?: string[];
 }
 
@@ -43,15 +44,28 @@ export function useUsers() {
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      // MELHORIA: A consulta agora busca os vínculos tanto de responsáveis quanto de cuidadores.
-      // Isso garante que a UI tenha acesso a todos os vínculos, preparando para a nova aba.
+      // REATORAÇÃO: Simplificada a consulta para ser mais limpa e eficiente.
+      // A lógica de mapeamento dos student_ids é feita no lado do cliente.
       const { data, error } = await supabase.from('profiles')
         .select('*, guardians_students(student_id), caregivers_students(student_id)')
-        .in('role', ['cuidador', 'responsavel'])
+        .in('role', ['cuidador', 'responsavel', 'professor'])
         .order('name', { ascending: true });
       
       if (error) throw error;
-      return data as any[]; // Permite que o Supabase retorne a estrutura aninhada
+
+      // Mapeia os dados para a interface User, unificando os student_ids
+      const formattedUsers: User[] = data.map(profile => ({
+        ...profile,
+        email: profile.email, // Garante que o email esteja presente
+        student_ids: [
+          ...(profile.guardians_students || []).map((gs: any) => gs.student_id),
+          ...(profile.caregivers_students || []).map((cs: any) => cs.student_id),
+        ],
+        // Remove as tabelas aninhadas para uma estrutura de dados mais limpa
+        guardians_students: undefined,
+        caregivers_students: undefined,
+      }));
+      return formattedUsers;
     },
   });
 
@@ -85,38 +99,38 @@ export function useUsers() {
 
   const updateUser = useMutation({
     mutationFn: async (payload: UpdateUserPayload) => {
-      const { id: userId, profileData } = payload;
+      const { id: profileId, profileData } = payload;
       const student_ids = payload.student_ids || [];
 
       // 1. Atualiza os dados do perfil na tabela 'profiles'
       const { data: updatedProfile, error: profileError } = await supabase
         .from('profiles')
         .update(profileData)
-        .eq('id', userId)
-        .select('role') // Retorna o 'role' para a lógica condicional
+        .eq('id', profileId)
+        .select('role, user_id') // Retorna o 'role' e 'user_id' para a lógica de vínculo
         .single();
 
       if (profileError || !updatedProfile) throw profileError || new Error("Perfil não encontrado após atualização.");
 
-      const userRole = updatedProfile.role;
+      const { role, user_id } = updatedProfile;
 
       // 2. Lógica condicional para atualizar a tabela de vínculo correta
-      if (userRole === 'cuidador') {
+      if (role === 'cuidador') {
         // Remove vínculos antigos de cuidador
-        await supabase.from('caregivers_students').delete().eq('caregiver_id', userId);
+        await supabase.from('caregivers_students').delete().eq('caregiver_id', user_id);
         // Insere novos vínculos se houver
         if (student_ids.length > 0) {
-          const newAssignments = student_ids.map(studentId => ({ caregiver_id: userId, student_id: studentId }));
+          const newAssignments = student_ids.map(studentId => ({ caregiver_id: user_id, student_id: studentId }));
           const { error } = await supabase.from('caregivers_students').insert(newAssignments);
           if (error) throw error;
         }
-      } else if (userRole === 'responsavel') {
+      } else if (role === 'responsavel') {
         // Remove vínculos antigos de responsável
-        await supabase.from('guardians_students').delete().eq('guardian_id', userId);
+        await supabase.from('guardians_students').delete().eq('guardian_id', user_id);
         // Insere novos vínculos se houver
         if (student_ids.length > 0) {
           const newAssignments = student_ids.map(studentId => ({
-            guardian_id: userId,
+            guardian_id: user_id,
             student_id: studentId,
             relationship: 'responsavel' // ou outro valor padrão
           }));

@@ -79,7 +79,8 @@ serve(async (req) => {
     let errorCount = 0;
     const importErrors: { line: number, error: string }[] = [];
     const createdAuthUsers = []; // Array para rastrear usuários criados para inserção de perfil
-    const assignmentsToInsert = []; // Array para coletar vínculos de responsáveis
+    const guardianAssignments = []; // Vínculos de responsáveis
+    const caregiverAssignments = []; // Vínculos de cuidadores
 
     // 5. Itera sobre cada registro para criar os usuários
     for (let i = 0; i < records.length; i++) { // ETAPA 1: Validação e Criação na Autenticação
@@ -141,29 +142,27 @@ serve(async (req) => {
           // Vínculo para Responsáveis
           if (validatedData.role === 'responsavel') {
           const assignments = validatedData.student_ids.map(student_id => ({
-            guardian_id: authUser.id,
+            guardian_id: authUser.id, // O vínculo é com o ID de autenticação
             student_id,
             relationship: 'responsavel' 
           }));
-          assignmentsToInsert.push(...assignments);
+          guardianAssignments.push(...assignments);
           }
           // Vínculo para Cuidadores (adicionado)
           else if (validatedData.role === 'cuidador') {
             const assignments = validatedData.student_ids.map(student_id => ({
-              caregiver_id: authUser.id,
+              caregiver_id: authUser.id, // O vínculo é com o ID de autenticação
               student_id,
             }));
-            // Adiciona a um array separado ou modifica a lógica para lidar com múltiplos tipos de vínculo
-            // Por simplicidade aqui, vamos assumir que a importação é ou de cuidadores ou de responsáveis, não misto.
-            // Uma implementação mais robusta separaria os inserts.
-            // TODO: Implementar insert para caregivers_students
+            caregiverAssignments.push(...assignments);
           }
         }
       });
 
       // ETAPA 2.5: Validação dos Vínculos (se houver)
-      if (assignmentsToInsert.length > 0) {
-        const studentIdsToValidate = [...new Set(assignmentsToInsert.map(a => a.student_id))];
+      const allAssignments = [...guardianAssignments, ...caregiverAssignments];
+      if (allAssignments.length > 0) {
+        const studentIdsToValidate = [...new Set(allAssignments.map(a => a.student_id))];
         const { data: existingStudents, error: studentCheckError } = await supabaseAdmin
           .from('students')
           .select('id')
@@ -212,13 +211,22 @@ serve(async (req) => {
       } else {
         // Se a inserção dos perfis foi bem-sucedida, insere os vínculos
         successCount = createdAuthUsers.length;
-        if (assignmentsToInsert.length > 0) {
-          const { error: assignmentError } = await supabaseAdmin.from('guardians_students').insert(assignmentsToInsert);
+        if (guardianAssignments.length > 0) {
+          const { error: assignmentError } = await supabaseAdmin.from('guardians_students').insert(guardianAssignments);
           if (assignmentError) {
             // Idealmente, um erro aqui também deveria acionar um rollback mais complexo.
             // Por enquanto, apenas registramos o erro.
             console.error("Erro ao vincular responsáveis a estudantes:", assignmentError);
             importErrors.push({ line: 0, error: `Usuários criados, mas falha ao vincular responsáveis: ${assignmentError.message}` });
+          }
+        }
+        // CORREÇÃO: Adiciona a inserção dos vínculos de cuidadores
+        if (caregiverAssignments.length > 0) {
+          const { error: assignmentError } = await supabaseAdmin.from('caregivers_students').insert(caregiverAssignments);
+          if (assignmentError) {
+            // Idealmente, um erro aqui também deveria acionar um rollback mais complexo.
+            console.error("Erro ao vincular cuidadores a estudantes:", assignmentError);
+            importErrors.push({ line: 0, error: `Usuários criados, mas falha ao vincular cuidadores: ${assignmentError.message}` });
           }
         }
       }

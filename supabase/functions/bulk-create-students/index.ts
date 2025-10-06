@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
       throw new Error("Acesso não autorizado. Token inválido.");
     }
 
-    const { data: profile, error: profileError } = await supabaseAdmin.from('profiles').select('role').eq('id', user.id).single();
+    const { data: profile, error: profileError } = await supabaseAdmin.from('profiles').select('role').eq('user_id', user.id).single();
 
     if (profileError || profile?.role !== 'gestor') {
       throw new Error("Apenas gestores podem importar estudantes.");
@@ -137,13 +137,14 @@ Deno.serve(async (req) => {
         const { data: guardians, error: guardianError } = await supabaseAdmin
           .from('profiles')
           .select('id, role')
-          .in('id', guardianIds);
+          .in('user_id', guardianIds); // CORREÇÃO: A validação deve ser feita pelo user_id
 
         if (guardianError) throw new Error(`Falha ao verificar responsáveis: ${guardianError.message}`);
 
         const validGuardianIds = new Set(guardians.filter(p => p.role === 'responsavel').map(p => p.id));
         
-        studentsToInsert.forEach(item => {
+        const invalidAssignments = studentsToInsert.filter(item => item.data.guardian_id && !validGuardianIds.has(item.data.guardian_id));
+        invalidAssignments.forEach(item => {
           if (item.data.guardian_id && !validGuardianIds.has(item.data.guardian_id)) {
             results.errorCount++;
             results.errors.push({ line: item.line, error: `O ID '${item.data.guardian_id}' fornecido para o responsável não pertence a um usuário com o perfil 'responsavel'.` });
@@ -151,16 +152,20 @@ Deno.serve(async (req) => {
         });
       }
 
+      // Filtra para inserir apenas os estudantes que passaram em todas as validações
+      const validStudentsToInsert = studentsToInsert.filter(item => 
+        !results.errors.some(err => err.line === item.line)
+      );
+
       const { error: insertError } = await supabaseAdmin
         .from('students')
-        .insert(studentsToInsert.map(item => item.data)); // Insere apenas os dados
+        .insert(validStudentsToInsert.map(item => item.data)); // Insere apenas os dados válidos
 
       if (insertError) {
         console.error('Supabase insert error:', insertError);
         // Se a inserção em lote falhar, é um erro único para a operação.
-        // Não é um erro por linha, mas sim da transação.
-        results.errorCount = studentsToInsert.length; // Considera todas as linhas como falhas.
-        results.errors.push({ line: 0, error: `Falha ao salvar no banco de dados. Verifique se há CPFs duplicados ou outros dados inválidos. (Detalhe: ${insertError.message})` });
+        results.errorCount += validStudentsToInsert.length;
+        results.errors.push({ line: 0, error: `Falha ao salvar no banco de dados. Verifique se há CPFs duplicados. (Detalhe: ${insertError.message})` });
       } else {
         results.successCount = studentsToInsert.length;
         // Limpa os erros de validação se a inserção for bem-sucedida, pois já foram tratados.
