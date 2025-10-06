@@ -61,9 +61,9 @@ Para agilizar o cadastro, você pode importar múltiplos usuários de uma vez.
 ### Gerenciamento de Estudantes
 
 Centralize todas as informações dos estudantes atípicos.
-
 #### Cadastrando um Novo Estudante
-1. Clique em **"Gerenciar Estudantes"** e depois em **"Novo Estudante"**.
+1. No menu lateral, clique em **"Alunos"**.
+2. Na tela de gerenciamento, clique no botão **"Novo Estudante"**.
 2. Preencha as informações do estudante.
 3. **Vínculos:** Na mesma tela, você pode selecionar um ou mais **responsáveis** e **cuidadores** da lista para vincular ao estudante.
 4. Clique em **"Criar"** ou **"Salvar"**.
@@ -76,14 +76,14 @@ Centralize todas as informações dos estudantes atípicos.
 
 ### Gerenciamento de Vínculos
 
-A gestão de vínculos foi centralizada no **cadastro do estudante** para um fluxo mais intuitivo. No entanto, a tela de **"Gestão de Vínculos"** ainda está disponível no menu lateral e serve como um painel de visualização e edição rápida. Nela, você pode:
+A gestão de vínculos foi centralizada no **cadastro do estudante** para um fluxo mais intuitivo. A tela de **"Gestão de Vínculos"**, acessível pelo menu lateral, agora serve como um painel de **visualização e edição rápida**. Nela, você pode:
 - Visualizar rapidamente quais estudantes estão associados a cada cuidador e responsável.
 - Identificar estudantes que ainda não possuem um cuidador ou responsável atribuído.
 - Clicar em "Editar" para ajustar os vínculos de um usuário específico.
 
 ---
 
-## 3. ❤️ Painel do Responsável
+## 3. ❤️ Painel do Responsável (Familiar)
 
 Como responsável, você tem acesso a um painel focado na privacidade e no acompanhamento do(s) seu(s) filho(s).
 
