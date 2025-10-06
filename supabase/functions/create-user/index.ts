@@ -126,11 +126,14 @@ serve(async (req) => {
       }));
 
       createdAuthUsers.forEach(({ authUser, validatedData }) => {
+        // CORREÇÃO: Verificar se o usuário é 'responsavel' ANTES de tentar acessar 'student_ids'.
+        // Isso evita o erro ao criar cuidadores ou outros perfis que não têm esse campo.
         if (validatedData.role === 'responsavel' && validatedData.student_ids && validatedData.student_ids.length > 0) {
           const assignments = validatedData.student_ids.map(student_id => ({
             guardian_id: authUser.id,
             student_id,
-            relationship: 'responsavel'
+            // O relacionamento pode ser definido aqui, ou deixado como padrão no banco de dados.
+            relationship: 'responsavel' 
           }));
           assignmentsToInsert.push(...assignments);
         }
