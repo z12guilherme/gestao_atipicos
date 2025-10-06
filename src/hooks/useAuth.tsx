@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        // A lógica de perfil será tratada em seu próprio hook, que reagirá à mudança de 'user'
+        // A lógica de perfil agora é tratada exclusivamente pelo useProfile.ts
       }
     );
 

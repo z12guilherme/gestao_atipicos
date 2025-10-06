@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Users,
   UserCheck,
@@ -16,10 +16,13 @@ import {
   Search,
   HeartHandshake,
 } from "lucide-react";
+import { useProfile } from "@/hooks/useProfile"; // 1. Importa o hook de perfil
+import { Skeleton } from "@/components/ui/skeleton"; 
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
 export function Layout() {
-  const { profile, signOut } = useAuth();
+  const { signOut, loading: authLoading } = useAuth(); // Adiciona o loading do useAuth
+  const { profile, isLoading: profileLoading } = useProfile();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -139,21 +142,28 @@ export function Layout() {
               <Bell className="h-5 w-5" />
               <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
             </Button>
-            <div className="flex items-center gap-2">
-              <Avatar className="h-9 w-9">
-                <AvatarFallback className={`text-white font-semibold ${getRoleColor(profile?.role)}`}>
-                  {getAvatarContent(profile?.name, profile?.role)}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-sm font-medium leading-none">
-                  {profile?.name}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {getRoleName(profile?.role)}
-                </p>
+            {authLoading || profileLoading ? (
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-9 w-9 rounded-full" />
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Avatar className="h-9 w-9">
+                  <AvatarImage src={profile?.avatar_url} alt={profile?.name} />
+                  <AvatarFallback className={`text-white font-semibold ${getRoleColor(profile?.role)}`}>
+                    {getAvatarContent(profile?.name, profile?.role)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm font-medium leading-none">{profile?.name}</p>
+                  <p className="text-xs text-muted-foreground">{getRoleName(profile?.role)}</p>
+                </div>
+              </div>
+            )}
             <Button variant="ghost" size="icon" onClick={handleSignOut} className="rounded-full">
               <LogOut className="h-5 w-5" />
             </Button>

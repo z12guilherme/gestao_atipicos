@@ -15,7 +15,8 @@ CREATE TABLE public.profiles (
   function_title TEXT, -- For cuidadores
   work_schedule TEXT, -- For cuidadores
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  avatar_url TEXT -- Add the avatar_url column
 );
 
 -- Create students table
@@ -223,16 +224,34 @@ INSERT INTO storage.buckets (id, name, public) VALUES ('documents', 'documents',
 
 -- Storage policies for documents
 CREATE POLICY "Authenticated users can upload documents" ON storage.objects
-  FOR INSERT WITH CHECK (
+  FOR INSERT WITH CHECK ((
     bucket_id = 'documents' AND 
     auth.role() = 'authenticated'
-  );
+  ));
 
 CREATE POLICY "Users can view documents based on student access" ON storage.objects
-  FOR SELECT USING (
+  FOR SELECT USING ((
     bucket_id = 'documents' AND 
     auth.role() = 'authenticated'
-  );
+  ));
+
+-- Create storage bucket for avatars
+INSERT INTO storage.buckets (id, name, public) VALUES ('avatars', 'avatars', true);
+
+-- RLS Policies for avatars bucket
+CREATE POLICY "Avatar images are publicly accessible." ON storage.objects
+  FOR SELECT USING ((bucket_id = 'avatars'));
+
+CREATE POLICY "Anyone can upload an avatar." ON storage.objects
+  FOR INSERT WITH CHECK ((bucket_id = 'avatars'));
+
+CREATE POLICY "Anyone can update their own avatar." ON storage.objects
+  FOR UPDATE USING ((
+    auth.uid() = (storage.foldername(name))[1]::uuid
+  )) WITH CHECK ((
+    bucket_id = 'avatars'
+  ));
+
 
 -- Function to auto-create profile on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
