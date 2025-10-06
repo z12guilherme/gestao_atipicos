@@ -63,13 +63,12 @@ O projeto encontra-se em um estágio avançado de desenvolvimento, com as princi
 
 
 <!-- Inserir um screenshot ou GIF da aplicação aqui -->
-<!-- <p align="center">
-  <img src="caminho/para/screenshot.png" alt="Screenshot do Dashboard" />
-
-  <p align="center">
+<p align="center">
   <img src="img/print_gestao-atipicos.jpg" alt="Screenshot do Dashboard" />
-(Pausa no Projeto devido limitações de Hardware)
-</p> -->
+  <br>
+  (Pausa no Projeto devido limitações de Hardware)
+</p>
+
 
 ## ✨ Funcionalidades Principais
 
