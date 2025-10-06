@@ -23,12 +23,12 @@ export function CuidadorDashboard() {
   const { profile } = useProfile();
   const { students: assignedStudents, isLoading } = useCaregiverData();
 
-  // Mock data para funcionalidades ainda não implementadas
-  const todayScheduleLength = 5; // Simula o número de atividades
-  const recentNotes = [
-    { student: "Ana Silva", note: "Ótimo progresso na comunicação hoje", time: "10:30" },
-    { student: "João Santos", note: "Precisa de mais apoio nas atividades motoras", time: "09:45" },
-    { student: "Maria Costa", note: "Demonstrou interesse em atividades artísticas", time: "08:15" }
+  // DADOS MOCK (a serem substituídos por dados reais)
+  const todayScheduleLength = 0; // TODO: Buscar dados reais da agenda
+  const recentNotes: { student: string, note: string, time: string }[] = []; // TODO: Buscar dados reais de observações
+  const averageRating = "N/A"; // TODO: Buscar dados reais de avaliação
+  const hasStudents = assignedStudents.length > 0;
+  const hasRecentNotes = recentNotes.length > 0;
   ];
 
   const getWelcomeMessage = () => {
@@ -97,7 +97,7 @@ export function CuidadorDashboard() {
             </div>
           </CardHeader>
           <CardContent className="relative">
-            <div className="text-3xl font-bold text-blue-900 dark:text-blue-100">{todayScheduleLength}</div>
+            <div className="text-3xl font-bold text-blue-900 dark:text-blue-100">{todayScheduleLength > 0 ? todayScheduleLength : '-'}</div>
             <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
               Programadas para hoje
             </p>
@@ -115,7 +115,7 @@ export function CuidadorDashboard() {
             </div>
           </CardHeader>
           <CardContent className="relative">
-            <div className="text-3xl font-bold text-purple-900 dark:text-purple-100">{recentNotes.length}</div>
+            <div className="text-3xl font-bold text-purple-900 dark:text-purple-100">{recentNotes.length > 0 ? recentNotes.length : '-'}</div>
             <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
               Registradas hoje
             </p>
@@ -133,7 +133,7 @@ export function CuidadorDashboard() {
             </div>
           </CardHeader>
           <CardContent className="relative">
-            <div className="text-3xl font-bold text-orange-900 dark:text-orange-100">4.8</div>
+            <div className="text-3xl font-bold text-orange-900 dark:text-orange-100">{averageRating}</div>
             <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
               Média das famílias
             </p>
@@ -160,8 +160,12 @@ export function CuidadorDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {assignedStudents.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">Nenhum estudante atribuído</p>
+              {!hasStudents ? (
+                <div className="text-center py-4 px-2">
+                  <Heart className="mx-auto h-8 w-8 text-muted-foreground" />
+                  <p className="mt-2 text-sm text-muted-foreground">Você ainda não tem estudantes sob seus cuidados.</p>
+                  <p className="text-xs text-muted-foreground">Peça a um gestor para atribuir estudantes a você.</p>
+                </div>
               ) : (
                 assignedStudents.map((student) => (
                   <div key={student.id} className="flex items-center space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
@@ -192,14 +196,20 @@ export function CuidadorDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {recentNotes.map((note, index) => (
-                <div key={index} className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium">{note.student}</p>
-                    <span className="text-xs text-muted-foreground">{note.time}</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">{note.note}</p>
+              {!hasRecentNotes ? (
+                 <div className="text-center py-4 px-2">
+                  <MessageSquare className="mx-auto h-8 w-8 text-muted-foreground" />
+                  <p className="mt-2 text-sm text-muted-foreground">Nenhuma observação registrada hoje.</p>
                 </div>
+              ) : (
+                recentNotes.map((note, index) => (
+                  <div key={index} className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-medium">{note.student}</p>
+                      <span className="text-xs text-muted-foreground">{note.time}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{note.note}</p>
+                  </div>
               ))}
             </CardContent>
           </Card>

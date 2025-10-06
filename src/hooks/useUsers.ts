@@ -43,11 +43,10 @@ export function useUsers() {
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      // CORREÇÃO: A consulta agora busca os vínculos tanto de responsáveis quanto de cuidadores.
-      // Isso garante uma estrutura de dados consistente para ambos os perfis.
-      // Adicionado `students(name)` para buscar o nome do estudante vinculado.
+      // MELHORIA: A consulta agora busca os vínculos tanto de responsáveis quanto de cuidadores.
+      // Isso garante que a UI tenha acesso a todos os vínculos, preparando para a nova aba.
       const { data, error } = await supabase.from('profiles')
-        .select('*, guardians_students(student_id, students(name)), caregivers_students(student_id, students(name))')
+        .select('*, guardians_students(student_id), caregivers_students(student_id)')
         .in('role', ['cuidador', 'responsavel'])
         .order('name', { ascending: true });
       
