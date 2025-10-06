@@ -86,11 +86,33 @@ export function useUsers() {
 
   const updateUser = useMutation({
     mutationFn: async (payload: UpdateUserPayload) => {
-      // A atualização pode ser feita diretamente via RPC ou API padrão se não houver lógica complexa.
-      // Por enquanto, vamos assumir uma chamada direta.
-      const { error } = await supabase.from('profiles').update(payload.profileData).eq('id', payload.id);
-      if (error) throw error;
-      // Lógica para atualizar 'guardians_students' se necessário
+      const { id: userId, profileData, student_ids } = payload;
+
+      // 1. Atualiza os dados do perfil na tabela 'profiles'
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update(profileData)
+        .eq('id', userId);
+
+      if (profileError) throw profileError;
+
+      // 2. Remove todos os vínculos antigos do cuidador na tabela 'caregivers_students'
+      const { error: deleteError } = await supabase
+        .from('caregivers_students')
+        .delete()
+        .eq('caregiver_id', userId);
+
+      if (deleteError) throw deleteError;
+
+      // 3. Se novos student_ids foram fornecidos, cria os novos vínculos
+      if (student_ids && student_ids.length > 0) {
+        const newAssignments = student_ids.map(studentId => ({
+          caregiver_id: userId,
+          student_id: studentId,
+        }));
+        const { error: insertError } = await supabase.from('caregivers_students').insert(newAssignments);
+        if (insertError) throw insertError;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
