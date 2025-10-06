@@ -45,11 +45,14 @@ export function useUsers() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        // CORREÇÃO: Busca os perfis e, para cada um, os IDs dos estudantes vinculados.
+        // Otimiza a consulta para trazer apenas cuidadores e responsáveis.
+        .select('*, guardians_students(student_id)')
+        .in('role', ['cuidador', 'responsavel'])
         .order('name', { ascending: true });
       
       if (error) throw error;
-      return data as User[];
+      return data as any[]; // Permite que o Supabase retorne a estrutura aninhada
     },
   });
 

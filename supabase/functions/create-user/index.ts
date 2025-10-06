@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
@@ -38,18 +38,24 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
 
     if (authError || !user) {
-      throw new Error("Acesso não autorizado. Token inválido.");
+      return new Response(JSON.stringify({ error: "Acesso não autorizado. Token inválido." }), {
+        headers: { ...responseHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
     }
 
     // 3. Confirma se o usuário autenticado tem o perfil 'gestor'
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('role')
-      .eq('id', user.id)
+      .eq('user_id', user.id) // CORREÇÃO: Usar 'user_id' para buscar o perfil do usuário autenticado.
       .single();
 
     if (profileError || profile?.role !== 'gestor') {
-      throw new Error("Apenas gestores podem criar novos usuários.");
+      return new Response(JSON.stringify({ error: "Acesso negado. Apenas gestores podem criar novos usuários." }), {
+        headers: { ...responseHeaders, "Content-Type": "application/json" },
+        status: 403,
+      });
     }
 
     // 4. Extrai a LISTA de registros do corpo da requisição
@@ -119,11 +125,10 @@ serve(async (req) => {
     
     // ETAPA 2: Inserção em Lote dos Perfis e Vínculos
     if (createdAuthUsers.length > 0) {
-      // CORREÇÃO: Em vez de inserir, vamos atualizar os perfis que foram criados automaticamente pelo trigger.
-      const profilesToUpdate = createdAuthUsers.map(({ authUser, validatedData }) => ({
-        id: authUser.id, // A condição para o WHERE na atualização
+      // Prepara os dados para a atualização. O perfil já foi criado pelo trigger.
+      const profileUpdates = createdAuthUsers.map(({ authUser, validatedData }) => ({
         name: validatedData.name,
-        role: validatedData.role, // O campo a ser atualizado
+        role: validatedData.role,
         cpf: validatedData.cpf,
         phone: validatedData.phone,
         function_title: validatedData.function_title,
@@ -165,13 +170,22 @@ serve(async (req) => {
         }
       }
 
-      // Executa a atualização em lote. Para cada perfil, atualiza onde o ID corresponde.
-      const { error: batchUpdateError } = await supabaseAdmin
-        .from('profiles')
-        .upsert(profilesToUpdate); // Usamos upsert para garantir que os dados sejam inseridos/atualizados.
+      // CORREÇÃO: Executa as atualizações uma a uma.
+      // O upsert em lote com a estrutura atual da tabela causa conflitos de constraint.
+      // Um loop de 'update' individual é mais seguro neste cenário.
+      let batchUpdateError: Error | null = null;
+      for (let i = 0; i < createdAuthUsers.length; i++) {
+        const { authUser } = createdAuthUsers[i];
+        const profileData = profileUpdates[i];
+        const { error } = await supabaseAdmin.from('profiles').update(profileData).eq('user_id', authUser.id);
+        if (error) {
+          batchUpdateError = new Error(error.message);
+          break; // Interrompe o loop no primeiro erro
+        }
+      }
 
       if (batchUpdateError) {
-        // Rollback: Se a atualização dos perfis falhar, tenta deletar os usuários de autenticação criados.
+        // Rollback: Se a atualização de qualquer perfil falhar, deleta os usuários de autenticação criados.
         console.error("Erro na atualização em lote de perfis, iniciando rollback:", batchUpdateError);
         for (const { authUser } of createdAuthUsers) {
           await supabaseAdmin.auth.admin.deleteUser(authUser.id);
@@ -203,7 +217,7 @@ serve(async (req) => {
       { headers: { ...responseHeaders, "Content-Type": "application/json" }, status: 200 },
     );
   } catch (error) {
-    console.error(`[${new Date().toISOString()}] Critical error in create-user:`, error.message);
+    console.error(`[${new Date().toISOString()}] Critical error in create-user:`, error);
     return new Response(
       JSON.stringify({
         successCount: 0,
