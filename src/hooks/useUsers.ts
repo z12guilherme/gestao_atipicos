@@ -15,6 +15,8 @@ export interface User {
   work_schedule?: string | null;
   // Campos específicos de responsável
   student_ids?: string[];
+  guardians_students?: { students: { id: string; name: string } }[];
+  caregivers_students?: { students: { id: string; name: string } }[];
 }
 
 interface ProfileData {
@@ -44,19 +46,24 @@ export function useUsers() {
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      // REATORAÇÃO: Simplificada a consulta para ser mais limpa e eficiente.
-      // A lógica de mapeamento dos student_ids é feita no lado do cliente.
-      const { data: profiles, error } = await supabase.from('profiles')
-        .select('*, guardians_students(students(id, name)), caregivers_students(students(id, name))')
-        .in('role', ['cuidador', 'responsavel', 'professor'])
+      // CORREÇÃO: A consulta agora busca o email da tabela de autenticação
+      // e inclui gestores na lista, garantindo que todos os dados sejam carregados.
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          auth_user:user_id(email),
+          guardians_students(students(id, name)),
+          caregivers_students(students(id, name))
+        `)
+        .in('role', ['gestor', 'cuidador', 'responsavel', 'professor'])
         .order('name', { ascending: true });
       
       if (error) throw error;
 
-      // Mapeia os dados para a interface User, unificando os student_ids
       const formattedUsers: User[] = profiles.map(profile => ({
         ...profile,
-        email: profile.email, // Garante que o email esteja presente
+        email: (profile.auth_user as { email: string })?.email || 'N/A',
         student_ids: [
           ...(profile.guardians_students || []).map((gs: any) => gs.students.id),
           ...(profile.caregivers_students || []).map((cs: any) => cs.students.id),
