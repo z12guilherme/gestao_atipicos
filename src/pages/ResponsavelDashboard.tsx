@@ -1,15 +1,20 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useGuardianData, StudentWithReports } from "@/hooks/useGuardianData";
+import { useGuardianData, Student, Report } from "@/hooks/useGuardianData"; // Importa Student e Report
 import { useProfile } from "@/hooks/useProfile";
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { HeartHandshake, User, FileText, Calendar } from "lucide-react";
+import { useStudentReports } from "@/hooks/useStudentReports"; // Importa o novo hook
 
 /**
  * Componente para exibir os detalhes de um único estudante no painel do responsável.
+ * Agora, ele busca seus próprios relatórios usando o hook `useStudentReports`.
  */
-function StudentCard({ student }: { student: StudentWithReports }) {
+function StudentCard({ student }: { student: Student }) {
+  // Busca os relatórios para este estudante específico.
+  const { reports, isLoading: isLoadingReports } = useStudentReports(student.id);
+
   return (
     <Card className="overflow-hidden shadow-lg border-0 bg-white dark:bg-slate-800/50">
       <CardHeader className="bg-slate-50 dark:bg-slate-800 p-4 border-b dark:border-slate-700">
@@ -32,8 +37,13 @@ function StudentCard({ student }: { student: StudentWithReports }) {
             Observações Recentes
           </h4>
           <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-            {student.reports && student.reports.length > 0 ? (
-              student.reports.map(report => (
+            {isLoadingReports ? (
+              <div className="space-y-2">
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            ) : reports && reports.length > 0 ? (
+              reports.map(report => (
                 <div key={report.id} className="p-3 rounded-lg bg-slate-100 dark:bg-slate-700">
                   <p className="text-sm text-slate-700 dark:text-slate-200">{report.content}</p>
                   <div className="flex items-center justify-between mt-2">
@@ -64,7 +74,7 @@ function StudentCard({ student }: { student: StudentWithReports }) {
  */
 export function ResponsavelDashboard() {
   const { profile } = useProfile();
-  const { data: studentsWithReports, isLoading } = useGuardianData(); // Hook agora retorna os estudantes com seus relatórios
+  const { data: students, isLoading } = useGuardianData(); // O hook agora retorna um array de Student
 
   const getWelcomeMessage = () => {
     const hour = new Date().getHours();
@@ -97,7 +107,7 @@ export function ResponsavelDashboard() {
         </p>
       </div>
 
-      {!isLoading && (!studentsWithReports || studentsWithReports.length === 0) ? (
+      {!isLoading && (!students || students.length === 0) ? (
         <div className="text-center py-16 border-2 border-dashed rounded-lg">
           <HeartHandshake className="mx-auto h-16 w-16 text-muted-foreground" />
           <h3 className="mt-4 text-xl font-semibold">Nenhum filho cadastrado</h3>
@@ -105,7 +115,7 @@ export function ResponsavelDashboard() {
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-          {studentsWithReports?.map(student => <StudentCard key={student.id} student={student as StudentWithReports} />)}
+          {students?.map(student => <StudentCard key={student.id} student={student} />)}
         </div>
       )}
     </div>
