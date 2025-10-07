@@ -2,31 +2,29 @@
 
 ---
 
-## 🐞 Bug Atual (Ponto de Parada - 06/10/2025)
+## ✅ Bug Resolvido (Retomada - 2024)
 
-**O Painel do Responsável não exibe o estudante vinculado, mesmo que o vínculo exista.**
+**Problema:** O Painel do Responsável não exibia o estudante vinculado, mesmo que o vínculo existisse no banco de dados.
 
 ### Detalhes do Problema
 
 - **Sintoma:** Ao fazer login como `responsavel`, o painel principal (`ResponsavelDashboard`) mostra a mensagem "Nenhum filho cadastrado".
 - **Confirmação do Vínculo:** No entanto, para o mesmo usuário, a aba `/students` (Gerenciar Estudantes) **exibe corretamente** o estudante vinculado.
-- **Conclusão:** Isso prova que o registro na tabela `guardians_students` está correto e que a política de segurança (RLS) permite a leitura básica do vínculo.
+- **Diagnóstico:** O problema residia no hook **`useGuardianData.tsx`**. A consulta de dados para o painel era muito complexa, pois tentava buscar dados aninhados (estudantes e seus relatórios) em uma única requisição. Essa complexidade, ao interagir com as políticas de RLS (Row Level Security), fazia a consulta falhar silenciosamente e retornar uma lista vazia.
 
-### Hipótese
+### Solução Aplicada
 
-O problema reside no hook **`useGuardianData.tsx`**. A consulta de dados para o painel é mais complexa do que a da aba `/students`, provavelmente porque tenta buscar dados aninhados (como relatórios) em uma única requisição. Essa complexidade, ao interagir com as políticas de RLS, pode estar fazendo a consulta falhar silenciosamente e retornar uma lista vazia.
-
-### Próximos Passos para Resolução
-
-1.  **Simplificar a Consulta:** Refatorar o `useGuardianData.tsx` para usar uma consulta mais simples e robusta, idêntica à do `useCaregiverData.ts` (que funciona):
+1.  **Simplificação da Consulta Principal:** O hook `useGuardianData.tsx` foi refatorado para usar uma consulta mais simples e robusta, buscando **apenas os estudantes** vinculados, sem tentar aninhar os relatórios.
     ```javascript
-    // Em useGuardianData.tsx
+    // Em useGuardianData.tsx (agora simplificado)
     .from('guardians_students')
-    .select('students(*)') // Apenas buscar os estudantes, sem aninhar relatórios.
+    .select('students(*)') // Apenas busca os estudantes.
     .eq('guardian_id', profile.id);
     ```
-2.  **Ajustar o Painel:** Modificar o `ResponsavelDashboard.tsx` para lidar com a busca de relatórios de forma separada, após a lista de estudantes ter sido carregada com sucesso. Isso torna o componente mais resiliente.
-3.  **Verificar o Mapeamento:** Garantir que o `.map()` dentro do hook `useGuardianData` está acessando a propriedade correta (ex: `item.students` e não `item.student`).
+2.  **Busca de Dados Separada:** A responsabilidade de buscar os relatórios foi movida para dentro do componente `StudentCard`. Foi criado um novo hook, `useStudentReports(studentId)`, que é chamado para cada estudante individualmente.
+3.  **Resiliência do Componente:** Essa abordagem tornou o `ResponsavelDashboard.tsx` mais resiliente. A lista de estudantes carrega primeiro, e os relatórios de cada um são carregados em seguida, de forma independente. Se a busca de relatórios de um estudante falhar, não impede que os outros sejam exibidos.
+
+O bug foi corrigido e o painel do responsável agora funciona como esperado.
 
 ---
 
