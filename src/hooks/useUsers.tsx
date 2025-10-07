@@ -32,7 +32,7 @@ export function useUsers() {
           caregivers_students ( students ( id, name ) ),
           guardians_students ( students ( id, name ) )
         `)
-        .in('role', ['cuidador', 'responsavel'])
+        .in('role', ['gestor', 'cuidador', 'responsavel', 'professor']) // CORREÇÃO: Inclui todos os perfis na busca.
         .order('name', { ascending: true });
       
       if (error) throw new Error(error.message);

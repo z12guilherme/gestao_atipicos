@@ -1,8 +1,18 @@
 -- Create enum for user roles
-CREATE TYPE public.user_role AS ENUM ('gestor', 'cuidador', 'responsavel');
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+        CREATE TYPE public.user_role AS ENUM ('gestor', 'cuidador', 'responsavel');
+    END IF;
+END$$;
 
 -- Create enum for student status
-CREATE TYPE public.student_status AS ENUM ('ativo', 'inativo', 'transferido');
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'student_status') THEN
+        CREATE TYPE public.student_status AS ENUM ('ativo', 'inativo', 'transferido');
+    END IF;
+END$$;
 
 -- Create profiles table
 CREATE TABLE public.profiles (

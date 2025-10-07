@@ -19,7 +19,9 @@ export function useCaregiverData() {
       // Ela busca diretamente na tabela de junção e expande os dados dos estudantes.
       const { data: rawData, error } = await supabase
         .from('caregivers_students')
-        .select('students(*)')
+        .select(`
+          students (id, name, class_name, status, birth_date, diagnosis, medical_info, period)
+        `)
         .eq('caregiver_id', profile.id);
 
       if (error) {
