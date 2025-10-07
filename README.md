@@ -39,7 +39,7 @@ O projeto está em desenvolvimento ativo, com as funcionalidades centrais já im
 
 
 <p align="center">
-  <img src="img/print.jpg" alt="Screenshot do Dashboard" />
+  <img src="img/print.JPG" alt="Screenshot do Dashboard" />
 </p>
 
 
