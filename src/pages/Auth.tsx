@@ -7,10 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Eye, EyeOff, Heart, Users, GraduationCap, Star, Loader2 } from "lucide-react";
-<<<<<<< HEAD
-=======
 import { ThemeToggle as OriginalThemeToggle } from "./theme-toggle-button";
->>>>>>> 79cda45 (Dark Mode)
 
 export default function Auth() {
   const { user, signIn } = useAuth();
@@ -53,12 +50,9 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-<<<<<<< HEAD
-=======
       <div className="absolute top-4 right-4">
         <OriginalThemeToggle />
       </div>
->>>>>>> 79cda45 (Dark Mode)
       <div className="container mx-auto px-4 py-8 lg:py-16">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center min-h-[calc(100vh-8rem)]">
           {/* Left side - Branding and Features */}
