@@ -6,7 +6,11 @@
     "skipLibCheck": true,
 
     /* Bundler mode */
+<<<<<<< HEAD
     "moduleResolution": "bundler",
+=======
+    "moduleResolution": "NodeNext",
+>>>>>>> 79cda45 (Dark Mode)
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
