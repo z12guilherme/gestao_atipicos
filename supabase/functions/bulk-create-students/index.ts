@@ -143,20 +143,21 @@ Deno.serve(async (req) => {
         if (guardianError) throw new Error(`Falha ao verificar responsáveis: ${guardianError.message}`);
 
         const validGuardianIds = new Set(guardians.filter(p => p.role === 'responsavel').map(p => p.id));
-        
-        const invalidAssignments = studentsToInsert.filter(item => item.data.guardian_id && !validGuardianIds.has(item.data.guardian_id));
-        invalidAssignments.forEach(item => {
-          if (item.data.guardian_id && !validGuardianIds.has(item.data.guardian_id)) {
-            results.errorCount++;
-            results.errors.push({ line: item.line, error: `O ID '${item.data.guardian_id}' fornecido para o responsável não pertence a um usuário com o perfil 'responsavel'.` });
-          }
-        });
       }
 
       // Filtra para inserir apenas os estudantes que passaram em todas as validações
       const validStudentsToInsert = studentsToInsert.filter(item => 
         !results.errors.some(err => err.line === item.line)
       );
+
+      // Validação final: Garante que os `guardian_id`s pertencem a responsáveis válidos.
+      // Esta validação é feita aqui para evitar que estudantes com `guardian_id` inválido sejam enviados para inserção.
+      validStudentsToInsert.forEach(item => {
+        if (item.data.guardian_id && !validGuardianIds.has(item.data.guardian_id)) {
+          results.errorCount++;
+          results.errors.push({ line: item.line, error: `O ID de responsável '${item.data.guardian_id}' é inválido ou não pertence a um usuário com o perfil 'responsavel'.` });
+        }
+      });
 
       const { error: insertError } = await supabaseAdmin
         .from('students')
@@ -168,9 +169,10 @@ Deno.serve(async (req) => {
         results.errorCount += validStudentsToInsert.length;
         results.errors.push({ line: 0, error: `Falha ao salvar no banco de dados. Verifique se há CPFs duplicados. (Detalhe: ${insertError.message})` });
       } else {
-        results.successCount = studentsToInsert.length;
-        // Limpa os erros de validação se a inserção for bem-sucedida, pois já foram tratados.
-        results.errors = results.errors.filter(e => e.line === 0 && e.error.startsWith('Falha'));
+        // CORREÇÃO: A contagem de sucesso deve ser baseada nos estudantes que realmente foram inseridos.
+        // Os erros de validação de linha já foram adicionados e não devem ser removidos.
+        // O `errorCount` já reflete as linhas que falharam na validação.
+        results.successCount = validStudentsToInsert.length;
       }
     }
     

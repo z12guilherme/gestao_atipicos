@@ -160,8 +160,8 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
 
   const handleDownloadTemplate = (format: 'csv' | 'xlsx') => {
     const headers = ["name", "birth_date", "status", "class_name", "period", "diagnosis", "medical_info"];
-    const example = ["Exemplo Aluno", "2015-08-20", "ativo", "Turma A", "3º Ano", "Manhã", "TEA", "Alergia a amendoim"];
-    
+    const example = ["Exemplo Aluno", "2015-08-20", "ativo", "Turma A", "Manhã", "TEA", "Alergia a amendoim"];
+
     if (format === 'csv') {
       const csvContent = [headers.join(','), example.join(',')].join('\r\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
