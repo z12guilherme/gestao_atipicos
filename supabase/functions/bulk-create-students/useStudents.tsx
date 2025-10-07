@@ -12,6 +12,7 @@ export interface Student {
   special_needs?: string;
   medical_info?: string;
   guardian_id?: string | null;
+  period?: 'Manhã' | 'Tarde' | 'Integral' | null;
   status: 'ativo' | 'inativo' | 'transferido';
   created_at: string;
   updated_at: string;
@@ -43,6 +44,7 @@ export function useStudents() {
       special_needs?: string;
       medical_info?: string;
       guardian_id?: string | null;
+      period?: 'Manhã' | 'Tarde' | 'Integral' | null;
       status: 'ativo' | 'inativo' | 'transferido';
     }) => {
       const { data, error } = await supabase

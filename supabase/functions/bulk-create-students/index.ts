@@ -11,6 +11,7 @@ const studentSchema = z.object({
     return parsed ? parsed.split('T')[0] : undefined;
   }, z.string({ required_error: "A coluna 'birth_date' é obrigatória." }).regex(/^\d{4}-\d{2}-\d{2}$/, "Formato de data inválido. Use AAAA-MM-DD, DD/MM/AAAA ou o formato de data do Excel.")),
   status: z.enum(['ativo', 'inativo', 'transferido'], { errorMap: () => ({ message: "O status deve ser 'ativo', 'inativo' ou 'transferido'." }) }),
+  period: z.enum(['Manhã', 'Tarde', 'Integral'], { errorMap: () => ({ message: "O período deve ser 'Manhã', 'Tarde' ou 'Integral'." }) }).nullable().optional(),
   // Campos opcionais
   cpf: z.string().trim().max(14, "CPF inválido").nullable().optional(),
   class_name: z.string().trim().nullable().optional(),
@@ -137,7 +138,7 @@ Deno.serve(async (req) => {
         const { data: guardians, error: guardianError } = await supabaseAdmin
           .from('profiles')
           .select('id, role')
-          .in('user_id', guardianIds); // CORREÇÃO: A validação deve ser feita pelo user_id
+          .in('id', guardianIds); // CORREÇÃO: A validação deve ser feita pelo ID do perfil.
 
         if (guardianError) throw new Error(`Falha ao verificar responsáveis: ${guardianError.message}`);
 

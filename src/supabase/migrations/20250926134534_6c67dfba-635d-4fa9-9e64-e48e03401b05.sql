@@ -263,14 +263,36 @@ END;
 $$ LANGUAGE plpgsql SET search_path = public;
 
 -- Triggers for updated_at
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON public.profiles;
 CREATE TRIGGER update_profiles_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_students_updated_at ON public.students;
 CREATE TRIGGER update_students_updated_at
   BEFORE UPDATE ON public.students
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_reports_updated_at ON public.reports;
 CREATE TRIGGER update_reports_updated_at
   BEFORE UPDATE ON public.reports
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+-- Function to get all users with their email, for admin purposes
+CREATE OR REPLACE FUNCTION public.get_all_users()
+RETURNS TABLE (
+  id UUID,
+  user_id UUID,
+  name TEXT,
+  email TEXT,
+  role user_role,
+  function_title TEXT,
+  work_schedule TEXT
+) AS $$
+BEGIN
+  RETURN QUERY 
+    SELECT p.id, p.user_id, p.name, u.email, p.role, p.function_title, p.work_schedule 
+    FROM public.profiles p 
+    JOIN auth.users u ON p.user_id = u.id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

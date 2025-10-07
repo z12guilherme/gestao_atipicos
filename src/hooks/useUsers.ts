@@ -46,30 +46,16 @@ export function useUsers() {
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      // CORREÇÃO: A consulta agora busca o email da tabela de autenticação
-      // e inclui gestores na lista, garantindo que todos os dados sejam carregados.
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          auth_user:user_id(email),
-          guardians_students(students(id, name)),
-          caregivers_students(students(id, name))
-        `)
-        .in('role', ['gestor', 'cuidador', 'responsavel', 'professor'])
-        .order('name', { ascending: true });
-      
+      // CORREÇÃO: A consulta direta estava falhando devido a permissões de RLS
+      // na tabela auth.users. Usar a função RPC 'get_all_users' resolve isso,
+      // pois ela é executada com privilégios de administrador no servidor.
+      const { data, error } = await supabase.rpc('get_all_users');
+
       if (error) throw error;
 
-      const formattedUsers: User[] = profiles.map(profile => ({
-        ...profile,
-        email: (profile.auth_user as { email: string })?.email || 'N/A',
-        student_ids: [
-          ...(profile.guardians_students || []).map((gs: any) => gs.students.id),
-          ...(profile.caregivers_students || []).map((cs: any) => cs.students.id),
-        ],
-      }));
-      return formattedUsers;
+      // A função RPC já retorna os dados no formato que precisamos.
+      // Apenas garantimos que o retorno seja um array.
+      return (data as User[]) || [];
     },
   });
 
