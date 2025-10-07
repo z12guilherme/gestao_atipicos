@@ -36,17 +36,17 @@ O projeto atingiu um estágio estável, com todas as funcionalidades centrais im
 
 ### Painel do Gestor
 <p align="center">
-  <img src="img/print-administrador.jpg" alt="Screenshot do Dashboard do Gestor" />
+  <img src="https://raw.githubusercontent.com/z12guilherme/gestao_atipicos/main/img/print-administrador.jpg" alt="Screenshot do Dashboard do Gestor" />
 </p>
 
 ### Painel do Responsável
 <p align="center">
-  <img src="img/print-responsavel.jpg" alt="Screenshot do Dashboard do Responsável" />
+  <img src="https://raw.githubusercontent.com/z12guilherme/gestao_atipicos/main/img/print-responsavel.jpg" alt="Screenshot do Dashboard do Responsável" />
 </p>
 
 ### Painel do Cuidador
 <p align="center">
-  <img src="img/print-cuidador.jpg" alt="Screenshot do Dashboard do Cuidador" />
+  <img src="https://raw.githubusercontent.com/z12guilherme/gestao_atipicos/main/img/print-cuidador.jpg" alt="Screenshot do Dashboard do Cuidador" />
 </p>
 
 </details>
