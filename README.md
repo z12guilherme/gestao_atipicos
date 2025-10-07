@@ -38,9 +38,28 @@ O projeto está em desenvolvimento ativo, com as funcionalidades centrais já im
 ---
 
 
+## 🖼️ Telas da Aplicação
+
+<details>
+<summary>Clique para ver as telas</summary>
+
+### Painel do Gestor
 <p align="center">
-  <img src="img/print.JPG" alt="Screenshot do Dashboard" />
+  <img src="img/print-administrador.jpg" alt="Screenshot do Dashboard do Gestor" />
 </p>
+
+### Painel do Responsável
+<p align="center">
+  <img src="img/print-cuidador.jpg" alt="Screenshot do Dashboard do Responsável" />
+</p>
+
+### Painel do Cuidador
+<p align="center">
+  <img src="img/print-responsavel.jpg" alt="Screenshot do Dashboard do Cuidador" />
+</p>
+
+</details>
+
 
 
 ## ✨ Funcionalidades Principais
