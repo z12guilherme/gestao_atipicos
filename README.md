@@ -14,28 +14,6 @@
   </p>
 </div>
 
-> **⚠️ Projeto Pausado ⚠️**
->
-> O desenvolvimento deste projeto está temporariamente pausado. Fique à vontade para explorar o código, fazer um fork ou entrar em contato para futuras colaborações. A versão atual está funcional e pode ser acessada no link acima.
-
-### ⏸️ Motivo da Pausa: Limitação de Hardware
-
-O desenvolvimento foi pausado por uma limitação de hardware: **um SSD com pouco espaço de armazenamento**. Projetos modernos como este, que utilizam **Docker**, o ecossistema **Node.js** (`node_modules`) e diversas ferramentas de build, consomem uma quantidade significativa de espaço em disco. A constante necessidade de gerenciar o armazenamento tornou o fluxo de trabalho improdutivo.
-
-A decisão de pausar é estratégica, visando um futuro upgrade para permitir um desenvolvimento mais fluido e eficiente.
-
-### 🐳 A Importância do Docker neste Projeto
-
-Você pode se perguntar por que usar Docker se ele consome mais recursos. A resposta está na **confiabilidade e padronização**.
-
-O Docker resolve o clássico problema de engenharia de software: **"funciona na minha máquina, mas não na sua"**. Ele encapsula a aplicação e todas as suas dependências (versão do Node.js, bibliotecas do sistema, etc.) em um "container". Isso garante que o ambiente de desenvolvimento, teste e produção seja **idêntico**, resultando em:
-
-- **Menos bugs** relacionados a diferenças de ambiente.
-- **Configuração simplificada** para novos desenvolvedores.
-- **Implantações (deploys) mais rápidas e seguras**.
-
-O `Dockerfile` do projeto utiliza uma técnica de **múltiplos estágios** para criar uma imagem final pequena e otimizada, contendo apenas o necessário para a produção. Adotar o Docker é uma prática que eleva a qualidade e a manutenibilidade do projeto a longo prazo.
-
 <p align="center">
   <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
   <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
@@ -45,27 +23,23 @@ O `Dockerfile` do projeto utiliza uma técnica de **múltiplos estágios** para 
 </p>
 
 ## 🎯 Status Atual do Projeto
-
-O projeto encontra-se em um estágio avançado de desenvolvimento, com as principais funcionalidades já implementadas e operacionais.
+O projeto está em desenvolvimento ativo, com as funcionalidades centrais já implementadas e operacionais.
 
 #### ✅ O que está funcionando:
 - **Autenticação:** Login e logout funcionam para todos os perfis de usuário (Gestor, Responsável, Cuidador).
 - **Painéis por Perfil:**
   - **Gestor:** Visualização de estatísticas, gerenciamento completo (CRUD) de usuários, estudantes e atribuições.
-  - **Responsável:** Visualização restrita apenas aos estudantes vinculados ao seu perfil, garantindo a privacidade.
   - **Cuidador:** Visualização dos estudantes sob sua responsabilidade.
 - **Importação em Massa:** A interface para importar usuários e estudantes via arquivos CSV/XLSX está pronta.
 
-#### ⚠️ Ponto de Atenção (Última tarefa em andamento):
-- A funcionalidade de **criação/importação de usuários** estava apresentando um erro de CORS ao se comunicar com a Edge Function do Supabase. A correção já foi aplicada no código (`supabase/functions/create-user/index.ts`), mas ainda precisa ser implantada no ambiente do Supabase para validar a solução.
+#### 🐞 Bug Atual em Investigação:
+- **Painel do Responsável:** O painel principal do responsável (`ResponsavelDashboard`) não está exibindo o estudante vinculado, embora o vínculo seja reconhecido em outras seções da plataforma. A investigação está focada no hook `useGuardianData.tsx`, que busca os dados para este painel.
 
 ---
 
 
 <p align="center">
-  ![Screenshot do Dashboard](img/print_gestao-atipicos.jpg)
-  <br>
-  (Pausa no Projeto devido limitações de Hardware)
+  <img src="img/print.jpg" alt="Screenshot do Dashboard" />
 </p>
 
 
@@ -83,7 +57,7 @@ O sistema foi projetado com diferentes níveis de acesso, oferecendo um dashboar
 - **Importação em Massa:** Funcionalidade para importar múltiplos usuários ou estudantes de uma vez a partir de arquivos **CSV** ou **XLSX**, agilizando o cadastro inicial.
 
 #### ❤️ **Dashboard do Responsável**
-- **Privacidade em Primeiro Lugar:** Acesso restrito apenas às informações dos estudantes vinculados ao seu perfil.
+- **Privacidade em Primeiro Lugar:** Acesso restrito apenas às informações dos filhos/dependentes vinculados ao seu perfil.
 - **Acompanhamento Detalhado:** Visualize dados como turma, status, diagnóstico e necessidades especiais do seu filho(a).
 
 #### 🤝 **Dashboard do Cuidador**
@@ -117,6 +91,20 @@ Este projeto foi construído com uma stack moderna e robusta, focada em produtiv
 
 Siga os passos abaixo para configurar e rodar a aplicação no seu ambiente de desenvolvimento.
 
+### 🐳 A Importância do Docker neste Projeto
+
+O uso de Docker é **altamente recomendado** para este projeto, pois ele resolve o clássico problema de "funciona na minha máquina". Ao encapsular a aplicação e suas dependências em um container, garantimos que o ambiente de desenvolvimento, teste e produção seja idêntico, resultando em:
+
+- **Menos bugs** relacionados a diferenças de ambiente.
+- **Configuração simplificada** para novos desenvolvedores.
+- **Implantações (deploys) mais rápidas e seguras**.
+
+O `Dockerfile` do projeto utiliza uma técnica de **múltiplos estágios** para criar uma imagem final pequena e otimizada, contendo apenas o necessário para a produção.
+
+---
+
+### Requisitos
+
 ### Pré-requisitos
 
 1. **Node.js:** Versão 18.x ou superior.
@@ -124,7 +112,7 @@ Siga os passos abaixo para configurar e rodar a aplicação no seu ambiente de d
 3. **Supabase CLI:** Instale a CLI do Supabase para gerenciar as Edge Functions localmente. Siga as [instruções de instalação](https://supabase.com/docs/guides/cli/getting-started).
 4. **Docker e Docker Compose:** (Recomendado) Para garantir um ambiente de execução consistente e facilitar o deploy.
 
-### 1. Clonar o Repositório
+### 1. Clone o Repositório
 
 ```bash
 git clone https://github.com/z12guilherme/gestao_atipicos.git
