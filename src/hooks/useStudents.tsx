@@ -37,14 +37,14 @@ export function useStudents() {
         .from('students')
         .select(`
           *,
-          caregivers_students ( caregiver_id ),
-          guardians_students ( guardian_id )
+          caregivers_students:caregivers_students ( caregiver:profiles (id, name) ),
+          guardians_students:guardians_students ( guardian:profiles (id, name) )
         `)
         .order('name', { ascending: true });
 
       if (error) throw error;
 
-      // 🔍 Separate students who don't have a caregiver or guardian
+      // Filtra estudantes que não possuem cuidadores ou responsáveis vinculados.
       const noCaregiver = data.filter(s => !s.caregivers_students || s.caregivers_students.length === 0);
       const noGuardian = data.filter(s => !s.guardians_students || s.guardians_students.length === 0);
 

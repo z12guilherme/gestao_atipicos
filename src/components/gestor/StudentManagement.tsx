@@ -11,16 +11,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { UserPlus, Edit, Save, Trash2, Upload, FileDown, Loader2, GraduationCap, X } from "lucide-react";
-import { useStudents, Student } from "@/hooks/useStudents"; // Hook para buscar estudantes
+import { useStudents, Student } from "@/hooks/useStudents";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import { useFileImport } from "@/hooks/useFileImport";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod"; 
-import { z } from "zod";
+import { z, ZodError } from "zod";
 import * as XLSX from 'xlsx';
+import { useUsers } from "@/hooks/useUsers";
+import { MultiSelect } from "@/components/ui/MultiSelect";
 import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog.tsx";
-import { useProfile } from "@/hooks/useProfile";
-import { useUsers } from "@/hooks/useUsers"; // 1. Importa o hook de usuários
-import { MultiSelect } from "@/components/ui/MultiSelect"; // 2. Importa o MultiSelect
 import { Textarea } from "../ui/textarea";
 
 const studentSchema = z.object({
@@ -30,9 +36,9 @@ const studentSchema = z.object({
   class_name: z.string().optional().nullable(),
   period: z.enum(['Manhã', 'Tarde', 'Integral']).optional().nullable(),
   diagnosis: z.string().optional().nullable(),
-  medical_info: z.string().optional().nullable(), // CORREÇÃO: Nome do campo alinhado com o banco de dados
-  caregiver_ids: z.array(z.string()).optional(), // 3. Adiciona os campos de vínculo ao schema
+  medical_info: z.string().optional().nullable(),
   guardian_ids: z.array(z.string()).optional(),
+  caregiver_ids: z.array(z.string()).optional(),
 });
 
 type StudentFormData = z.infer<typeof studentSchema>;
@@ -45,9 +51,8 @@ interface StudentManagementProps {
 }
 
 export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent, setEditingStudent }: StudentManagementProps) {
-  const { profile } = useProfile();
-  const { students, isLoading, createStudent, updateStudent, deleteStudent } = useStudents(); // Hook de estudantes
-  const { users: allUsers } = useUsers(); // Hook para buscar cuidadores e responsáveis
+  const { students, isLoading, createStudent, updateStudent, deleteStudent } = useStudents();
+  const { users: allUsers } = useUsers();
 
   const caregivers = useMemo(() => allUsers.filter(u => u.role === 'cuidador'), [allUsers]);
   const guardians = useMemo(() => allUsers.filter(u => u.role === 'responsavel'), [allUsers]);
@@ -60,8 +65,8 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
     isErrorsDialogOpen, setErrorsDialogOpen,
     handleImport,
   } = useFileImport({ supabaseFunction: 'bulk-create-students', invalidateQueryKey: 'students', entityName: 'estudantes' }); 
-
-  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<StudentFormData>({
+  
+  const form = useForm<StudentFormData>({
     resolver: zodResolver(studentSchema),
     values: editingStudent ? {
       name: editingStudent.name,
@@ -70,13 +75,16 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
       class_name: editingStudent.class_name || "",
       period: editingStudent.period || undefined,
       diagnosis: editingStudent.diagnosis || "",
-      medical_info: editingStudent.medical_info || "", // CORREÇÃO: Nome do campo alinhado com o banco de dados
-      caregiver_ids: (editingStudent.caregivers_students || []).map((cs: any) => cs.caregiver_id),
-      guardian_ids: (editingStudent.guardians_students || []).map((gs: any) => gs.guardian_id),
+      medical_info: editingStudent.medical_info || "",
+      // Carrega os IDs dos vínculos existentes para o formulário
+      guardian_ids: (editingStudent.guardians_students || []).map((gs: any) => gs.guardian.id),
+      caregiver_ids: (editingStudent.caregivers_students || []).map((cs: any) => cs.caregiver.id),
     } : {
       name: "",
       birth_date: "",
       status: "ativo",
+      guardian_ids: [],
+      caregiver_ids: [],
     },
   });
 
@@ -87,44 +95,48 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
 
   const onSubmit = async (data: StudentFormData) => {
     try {
-      const { caregiver_ids, guardian_ids, ...studentInfo } = data;
+      const { guardian_ids, caregiver_ids, ...studentInfo } = data;
 
       if (editingStudent) {
-        // Lógica de atualização
         const studentId = editingStudent.id;
+        // 1. Atualiza os dados do estudante
         await updateStudent.mutateAsync({ id: studentId, ...studentInfo });
 
-        // Atualiza vínculos de cuidadores
-        if (caregiver_ids !== undefined) {
-          await supabase.from('caregivers_students').delete().eq('student_id', studentId);
-          if (caregiver_ids.length > 0) {
-            const caregiverAssignments = caregiver_ids.map(caregiver_id => ({ student_id: studentId, caregiver_id }));
-            await supabase.from('caregivers_students').insert(caregiverAssignments);
-          }
+        // 2. Atualiza os vínculos de responsáveis
+        await supabase.from('guardians_students').delete().eq('student_id', studentId);
+        if (guardian_ids && guardian_ids.length > 0) {
+          const guardianAssignments = guardian_ids.map(guardianId => ({ 
+            student_id: studentId,
+            guardian_id: guardianId,
+            relationship: 'Responsável'
+          }));
+          await supabase.from('guardians_students').insert(guardianAssignments);
         }
 
-        // Atualiza vínculos de responsáveis
-        if (guardian_ids !== undefined) {
-          await supabase.from('guardians_students').delete().eq('student_id', studentId);
-          if (guardian_ids.length > 0) {
-            const guardianAssignments = guardian_ids.map(guardian_id => ({ student_id: studentId, guardian_id, relationship: 'Responsável' }));
-            await supabase.from('guardians_students').insert(guardianAssignments);
-          }
-        }
-
-      } else {
-        // Lógica de criação
-        const savedStudent = await createStudent.mutateAsync(studentInfo);
-        if (!savedStudent) throw new Error("Falha ao criar estudante.");
-
-        const studentId = savedStudent.id;
+        // 3. Atualiza os vínculos de cuidadores
+        await supabase.from('caregivers_students').delete().eq('student_id', studentId);
         if (caregiver_ids && caregiver_ids.length > 0) {
           const caregiverAssignments = caregiver_ids.map(caregiver_id => ({ student_id: studentId, caregiver_id }));
           await supabase.from('caregivers_students').insert(caregiverAssignments);
         }
+
+      } else {
+        // Lógica de criação com vínculos
+        const savedStudent = await createStudent.mutateAsync(studentInfo);
+        if (!savedStudent) throw new Error("Falha ao criar estudante.");
+
+        const studentId = savedStudent.id;
         if (guardian_ids && guardian_ids.length > 0) {
-          const guardianAssignments = guardian_ids.map(guardian_id => ({ student_id: studentId, guardian_id, relationship: 'Responsável' }));
+          const guardianAssignments = guardian_ids.map(guardianId => ({ 
+            student_id: studentId,
+            guardian_id: guardianId,
+            relationship: 'Responsável'
+          }));
           await supabase.from('guardians_students').insert(guardianAssignments);
+        }
+        if (caregiver_ids && caregiver_ids.length > 0) {
+          const caregiverAssignments = caregiver_ids.map(caregiver_id => ({ student_id: studentId, caregiver_id }));
+          await supabase.from('caregivers_students').insert(caregiverAssignments);
         }
       }
       setEditingStudent(null);
@@ -167,10 +179,6 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
       XLSX.writeFile(workbook, "modelo_importacao_estudantes.xlsx");
     }
   };
-
-  if (profile?.role !== 'gestor') {
-    return null;
-  }
 
   if (isLoading) {
     return (
@@ -250,23 +258,24 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                     <DialogTitle>{editingStudent ? 'Editar Estudante' : 'Cadastrar Novo Estudante'}</DialogTitle>
                     <DialogDescription>Preencha os campos abaixo.</DialogDescription>
                   </DialogHeader>
-                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                  <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">Nome Completo *</Label>
-                      <Input id="name" {...register("name")} />
-                      {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+                      <Input id="name" {...form.register("name")} />
+                      {form.formState.errors.name && <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>}
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="birth_date">Data de Nascimento *</Label>
-                        <Input id="birth_date" type="date" {...register("birth_date")} />
-                        {errors.birth_date && <p className="text-sm text-destructive">{errors.birth_date.message}</p>}
+                        <Input id="birth_date" type="date" {...form.register("birth_date")} />
+                        {form.formState.errors.birth_date && <p className="text-sm text-destructive">{form.formState.errors.birth_date.message}</p>}
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="status">Status *</Label>
-                        <Controller
+                        <FormField
                           name="status"
-                          control={control}
+                          control={form.control}
                           render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value}>
                               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -283,13 +292,13 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                     <div className="grid grid-cols-2 gap-4">
                        <div className="space-y-2">
                         <Label htmlFor="class_name">Turma</Label>
-                        <Input id="class_name" {...register("class_name")} /> 
+                        <Input id="class_name" {...form.register("class_name")} /> 
                       </div>
                        <div className="space-y-2">
                         <Label htmlFor="period">Período</Label>
                         <Controller
                           name="period"
-                          control={control}
+                          control={form.control}
                           render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value ?? undefined}>
                               <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
@@ -305,20 +314,19 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                     </div>
                      <div className="space-y-2">
                       <Label htmlFor="diagnosis">Diagnóstico</Label>
-                      <Input id="diagnosis" {...register("diagnosis")} />
+                      <Input id="diagnosis" {...form.register("diagnosis")} />
                     </div>
                      <div className="space-y-2">
                       <Label htmlFor="medical_info">Informações Médicas Relevantes</Label>
-                      <Textarea id="medical_info" {...register("medical_info")} />
+                      <Textarea id="medical_info" {...form.register("medical_info")} />
                     </div>
-                    
-                    {/* 4. Adiciona os campos de seleção ao formulário */}
+
                     <div className="space-y-2">
                       <Label htmlFor="guardian_ids">Responsáveis Vinculados</Label>
                       <MultiSelect
                         options={guardians.map(g => ({ value: g.id, label: g.name }))}
-                        selected={watch('guardian_ids') || []}
-                        onChange={(selected) => setValue('guardian_ids', selected)}
+                        selected={form.watch('guardian_ids') || []}
+                        onChange={(selected) => form.setValue('guardian_ids', selected)}
                         placeholder="Selecione os responsáveis..."
                         className="w-full"
                       />
@@ -328,8 +336,8 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                       <Label htmlFor="caregiver_ids">Cuidadores Vinculados</Label>
                       <MultiSelect
                         options={caregivers.map(c => ({ value: c.id, label: c.name }))}
-                        selected={watch('caregiver_ids') || []}
-                        onChange={(selected) => setValue('caregiver_ids', selected)}
+                        selected={form.watch('caregiver_ids') || []}
+                        onChange={(selected) => form.setValue('caregiver_ids', selected)}
                         placeholder="Selecione os cuidadores..."
                         className="w-full"
                       />
@@ -345,6 +353,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                       </Button>
                     </div>
                   </form>
+                  </Form>
                 </DialogContent>
               </Dialog>
             </div>

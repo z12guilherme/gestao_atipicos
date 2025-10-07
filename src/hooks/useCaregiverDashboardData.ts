@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useProfile } from "./useProfile";
 import { startOfToday, endOfToday } from 'date-fns';
 
 export interface RecentNote {
@@ -18,21 +19,21 @@ export interface RecentNote {
  */
 export function useCaregiverDashboardData() {
   const { user } = useAuth();
+  const { profile } = useProfile();
 
   return useQuery({
-    queryKey: ['caregiverDashboardData', user?.id],
+    queryKey: ['caregiverDashboardData', profile?.id],
     queryFn: async () => {
-      if (!user) return null;
+      if (!user || !profile) return null;
 
       const todayStart = startOfToday().toISOString();
       const todayEnd = endOfToday().toISOString();
 
       // 1. Buscar observações do dia criadas pelo cuidador
-      // CORREÇÃO: A tabela se chama 'reports', não 'notes'.
       const { data: notes, error: notesError } = await supabase
         .from('reports')
         .select('id, content, created_at, students(name)') // Faz um JOIN para buscar o nome do estudante
-        .eq('caregiver_id', user.id)
+        .eq('caregiver_id', profile.id) // CORREÇÃO: Usa o ID do perfil
         .gte('created_at', todayStart)
         .lte('created_at', todayEnd)
         .order('created_at', { ascending: false });
@@ -41,7 +42,7 @@ export function useCaregiverDashboardData() {
       const { count: scheduleCount, error: scheduleError } = await supabase
         .from('schedules')
         .select('*', { count: 'exact', head: true })
-        .eq('caregiver_id', user.id)
+        .eq('caregiver_id', profile.id) // CORREÇÃO: Usa o ID do perfil
         .gte('start_time', todayStart)
         .lte('start_time', todayEnd);
 
@@ -61,6 +62,6 @@ export function useCaregiverDashboardData() {
         todayScheduleCount: scheduleCount || 0,
       };
     },
-    enabled: !!user,
+    enabled: !!user && !!profile,
   });
 }

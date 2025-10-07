@@ -1,43 +1,41 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useProfile } from "./useProfile";
 
 /**
  * Hook para buscar os dados específicos do painel de um cuidador (caregiver).
- * 
- * Ele busca o perfil do usuário logado e, se for um cuidador,
- * carrega a lista de estudantes vinculados a ele com todos os seus detalhes.
  */
 export function useCaregiverData() {
   const { user } = useAuth();
+  const { profile } = useProfile();
 
-  const { data: caregiverData, isLoading, error } = useQuery({
-    queryKey: ['caregiverData', user?.id],
+  const { data: students, isLoading, error } = useQuery({
+    queryKey: ['caregiverStudents', profile?.id],
     queryFn: async () => {
-      if (!user) return null;
+      if (!user || !profile) return [];
 
-      // A consulta busca o perfil e expande os dados dos estudantes vinculados.
-      // 'caregivers_students(students(*))' faz um JOIN para buscar
-      // os detalhes completos (*) da tabela 'students'.
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*, caregivers_students(students(*))')
-        .eq('user_id', user.id)
-        .single();
+      // CORREÇÃO: A consulta agora é padronizada para usar o ID do perfil, assim como o hook do responsável.
+      // Ela busca diretamente na tabela de junção e expande os dados dos estudantes.
+      const { data: rawData, error } = await supabase
+        .from('caregivers_students')
+        .select('students(*)')
+        .eq('caregiver_id', profile.id);
 
       if (error) {
         console.warn("Could not fetch caregiver data:", error.message);
-        return null;
+        return [];
       }
-      return data;
+
+      // Garante que 'students' seja sempre um array, mesmo que não haja estudantes vinculados.
+      const studentList = (rawData || []).map((cs: any) => cs.students).filter(Boolean);
+      return studentList;
     },
-    enabled: !!user,
+    enabled: !!user && !!profile,
   });
 
   return {
-    caregiverData,
-    // Garante que 'students' seja sempre um array, mesmo que não haja estudantes vinculados.
-    students: (caregiverData?.caregivers_students || []).map((cs: any) => cs.students).filter(Boolean),
+    students: students || [],
     isLoading,
     error,
   };

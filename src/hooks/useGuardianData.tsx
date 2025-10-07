@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useProfile } from "./useProfile"; // Importa o hook de perfil
 
 // Estendemos a interface para incluir os relatórios
 export interface StudentWithReports extends Student {
@@ -12,39 +13,43 @@ export interface StudentWithReports extends Student {
   }[];
 }
 
-interface GuardianData {
-  students: Student[];
-}
-
 /**
  * Hook para buscar os dados dos estudantes (filhos) vinculados a um responsável.
  */
 export function useGuardianData() {
   const { user } = useAuth();
+  const { profile } = useProfile(); // Obtém o perfil do usuário logado
 
-  return useQuery<GuardianData>({
-    queryKey: ['guardianData', user?.id],
+  return useQuery<StudentWithReports[]>({
+    queryKey: ['guardianData', profile?.id], // A chave da query agora depende do ID do perfil
     queryFn: async () => {
-      if (!user) {
-        return { students: [] };
+      if (!user || !profile) { // Garante que tanto o usuário quanto o perfil estejam carregados
+        return [];
       }
 
-      const { data, error } = await supabase
+      // CORREÇÃO: A consulta foi reestruturada para ser mais robusta.
+      // 1. Inicia a partir do perfil do usuário logado.
+      // 2. Busca os vínculos na tabela `guardians_students`.
+      // 3. Para cada vínculo, busca os dados completos do estudante e seus relatórios.
+      const { data: rawData, error } = await supabase
         .from('guardians_students')
-        // MELHORIA: Busca os estudantes e, para cada um, seus relatórios e o nome do cuidador que o escreveu.
-        .select('*, students(*, reports(*, profiles:caregiver_id(name)))')
-        .eq('guardian_id', user.id);
+        .select('students(*)') // SIMPLIFICAÇÃO: Alinhado com useCaregiverData para maior robustez.
+        .eq('guardian_id', profile.id); // CORREÇÃO: Usa o ID do perfil para a consulta
 
       if (error) {
         console.error("Erro ao buscar dados do responsável:", error);
-        return { students: [] };
+        return [];
       }
 
-      // Extrai e formata os dados dos estudantes da resposta, que vêm aninhados.
-      // Ordena os relatórios por data, do mais recente para o mais antigo.
-      const students = data.map(item => ({ ...item.students, reports: item.students.reports.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) })).filter(Boolean) as StudentWithReports[];
-      return { students };
+      const students = (rawData || [])
+        .map((item: any) => {
+          // A estrutura agora é mais simples, apenas extraímos o objeto do estudante.
+          // A busca de relatórios será tratada separadamente para garantir robustez.
+          return item.students;
+        }).filter(Boolean) as StudentWithReports[];
+      
+      return students;
     },
-    enabled: !!user,
+    enabled: !!user && !!profile, // A query só é executada quando ambos estiverem disponíveis
   });
 }

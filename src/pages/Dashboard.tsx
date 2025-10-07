@@ -1,8 +1,7 @@
-import { Navigate } from "react-router-dom";
 import { GestorDashboard } from "@/pages/GestorDashboard";
 import { CuidadorDashboard } from "@/pages/CuidadorDashboard";
 import { ResponsavelDashboard } from "@/pages/ResponsavelDashboard";
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from '@/hooks/useProfile';
 
 const Dashboard = () => {
@@ -20,14 +19,10 @@ const Dashboard = () => {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
   // Dashboard content based on user role
   const getDashboardContent = () => {
     if (!profile) return null;
-
+ 
     switch (profile.role) {
       case 'gestor':
         return <GestorDashboard />; // O redirecionamento foi removido daqui

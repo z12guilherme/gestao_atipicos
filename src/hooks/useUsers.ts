@@ -46,24 +46,21 @@ export function useUsers() {
     queryFn: async () => {
       // REATORAÇÃO: Simplificada a consulta para ser mais limpa e eficiente.
       // A lógica de mapeamento dos student_ids é feita no lado do cliente.
-      const { data, error } = await supabase.from('profiles')
-        .select('*, guardians_students(student_id), caregivers_students(student_id)')
+      const { data: profiles, error } = await supabase.from('profiles')
+        .select('*, guardians_students(students(id, name)), caregivers_students(students(id, name))')
         .in('role', ['cuidador', 'responsavel', 'professor'])
         .order('name', { ascending: true });
       
       if (error) throw error;
 
       // Mapeia os dados para a interface User, unificando os student_ids
-      const formattedUsers: User[] = data.map(profile => ({
+      const formattedUsers: User[] = profiles.map(profile => ({
         ...profile,
         email: profile.email, // Garante que o email esteja presente
         student_ids: [
-          ...(profile.guardians_students || []).map((gs: any) => gs.student_id),
-          ...(profile.caregivers_students || []).map((cs: any) => cs.student_id),
+          ...(profile.guardians_students || []).map((gs: any) => gs.students.id),
+          ...(profile.caregivers_students || []).map((cs: any) => cs.students.id),
         ],
-        // Remove as tabelas aninhadas para uma estrutura de dados mais limpa
-        guardians_students: undefined,
-        caregivers_students: undefined,
       }));
       return formattedUsers;
     },
@@ -99,47 +96,17 @@ export function useUsers() {
 
   const updateUser = useMutation({
     mutationFn: async (payload: UpdateUserPayload) => {
-      const { id: profileId, profileData } = payload;
-      const student_ids = payload.student_ids || [];
+      const { id, profileData, student_ids } = payload;
 
-      // 1. Atualiza os dados do perfil na tabela 'profiles'
-      const { data: updatedProfile, error: profileError } = await supabase
+      // Atualiza apenas os dados do perfil. A gestão de vínculos foi movida para StudentManagement.
+      const { error: profileError } = await supabase
         .from('profiles')
         .update(profileData)
-        .eq('id', profileId)
-        .select('role, user_id') // Retorna o 'role' e 'user_id' para a lógica de vínculo
-        .single();
+        .eq('id', id);
 
-      if (profileError || !updatedProfile) throw profileError || new Error("Perfil não encontrado após atualização.");
-
-      const { role, user_id } = updatedProfile;
-
-      // 2. Lógica condicional para atualizar a tabela de vínculo correta
-      if (role === 'cuidador') {
-        // Remove vínculos antigos de cuidador
-        await supabase.from('caregivers_students').delete().eq('caregiver_id', user_id);
-        // Insere novos vínculos se houver
-        if (student_ids.length > 0) {
-          const newAssignments = student_ids.map(studentId => ({ caregiver_id: user_id, student_id: studentId }));
-          const { error } = await supabase.from('caregivers_students').insert(newAssignments);
-          if (error) throw error;
-        }
-      } else if (role === 'responsavel') {
-        // Remove vínculos antigos de responsável
-        await supabase.from('guardians_students').delete().eq('guardian_id', user_id);
-        // Insere novos vínculos se houver
-        if (student_ids.length > 0) {
-          const newAssignments = student_ids.map(studentId => ({
-            guardian_id: user_id,
-            student_id: studentId,
-            relationship: 'responsavel' // ou outro valor padrão
-          }));
-          const { error } = await supabase.from('guardians_students').insert(newAssignments);
-          if (error) throw error;
-        }
+      if (profileError) {
+        throw profileError;
       }
-
-      // Se a role não for nenhuma das duas, nenhuma ação de vínculo é necessária.
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });

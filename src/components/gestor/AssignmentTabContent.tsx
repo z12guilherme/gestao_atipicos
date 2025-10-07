@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { UserProfile } from "@/hooks/useUsers";
+import { User as UserProfile } from "@/hooks/useUsers";
 import { Student } from "@/hooks/useStudents";
 
 interface AssignmentTabContentProps {
@@ -75,7 +75,7 @@ export function AssignmentTabContent({
         </CardHeader>
         <CardContent>
           {isLoading && <p>Carregando...</p>}
-          {unassignedStudents.length > 0 ? (
+          {(unassignedStudents || []).length > 0 ? (
             <ul className="space-y-2">
               {unassignedStudents.map(student => (
                 <li key={student.id} className="text-sm p-2 border rounded-md">{student.name}</li>

@@ -251,11 +251,11 @@ export function CuidadorDashboard() {
                 <MessageSquare className="mr-2 h-4 w-4" />
                 Nova Observação
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start" disabled>
                 <Calendar className="mr-2 h-4 w-4" />
                 Ver Cronograma Completo
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start" disabled>
                 <Activity className="mr-2 h-4 w-4" />
                 Relatório de Progresso
               </Button>
