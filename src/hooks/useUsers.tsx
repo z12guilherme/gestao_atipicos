@@ -23,19 +23,14 @@ export function useUsers() {
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      // CORREÇÃO: A query foi simplificada para buscar os dados aninhados
-      // e retorná-los diretamente, sem o processamento que estava causando o bug.
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          caregivers_students ( students ( id, name ) ),
-          guardians_students ( students ( id, name ) )
-        `)
-        .in('role', ['gestor', 'cuidador', 'responsavel', 'professor']) // CORREÇÃO: Inclui todos os perfis na busca.
-        .order('name', { ascending: true });
+      // CORREÇÃO: A consulta direta falha devido às políticas de RLS.
+      // Voltamos a usar a função RPC 'get_all_users', que é executada com
+      // privilégios de administrador no servidor e bypassa essa restrição.
+      const { data, error } = await supabase.rpc('get_all_users');
       
       if (error) throw new Error(error.message);
+
+      // A função RPC já retorna os dados no formato que precisamos.
       return (data as any[]) || [];
     },
   });
