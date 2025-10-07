@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
       errors: [] as { line: number, error: string }[],
     };
 
-    const studentsToInsert: { data: z.infer<typeof studentSchema>, line: number }[] = [];
+      let studentsToValidate: { data: z.infer<typeof studentSchema>, line: number }[] = [];
 
     for (const [index, studentData] of studentList.entries()) {
       const line = index + 2; // +1 para o índice base 1, +1 para o cabeçalho do CSV
@@ -125,54 +125,52 @@ Deno.serve(async (req) => {
       }
       
       // Adiciona o estudante validado à lista para inserção em lote
-      studentsToInsert.push({ data: validation.data, line });
+      studentsToValidate.push({ data: validation.data, line });
     }
 
-    if (studentsToInsert.length > 0) {
-      // Validação extra: Garante que os `guardian_id`s pertencem a responsáveis.
-      const guardianIds = studentsToInsert
+    // Se não houver estudantes que passaram na validação inicial, retorne.
+    if (studentsToValidate.length === 0) {
+      return new Response(JSON.stringify(results), { headers: responseHeaders, status: 200 });
+    }
+
+    // Etapa 2: Validação de `guardian_id`s
+    const guardianIds = studentsToValidate
         .map(item => item.data.guardian_id)
         .filter((id): id is string => id !== null && id !== undefined);
 
-      if (guardianIds.length > 0) {
-        const { data: guardians, error: guardianError } = await supabaseAdmin
-          .from('profiles')
-          .select('id, role')
-          .in('id', guardianIds); // CORREÇÃO: A validação deve ser feita pelo ID do perfil.
+    let validGuardianIds = new Set<string>();
+    if (guardianIds.length > 0) {
+      const { data: guardians, error: guardianError } = await supabaseAdmin
+        .from('profiles')
+        .select('id, role')
+        .in('id', guardianIds);
 
-        if (guardianError) throw new Error(`Falha ao verificar responsáveis: ${guardianError.message}`);
-
-        const validGuardianIds = new Set(guardians.filter(p => p.role === 'responsavel').map(p => p.id));
+      if (guardianError) throw new Error(`Falha ao verificar responsáveis: ${guardianError.message}`);
+      validGuardianIds = new Set(guardians.filter(p => p.role === 'responsavel').map(p => p.id));
+    }
+    
+    // Filtra a lista, mantendo apenas os estudantes com `guardian_id` válido (ou sem `guardian_id`)
+    const studentsToInsert = studentsToValidate.filter(item => {
+      if (item.data.guardian_id && !validGuardianIds.has(item.data.guardian_id)) {
+        results.errorCount++;
+        results.errors.push({ line: item.line, error: `O ID de responsável '${item.data.guardian_id}' é inválido ou não pertence a um usuário com o perfil 'responsavel'.` });
+        return false; // Remove este estudante da lista de inserção
       }
-
-      // Filtra para inserir apenas os estudantes que passaram em todas as validações
-      const validStudentsToInsert = studentsToInsert.filter(item => 
-        !results.errors.some(err => err.line === item.line)
-      );
-
-      // Validação final: Garante que os `guardian_id`s pertencem a responsáveis válidos.
-      // Esta validação é feita aqui para evitar que estudantes com `guardian_id` inválido sejam enviados para inserção.
-      validStudentsToInsert.forEach(item => {
-        if (item.data.guardian_id && !validGuardianIds.has(item.data.guardian_id)) {
-          results.errorCount++;
-          results.errors.push({ line: item.line, error: `O ID de responsável '${item.data.guardian_id}' é inválido ou não pertence a um usuário com o perfil 'responsavel'.` });
-        }
-      });
-
+      return true; // Mantém este estudante na lista
+    });
+    
+    // Etapa 3: Inserção em lote apenas dos estudantes 100% válidos
+    if (studentsToInsert.length > 0) {
       const { error: insertError } = await supabaseAdmin
         .from('students')
-        .insert(validStudentsToInsert.map(item => item.data)); // Insere apenas os dados válidos
+        .insert(studentsToInsert.map(item => item.data));
 
       if (insertError) {
         console.error('Supabase insert error:', insertError);
-        // Se a inserção em lote falhar, é um erro único para a operação.
-        results.errorCount += validStudentsToInsert.length;
+        results.errorCount += studentsToInsert.length;
         results.errors.push({ line: 0, error: `Falha ao salvar no banco de dados. Verifique se há CPFs duplicados. (Detalhe: ${insertError.message})` });
       } else {
-        // CORREÇÃO: A contagem de sucesso deve ser baseada nos estudantes que realmente foram inseridos.
-        // Os erros de validação de linha já foram adicionados e não devem ser removidos.
-        // O `errorCount` já reflete as linhas que falharam na validação.
-        results.successCount = validStudentsToInsert.length;
+        results.successCount = studentsToInsert.length;
       }
     }
     

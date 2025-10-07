@@ -69,14 +69,16 @@ export function useFileImport({ supabaseFunction, invalidateQueryKey, entityName
           });
         } else {
           toast.success(`${successCount} ${entityName} importados com sucesso!`);
+          resetImportState();
         }
 
-        queryClient.invalidateQueries({ queryKey: [invalidateQueryKey] });
-        resetImportState();
       } catch (e: any) {
         toast.error("Falha ao importar arquivo.", { description: e.message });
       } finally {
         setIsImporting(false);
+        // Invalida a query aqui para garantir que a lista seja atualizada
+        // mesmo que haja erros parciais na importação.
+        queryClient.invalidateQueries({ queryKey: [invalidateQueryKey] });
       }
     };
 
