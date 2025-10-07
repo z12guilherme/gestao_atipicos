@@ -24,16 +24,7 @@
 
 ## 🎯 Status Atual do Projeto
 O projeto está em desenvolvimento ativo, com as funcionalidades centrais já implementadas e operacionais.
-
-#### ✅ O que está funcionando:
-- **Autenticação:** Login e logout funcionam para todos os perfis de usuário (Gestor, Responsável, Cuidador).
-- **Painéis por Perfil:**
-  - **Gestor:** Visualização de estatísticas, gerenciamento completo (CRUD) de usuários, estudantes e atribuições.
-  - **Cuidador:** Visualização dos estudantes sob sua responsabilidade.
-- **Importação em Massa:** A interface para importar usuários e estudantes via arquivos CSV/XLSX está pronta.
-
-#### 🐞 Bug Atual em Investigação:
-- **Painel do Responsável:** O painel principal do responsável (`ResponsavelDashboard`) não está exibindo o estudante vinculado, embora o vínculo seja reconhecido em outras seções da plataforma. A investigação está focada no hook `useGuardianData.tsx`, que busca os dados para este painel.
+O projeto atingiu um estágio estável, com todas as funcionalidades centrais implementadas e prontas para uso. A plataforma oferece painéis dedicados e seguros para Gestores, Responsáveis e Cuidadores, garantindo uma gestão eficiente e um acompanhamento detalhado dos estudantes.
 
 ---
 
@@ -50,12 +41,12 @@ O projeto está em desenvolvimento ativo, com as funcionalidades centrais já im
 
 ### Painel do Responsável
 <p align="center">
-  <img src="img/print-cuidador.jpg" alt="Screenshot do Dashboard do Responsável" />
+  <img src="img/print-responsavel.jpg" alt="Screenshot do Dashboard do Responsável" />
 </p>
 
 ### Painel do Cuidador
 <p align="center">
-  <img src="img/print-responsavel.jpg" alt="Screenshot do Dashboard do Cuidador" />
+  <img src="img/print-cuidador.jpg" alt="Screenshot do Dashboard do Cuidador" />
 </p>
 
 </details>
