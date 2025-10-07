@@ -1,28 +1,32 @@
 # TODO - Retomada do Projeto
 
-## ⚠️ Motivo da Pausa (Contexto de Hardware)
-
-O desenvolvimento foi pausado principalmente por uma limitação de hardware: **um SSD com pouco espaço de armazenamento**.
-
-Projetos modernos como este, que utilizam **Docker**, o ecossistema **Node.js** (`node_modules`) e diversas ferramentas de build, consomem uma quantidade significativa de espaço em disco. A constante necessidade de limpar caches e imagens Docker para liberar espaço tornou o fluxo de trabalho improdutivo e frustrante.
-
-A decisão de pausar é estratégica, visando um futuro upgrade de hardware (um SSD maior) para permitir um desenvolvimento mais fluido e eficiente.
-
 ---
 
-## Visão Geral do Status do Projeto
+## 🐞 Bug Atual (Ponto de Parada - 06/10/2025)
 
-Para facilitar a retomada, aqui está um resumo do estado atual da aplicação:
+**O Painel do Responsável não exibe o estudante vinculado, mesmo que o vínculo exista.**
 
-#### ✅ Telas e Funcionalidades 100% Funcionais:
-- **Autenticação:** Login/Logout para todos os perfis.
-- **Painel do Gestor:**
-  - Dashboard com estatísticas.
-  - Gerenciamento (CRUD) de Usuários (exceto a criação, que é o ponto de parada atual).
-  - Gerenciamento (CRUD) de Estudantes.
-  - Gerenciamento (CRUD) de Atribuições (vínculo entre cuidador e estudante).
-- **Painel do Responsável:** Visualização dos dados dos estudantes vinculados.
-- **Painel do Cuidador:** Visualização dos estudantes atribuídos.
+### Detalhes do Problema
+
+- **Sintoma:** Ao fazer login como `responsavel`, o painel principal (`ResponsavelDashboard`) mostra a mensagem "Nenhum filho cadastrado".
+- **Confirmação do Vínculo:** No entanto, para o mesmo usuário, a aba `/students` (Gerenciar Estudantes) **exibe corretamente** o estudante vinculado.
+- **Conclusão:** Isso prova que o registro na tabela `guardians_students` está correto e que a política de segurança (RLS) permite a leitura básica do vínculo.
+
+### Hipótese
+
+O problema reside no hook **`useGuardianData.tsx`**. A consulta de dados para o painel é mais complexa do que a da aba `/students`, provavelmente porque tenta buscar dados aninhados (como relatórios) em uma única requisição. Essa complexidade, ao interagir com as políticas de RLS, pode estar fazendo a consulta falhar silenciosamente e retornar uma lista vazia.
+
+### Próximos Passos para Resolução
+
+1.  **Simplificar a Consulta:** Refatorar o `useGuardianData.tsx` para usar uma consulta mais simples e robusta, idêntica à do `useCaregiverData.ts` (que funciona):
+    ```javascript
+    // Em useGuardianData.tsx
+    .from('guardians_students')
+    .select('students(*)') // Apenas buscar os estudantes, sem aninhar relatórios.
+    .eq('guardian_id', profile.id);
+    ```
+2.  **Ajustar o Painel:** Modificar o `ResponsavelDashboard.tsx` para lidar com a busca de relatórios de forma separada, após a lista de estudantes ter sido carregada com sucesso. Isso torna o componente mais resiliente.
+3.  **Verificar o Mapeamento:** Garantir que o `.map()` dentro do hook `useGuardianData` está acessando a propriedade correta (ex: `item.students` e não `item.student`).
 
 ---
 
