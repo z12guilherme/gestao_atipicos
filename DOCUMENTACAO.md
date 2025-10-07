@@ -2,7 +2,7 @@
 
 **Autor:** Marcos Guilherme  
 **Email:** mguimarcos39@gmail.com  
-**Data:** Outubro de 2023 (ou a data atual)
+**Data:** Outubro de 2025
 
 ---
 
@@ -142,38 +142,69 @@ A aplicação está hospedada na **Vercel**, uma plataforma otimizada para aplic
 
 ## 5. Resultados e Demonstração
 
-*(Nesta seção, você pode adicionar screenshots de cada painel para ilustrar o funcionamento)*
+Nesta seção, detalhamos o funcionamento de cada painel da plataforma, servindo como um guia de uso para os diferentes perfis de usuário.
 
 ### 5.1. Painel do Gestor
 
 O gestor tem uma visão completa do sistema, com dashboards e ferramentas para gerenciar todas as entidades da plataforma.
 
-*(Screenshot do dashboard do gestor)*
+#### Dashboard Principal
+Ao fazer login, o gestor é recebido com um painel interativo que exibe:
+- **Estatísticas em Tempo Real:** Cards coloridos e intuitivos mostram o total de alunos, usuários, cuidadores e turmas.
+- **Ações Rápidas:** Um card dedicado oferece um atalho para a tela de "Gerenciar Vínculos", uma das funcionalidades centrais do sistema.
+- **Gráficos de Análise:**
+  - **Alunos por Turma:** Um gráfico de barras que ilustra a distribuição de estudantes nas turmas cadastradas, permitindo uma análise rápida da lotação.
+  - **Distribuição de Usuários:** Um gráfico de pizza que mostra a proporção de cada perfil (Gestores, Cuidadores, Responsáveis, etc.) no sistema.
+
+#### Funcionalidades de Gerenciamento (CRUD)
+Através do menu lateral, o gestor pode acessar as seguintes áreas:
+- **Gerenciar Usuários:** Criar, editar e excluir perfis de gestores, cuidadores e responsáveis.
+- **Gerenciar Alunos:** Cadastrar novos estudantes, editar suas informações (dados pessoais, médicos, diagnóstico) e vincular/desvincular responsáveis e cuidadores diretamente no perfil do aluno.
+- **Gerenciar Vínculos:** Uma tela dedicada para visualizar e gerenciar as associações entre cuidadores e estudantes, facilitando a atribuição e identificando alunos que ainda precisam de um cuidador.
+
+#### Importação em Massa
+Para otimizar o cadastro inicial, o gestor pode importar múltiplos usuários ou estudantes de uma vez a partir de arquivos **CSV** ou **XLSX**. A funcionalidade inclui o download de um modelo para garantir o preenchimento correto dos dados.
 
 ### 5.2. Painel do Responsável
 
-O responsável tem acesso a um painel limpo e focado, com as informações relevantes sobre seus dependentes, respeitando a privacidade.
+O painel do responsável foi projetado para ser um ambiente acolhedor e informativo, onde pais e mães podem acompanhar de perto o desenvolvimento de seus filhos.
 
-*(Screenshot do painel do responsável)*
+#### Navegação e Visualização
+- **Seleção de Filho:** Caso o responsável tenha mais de um filho matriculado, uma navegação por abas no topo da tela permite alternar facilmente entre os perfis.
+- **Cabeçalho do Estudante:** Um card de destaque exibe o nome, foto (avatar), turma e status do estudante selecionado, criando um ponto focal claro.
+
+#### Detalhes do Acompanhamento
+O painel é dividido em duas colunas para uma organização clara:
+- **Coluna Principal:**
+  - **Dados Pessoais:** Informações como data de nascimento, diagnóstico, necessidades especiais e dados médicos.
+  - **Análise de Atividades:** Apresenta indicadores-chave (KPIs) como o total de observações e a data do último registro. Um gráfico de barras mostra a frequência de observações por semana, oferecendo uma visão visual do acompanhamento.
+- **Coluna Lateral:**
+  - **Cronograma do Dia:** Exibe as atividades programadas para o estudante no dia corrente (ex: "Acolhimento", "Terapia Ocupacional").
+  - **Últimas Observações:** Uma lista rolável com os registros mais recentes feitos pelos cuidadores, permitindo que os pais fiquem a par do dia a dia do filho.
 
 ### 5.3. Painel do Cuidador
 
-O cuidador visualiza uma lista clara dos estudantes sob sua responsabilidade, facilitando a organização do seu trabalho diário.
+O painel do cuidador é uma ferramenta de trabalho focada na organização e no registro de informações.
 
-*(Screenshot do painel do cuidador)*
+#### Dashboard Principal
+Ao fazer login, o cuidador visualiza uma lista clara e objetiva dos estudantes que estão sob sua responsabilidade. Cada estudante é apresentado em um card, facilitando a identificação e o acesso rápido às suas informações.
+
+#### Funcionalidades (Atuais e Futuras)
+- **Visualização de Estudantes:** Acesso rápido aos perfis dos estudantes atribuídos.
+- **Registro de Observações:** O cuidador pode selecionar um estudante e registrar observações sobre seu progresso, comportamento ou eventos importantes do dia. Essa informação fica imediatamente disponível para o responsável no seu painel.
 
 ---
 
 ## 6. Conclusão e Trabalhos Futuros
 
-O projeto "Gestão Atípicos" atingiu com sucesso seus objetivos iniciais, entregando uma plataforma funcional, segura e escalável para a gestão de estudantes atípicos. A arquitetura escolhida provou-se eficiente, permitindo um desenvolvimento rápido e uma base sólida para futuras expansões.
+O projeto "Gestão Atípicos" atingiu com sucesso seus objetivos, entregando uma plataforma 100% funcional, segura e escalável. A solução centraliza a gestão de estudantes atípicos, otimiza a comunicação entre cuidadores e responsáveis e fornece ferramentas administrativas poderosas para os gestores. A arquitetura moderna e a experiência de usuário refinada consolidam o sistema como uma base sólida e pronta para uso.
 
 Como próximos passos, o projeto pode evoluir nas seguintes áreas:
 
-- **Módulo de Comunicação:** Implementar um sistema de chat ou mural de recados para facilitar a comunicação entre cuidadores e responsáveis.
-- **Registro de Ocorrências e Evolução:** Permitir que cuidadores registrem observações diárias sobre o progresso, comportamento e eventos importantes relacionados a cada estudante.
-- **Relatórios e Análises:** Criar um módulo para que gestores possam gerar relatórios personalizados sobre a frequência, evolução e necessidades dos estudantes.
-- **Notificações:** Sistema de notificações por e-mail ou push para avisar sobre novas mensagens, atribuições ou alertas importantes.
-- **Integração com Calendário:** Sincronizar a agenda de atividades com calendários externos (Google Calendar, etc.).
+- **Módulo de Comunicação Direta:** Implementar um sistema de chat em tempo real para facilitar a comunicação instantânea entre cuidadores e responsáveis, permitindo a troca de mensagens privadas e seguras.
+- **Relatórios e Análises:** Criar um módulo para que gestores possam gerar relatórios personalizados sobre a frequência de observações, evolução dos estudantes e carga de trabalho dos cuidadores.
+- **Notificações:** Sistema de notificações (na plataforma, por e-mail ou push) para avisar sobre novas observações, mensagens ou alertas importantes.
+- **Integração com Calendário:** Sincronizar o cronograma de atividades dos estudantes com calendários externos (Google Calendar, Outlook Calendar) para pais e cuidadores.
+- **Plano de Desenvolvimento Individual (PDI):** Módulo para criar, acompanhar e avaliar metas e objetivos específicos para cada estudante, com a colaboração de professores, cuidadores e responsáveis.
 
 Este projeto demonstra o grande potencial da tecnologia para resolver problemas reais no setor educacional, oferecendo ferramentas que apoiam e valorizam o trabalho de todos os envolvidos no processo de inclusão.
