@@ -95,7 +95,7 @@ function StudentCard({ student }: { student: Student }) {
                 <div key={report.id} className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                   <p className="text-sm text-slate-800 dark:text-slate-200 mb-2">{report.content}</p>
                   <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                    <span className="flex items-center"><User className="h-3 w-3 mr-1.5" />{report.profiles?.name || 'Cuidador'}</span>
+                    <span className="flex items-center"><User className="h-3 w-3 mr-1.5" />{report.caregiver_name || 'Cuidador'}</span>
                     <span className="flex items-center"><Calendar className="h-3 w-3 mr-1.5" />{formatDistanceToNow(new Date(report.created_at), { addSuffix: true, locale: ptBR })}</span>
                   </div>
                 </div>
