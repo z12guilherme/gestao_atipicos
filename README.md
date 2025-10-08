@@ -1,5 +1,8 @@
-# 🚀 Gestão Atípicos
-
+<p align="center">
+  <a href="https://gestao-atipicos.vercel.app/" target="_blank">
+    <img src="https://gestao-atipicos.vercel.app/logo.svg" alt="Logo Gestão Atípicos" width="100">
+  </a>
+</p>
 <p align="center">
   <img src="https://img.shields.io/badge/status-concluído-green?style=for-the-badge" alt="Status do Projeto">
   <img src="https://img.shields.io/github/license/z12guilherme/gestao_atipicos?style=for-the-badge" alt="Licença">
