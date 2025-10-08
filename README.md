@@ -3,6 +3,11 @@
     <img src="https://gestao-atipicos.vercel.app/logo.svg" alt="Logo Gestão Atípicos" width="100">
   </a>
 </p>
+
+<h1 align="center">
+  Gestão Atípicos
+</h1>
+
 <p align="center">
   <img src="https://img.shields.io/badge/status-concluído-green?style=for-the-badge" alt="Status do Projeto">
   <img src="https://img.shields.io/github/license/z12guilherme/gestao_atipicos?style=for-the-badge" alt="Licença">
@@ -181,4 +186,4 @@ Feito com ❤️ por **Marcos Guilherme**
   - 📍 Belo Jardim - PE
 
 [](https://www.google.com/search?q=https://github.com/z12guilherme)
-[](https://www.google.com/search?q=https://www.linkedin.com/in/seu-linkedin/)
+[](https://www.google.com/search?q=https://www.linkedin.com/in/seu-linkedin/) \`\`\`
