@@ -178,4 +178,4 @@ Feito com ❤️ por **Marcos Guilherme**
   - 📍 Belo Jardim - PE
 
 [](https://www.google.com/search?q=https://github.com/z12guilherme)
-[](https://www.google.com/search?q=https://www.linkedin.com/in/seu-linkedin/) \`\`\`
+[](https://www.google.com/search?q=https://www.linkedin.com/in/seu-linkedin/)
