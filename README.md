@@ -234,7 +234,6 @@ Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes
 
 ## 👨‍💻 Autor
 
-Marcos Guilherme
-Bacharelando em Sistemas da Informação | Desenvolvedor Full Stack
+Marcos Guilherme | Bacharelando em Sistemas da Informação | Desenvolvedor Full Stack
 📍 Belo Jardim - PE
 🔗 GitHub
