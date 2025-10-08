@@ -1,162 +1,23 @@
-Perfeito, Marcos!
-Segue abaixo o **`README.md`** totalmente **formatado em Markdown profissional**, com visual moderno, bem espaçado e elegante — ideal para o GitHub, incluindo a **thumbnail do vídeo** centralizada e com todos os elementos bem organizados 👇
-
----
-
-````markdown
-# 🧩 Gestão Atípicos  
-
-> Plataforma completa para gestão e acompanhamento de estudantes atípicos, conectando **cuidadores**, **famílias** e **gestores** em um ambiente colaborativo e seguro.
-
----
-
-## 🌐 Acessar a aplicação
-🔗 [Clique aqui para acessar o sistema](#)
-
----
-
-### 🛠️ Tecnologias Principais  
-![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
-![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
-![Shadcn/UI](https://img.shields.io/badge/Shadcn/UI-000000?style=for-the-badge&logo=shadcnui&logoColor=white)
-
----
-
-## 🎯 Status Atual do Projeto
-O projeto atingiu um estágio **estável**, com todas as **funcionalidades centrais implementadas e prontas para uso**.  
-A plataforma oferece **painéis dedicados e seguros** para Gestores, Responsáveis e Cuidadores, garantindo **gestão eficiente** e **acompanhamento detalhado** dos estudantes.
-
----
-
-## 🖼️ Telas da Aplicação
-
-### Painel do Gestor  
-<p align="center">
-  <img src="img/print_gestor.jpg" width="80%" alt="Screenshot do Dashboard do Gestor" />
-</p>
-
-### Painel do Responsável  
-<p align="center">
-  <img src="img/print_responsavel.jpg" width="80%" alt="Screenshot do Dashboard do Responsável" />
-</p>
-
-### Painel do Cuidador  
-<p align="center">
-  <img src="img/print_cuidador.jpg" width="80%" alt="Screenshot do Dashboard do Cuidador" />
-</p>
-
----
-
-## ✨ Funcionalidades Principais
-
-### 👤 **Dashboard do Gestor**
-- Visão Geral: Estatísticas em tempo real sobre estudantes, cuidadores e responsáveis.  
-- Ações Rápidas: Cadastro e gerenciamento ágil de usuários e estudantes.  
-- Importação em Massa: Suporte a arquivos CSV/XLSX.  
-- Vínculos Inteligentes: Associação dinâmica entre cuidadores e estudantes.  
-
-### ❤️ **Dashboard do Responsável**
-- Privacidade: Visualização apenas dos dependentes vinculados.  
-- Acompanhamento Detalhado: Dados sobre turma, diagnóstico e necessidades especiais.  
-
-### 🤝 **Dashboard do Cuidador**
-- Foco no Cuidado: Exibição dos estudantes sob sua responsabilidade.  
-- Agenda e Observações *(em breve)*: Registro de progresso e comunicação com a equipe.  
-
----
-
-## 🚀 Tecnologias Utilizadas
-- **Frontend:** Vite, React, TypeScript  
-- **Backend & Banco:** Supabase (PostgreSQL, Auth e Edge Functions)  
-- **UI & Estilização:** Shadcn/UI, Tailwind CSS, Lucide React  
-- **Gerenciamento de Estado:** TanStack Query (React Query)  
-- **Formulários e Validação:** React Hook Form, Zod  
-- **Utilitários:** SheetJS (xlsx)
-
----
-
-## ⚙️ Como Executar o Projeto Localmente
-
-### 1️⃣ Clone o Repositório
-```bash
+<div align="center"> <h1 align="center"> <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/heart-handshake.svg" width="40" /> <br> Gestão Atípicos </h1> <p align="center"> Plataforma completa para gestão e acompanhamento de estudantes atípicos, conectando cuidadores, famílias e gestores em um ambiente colaborativo e seguro. </p> <p align="center"> <a href="https://gestao-atipicos.vercel.app/" target="_blank"> <strong>Acessar a aplicação →</strong> </a> </p> </div> <p align="center"> <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" /> <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" /> <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" /> <img src="https://img.shields.io/badge/Supabase-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" /> <img src="https://img.shields.io/badge/shadcn/ui-000000?style=for-the-badge&logo=shadcnui&logoColor=white" alt="Shadcn/UI" /> </p> ## 🎯 Status Atual do Projeto O projeto está em desenvolvimento ativo, com as funcionalidades centrais já implementadas e operacionais. O projeto atingiu um estágio estável, com todas as funcionalidades centrais implementadas e prontas para uso. A plataforma oferece painéis dedicados e seguros para Gestores, Responsáveis e Cuidadores, garantindo uma gestão eficiente e um acompanhamento detalhado dos estudantes. --- ## 🖼️ Telas da Aplicação <details> <summary>Clique para ver as telas</summary> ### Painel do Gestor <p align="center"> <img src="https://raw.githubusercontent.com/z12guilherme/gestao_atipicos/main/img/print-administrador.JPG" alt="Screenshot do Dashboard do Gestor" /> </p> ### Painel do Responsável <p align="center"> <img src="https://raw.githubusercontent.com/z12guilherme/gestao_atipicos/main/img/print-responsavel.JPG" alt="Screenshot do Dashboard do Responsável" /> </p> ### Painel do Cuidador <p align="center"> <img src="https://raw.githubusercontent.com/z12guilherme/gestao_atipicos/main/img/print-cuidador.JPG" alt="Screenshot do Dashboard do Cuidador" /> </p> </details> ## ✨ Funcionalidades Principais O sistema foi projetado com diferentes níveis de acesso, oferecendo um dashboard personalizado para cada perfil de usuário: #### 👤 **Dashboard do Gestor** - **Visão Geral:** Dashboard interativo com estatísticas em tempo real sobre estudantes (ativos/inativos), cuidadores e responsáveis. - **Ações Rápidas:** Acesso rápido para cadastrar novos usuários e estudantes, além de gerenciar atribuições. - **Gerenciamento Completo (CRUD):** - **Usuários:** Crie, edite e exclua perfis de gestores, cuidadores e responsáveis. - **Estudantes:** Gerencie os dados completos dos estudantes, incluindo informações médicas e necessidades especiais. - **Atribuições:** Vincule cuidadores a estudantes de forma intuitiva. - **Importação em Massa:** Funcionalidade para importar múltiplos usuários ou estudantes de uma vez a partir de arquivos **CSV** ou **XLSX**, agilizando o cadastro inicial. #### ❤️ **Dashboard do Responsável** - **Privacidade em Primeiro Lugar:** Acesso restrito apenas às informações dos filhos/dependentes vinculados ao seu perfil. - **Acompanhamento Detalhado:** Visualize dados como turma, status, diagnóstico e necessidades especiais do seu filho(a). #### 🤝 **Dashboard do Cuidador** - **Foco no Cuidado:** Visualize rapidamente os estudantes que estão sob sua responsabilidade. - **Agenda Diária:** Acompanhe as atividades programadas para o dia. - **Registro de Observações:** (Funcionalidade futura) Ferramenta para registrar o progresso e ocorrências diárias, facilitando a comunicação com a equipe e a família. ## 🚀 Tecnologias Utilizadas Este projeto foi construído com uma stack moderna e robusta, focada em produtividade e escalabilidade. - **Frontend:** - **[Vite](https://vitejs.dev/):** Build tool de alta performance. - **[React](https://react.dev/):** Biblioteca para construção de interfaces. - **[TypeScript](https://www.typescriptlang.org/):** JavaScript com tipagem estática para maior segurança e manutenibilidade. - **Backend & Banco de Dados:** - **[Supabase](https://supabase.com/):** Plataforma open-source que oferece banco de dados (PostgreSQL), autenticação, Edge Functions e APIs em tempo real. - **UI & Estilização:** - **[Shadcn/UI](https://ui.shadcn.com/):** Coleção de componentes de UI reusáveis e acessíveis. - **[Tailwind CSS](https://tailwindcss.com/):** Framework CSS utility-first para estilização rápida. - **[Lucide React](https://lucide.dev/):** Biblioteca de ícones open-source. - **Gerenciamento de Estado e Dados:** - **[TanStack Query (React Query)](https://tanstack.com/query/latest):** Para data-fetching, caching e sincronização de estado do servidor. - **Formulários:** - **[React Hook Form](https://react-hook-form.com/):** Gerenciamento de formulários performático e flexível. - **[Zod](https://zod.dev/):** Validação de schemas com inferência de tipos. - **Utilitários:** - **[SheetJS (xlsx)](https://sheetjs.com/):** Para leitura e processamento de planilhas XLSX. ## ⚙️ Como Executar o Projeto Localmente Siga os passos abaixo para configurar e rodar a aplicação no seu ambiente de desenvolvimento. ### 🐳 A Importância do Docker neste Projeto O uso de Docker é **altamente recomendado** para este projeto, pois ele resolve o clássico problema de "funciona na minha máquina". Ao encapsular a aplicação e suas dependências em um container, garantimos que o ambiente de desenvolvimento, teste e produção seja idêntico, resultando em: - **Menos bugs** relacionados a diferenças de ambiente. - **Configuração simplificada** para novos desenvolvedores. - **Implantações (deploys) mais rápidas e seguras**. O Dockerfile do projeto utiliza uma técnica de **múltiplos estágios** para criar uma imagem final pequena e otimizada, contendo apenas o necessário para a produção. --- ### Requisitos ### Pré-requisitos 1. **Node.js:** Versão 18.x ou superior. 2. **Conta no Supabase:** Crie uma conta gratuita em [supabase.com](https://supabase.com). 3. **Supabase CLI:** Instale a CLI do Supabase para gerenciar as Edge Functions localmente. Siga as [instruções de instalação](https://supabase.com/docs/guides/cli/getting-started). 4. **Docker e Docker Compose:** (Recomendado) Para garantir um ambiente de execução consistente e facilitar o deploy. ### 1. Clone o Repositório
+bash
 git clone https://github.com/z12guilherme/gestao_atipicos.git
 cd gestao_atipicos
-````
-
-### 2️⃣ Instale as Dependências
-
-```bash
+### 2. Instalar as Dependências Use o gerenciador de pacotes de sua preferência:
+bash
 npm install
 # ou
 yarn install
-```
-
-### 3️⃣ Configure o Ambiente
-
-Crie um arquivo `.env` na raiz com:
-
-```env
+### 3. Configurar Variáveis de Ambiente 1. Crie um arquivo chamado .env na raiz do projeto. 2. Acesse o painel do seu projeto no Supabase. 3. Vá para **Project Settings > API**. 4. Copie a **URL** e a chave **anon (public)**. 5. Adicione as chaves ao seu arquivo .env:
+env
 VITE_SUPABASE_URL="SUA_URL_DO_PROJETO_SUPABASE"
 VITE_SUPABASE_ANON_KEY="SUA_CHAVE_ANON_PUBLICA_SUPABASE"
-```
-
-### 4️⃣ Execute a Aplicação
-
-```bash
+### 4. Configurar o Banco de Dados Supabase Para que a aplicação funcione corretamente, você precisará criar as tabelas no seu banco de dados Supabase. Acesse o **SQL Editor** no painel do Supabase e execute os scripts SQL necessários para criar as tabelas profiles, students, caregivers_students e guardians_students. > **Nota:** É fundamental configurar as políticas de **Row Level Security (RLS)** para garantir que os usuários só possam acessar os dados que lhes são permitidos. ### 5. Iniciar o Servidor de Desenvolvimento Com tudo configurado, inicie a aplicação:
+bash
 npm run dev
-```
-
-Acesse em: [http://localhost:5173](http://localhost:5173)
-
----
-
-## 🐳 Execução via Docker
-
-```bash
-docker build -t gestao-atipicos .
-docker run -p 8080:80 gestao-atipicos
-```
-
-Acesse em [http://localhost:8080](http://localhost:8080)
-
----
-
-## 🎬 Apresentação do Projeto
-
-<p align="center">
-  <a href="https://www.youtube.com/watch?v=BjTLM1idajQ" target="_blank">
-    <img src="https://img.youtube.com/vi/BjTLM1idajQ/0.jpg" width="70%" alt="Apresentação do Projeto Gestão Atípicos no YouTube" />
-  </a>
-</p>
-
-> 🎥 **Assista à apresentação completa:**
-> 🔗 [https://www.youtube.com/watch?v=BjTLM1idajQ](https://www.youtube.com/watch?v=BjTLM1idajQ)
-
----
-
-## 🤝 Contribuição
-
-Contribuições são bem-vindas!
-Abra uma **issue** ou envie um **pull request** com suas melhorias.
-
----
-
-## 📄 Licença
-
-Este projeto está sob a **licença MIT**.
-Consulte o arquivo `LICENSE` para mais detalhes.
-
----
-
-## 👨‍💻 Autor
-
-**Marcos Guilherme**
-📚 Bacharelando em Sistemas da Informação
-💻 Desenvolvedor Full Stack
-📍 Belo Jardim - PE
-🔗 [GitHub](https://github.com/z12guilherme)
-
-Quer que eu adicione também **os badges de status** (como “Projeto Concluído ✅”, “Deploy Disponível 🌍” e “Documentado 📘”) no topo do README para dar aquele visual mais profissional?
-```
+A aplicação estará disponível em http://localhost:5173. --- ## 📖 Guia de Uso ### Acesso à Plataforma Para começar, acesse a plataforma através do link fornecido e utilize o email e a senha cadastrados para fazer login. A plataforma possui três perfis de acesso, cada um com seu próprio painel. ### 👤 Painel do Gestor O gestor possui acesso total ao sistema, permitindo o gerenciamento completo de usuários, estudantes e atribuições. * **Gerenciamento de Usuários:** Crie, visualize, edite e exclua perfis. É possível importar múltiplos usuários de uma vez a partir de arquivos **CSV** ou **XLSX**. * **Gerenciamento de Estudantes:** Centralize todas as informações dos estudantes, incluindo dados médicos e necessidades. A importação em massa também está disponível para estudantes. * **Gerenciamento de Atribuições:** Vincule cuidadores aos estudantes que eles irão acompanhar. O painel mostra os estudantes agrupados por cuidador e uma lista de estudantes que ainda não foram atribuídos. ### ❤️ Painel do Responsável Como responsável, você tem acesso a um painel focado na privacidade e no acompanhamento do(s) seu(s) filho(s). * **Visualizando Informações:** Ao fazer login, você verá uma lista dos estudantes vinculados ao seu perfil, podendo consultar dados como turma, status, diagnóstico e necessidades especiais. O acesso é restrito apenas aos seus dependentes. ### 🤝 Painel do Cuidador O painel do cuidador foi projetado para focar nas suas atividades diárias e no acompanhamento dos estudantes sob sua responsabilidade. * **Meus Estudantes:** A tela principal exibe uma lista clara de todos os estudantes que foram atribuídos a você pelo gestor. * **Agenda Diária e Observações (Funcionalidades Futuras):** Em breve, o cuidador poderá visualizar a agenda de atividades e registrar observações sobre o progresso e ocorrências do dia. --- ## 🐳 Executando com Docker O uso de Docker é **altamente recomendado** para este projeto, pois ele resolve o clássico problema de "funciona na minha máquina". Ao encapsular a aplicação e suas dependências em um container, garantimos que o ambiente de desenvolvimento, teste e produção seja idêntico, evitando inconsistências. O Dockerfile do projeto utiliza uma abordagem de múltiplos estágios para criar uma imagem otimizada e segura, servindo a aplicação React com Nginx. Para facilitar a implantação e garantir um ambiente consistente, o projeto pode ser executado em um container Docker. 1. **Construir a imagem:**
+bash
+    docker build -t gestao-atipicos .
+2. **Executar o container:**
+bash
+    docker run -p 8080:80 gestao-atipicos
+A aplicação estará disponível em http://localhost:8080. --- ## 🤝 Contribuição Contribuições são sempre bem-vindas! Se você tem alguma ideia para melhorar o projeto, sinta-se à vontade para abrir uma *issue* ou enviar um *pull request*. 1. Faça um *fork* do projeto. 2. Crie uma nova *branch* (git checkout -b feature/sua-feature). 3. Faça o *commit* das suas alterações (git commit -m 'Adiciona nova feature'). 4. Envie para a sua *branch* (git push origin feature/sua-feature). 5. Abra um *Pull Request*. ## 📄 Licença Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes. ## 👨‍💻 Autor **Marcos Guilherme** Bacharelando em Sistemas da Informação Desenvolvedor Full Stack 📍 Belo Jardim - PE 🔗 [GitHub](https://github.com/z12guilherme)
