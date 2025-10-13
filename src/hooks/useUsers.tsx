@@ -13,49 +13,50 @@ export interface User {
   work_schedule?: string;
   email?: string;
   student_ids?: string[];
+  caregivers_students?: { students: { id: string; name: string } }[];
+  guardians_students?: { students: { id: string; name: string } }[];
   created_at: string;
 }
 
 export function useUsers() {
   const queryClient = useQueryClient();
 
-  // --- QUERY: busca todos os usuários com email ---
+  // --- QUERY: busca todos os usuários com seus vínculos ---
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      // CORREÇÃO: A consulta direta falha devido às políticas de RLS.
-      // Voltamos a usar a função RPC 'get_all_users', que é executada com
-      // privilégios de administrador no servidor e bypassa essa restrição.
-      const { data, error } = await supabase.rpc('get_all_users');
-      
-      if (error) throw new Error(error.message);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          user_id,
+          name,
+          role,
+          cpf,
+          phone,
+          function_title,
+          work_schedule,
+          caregivers_students:caregivers_students (
+            students:students ( id, name )
+          ),
+          guardians_students:guardians_students (
+            students:students ( id, name )
+          )
+        `);
 
-      // A função RPC já retorna os dados no formato que precisamos.
-      return (data as any[]) || [];
+      if (error) throw error;
+      return data as User[];
     },
   });
 
   // --- MUTATION: criar usuário ---
   const createUser = useMutation({
-    mutationFn: async (userData: {
-      email: string;
-      password: string;
-      name: string;
-      cpf?: string;
-      phone?: string;
-      role: 'gestor' | 'cuidador' | 'responsavel';
-      function_title?: string;
-      work_schedule?: string;
-      student_ids?: string[];
-    }) => {
+    mutationFn: async (userData: Partial<User> & { email: string; password: string }) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Você precisa estar autenticado');
 
       const response = await supabase.functions.invoke('create-user', {
-        // CORREÇÃO: Adiciona o token de autenticação no cabeçalho da requisição.
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
         body: { records: [userData] },
       });
 
@@ -97,10 +98,10 @@ export function useUsers() {
       if (!session) throw new Error('Você precisa estar autenticado');
 
       const { error } = await supabase.functions.invoke('delete-user', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ userId: user_id }) }); // CORREÇÃO: Envia o corpo como uma string JSON
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({ userId: user_id }),
+      });
+
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {
@@ -127,7 +128,6 @@ export function useUsers() {
       toast.error(`Falha ao enviar e-mail: ${error.message}`);
     },
   });
-
 
   return {
     users: users || [],
