@@ -6,12 +6,12 @@ export interface User {
   id: string;
   user_id: string;
   name: string;
+  email?: string; // agora incluído
   cpf?: string;
   phone?: string;
   role: 'gestor' | 'cuidador' | 'responsavel';
   function_title?: string;
   work_schedule?: string;
-  email?: string;
   student_ids?: string[];
   caregivers_students?: { students: { id: string; name: string } }[];
   guardians_students?: { students: { id: string; name: string } }[];
@@ -21,30 +21,14 @@ export interface User {
 export function useUsers() {
   const queryClient = useQueryClient();
 
-  // --- QUERY: busca todos os usuários com seus vínculos ---
+  // --- QUERY: busca todos os usuários com email e vínculos ---
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          user_id,
-          name,
-          role,
-          cpf,
-          phone,
-          function_title,
-          work_schedule,
-          caregivers_students:caregivers_students (
-            students:students ( id, name )
-          ),
-          guardians_students:guardians_students (
-            students:students ( id, name )
-          )
-        `);
+      // Chama a RPC 'get_all_users' que retorna profiles + email do auth.users
+      const { data, error } = await supabase.rpc('get_all_users');
+      if (error) throw new Error(error.message);
 
-      if (error) throw error;
       return data as User[];
     },
   });
