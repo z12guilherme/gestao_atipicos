@@ -11,7 +11,7 @@ import { AssignmentTabContent } from "./AssignmentTabContent";
 
 export function AssignmentManagement() {
   const { users, isLoading: isLoadingUsers, updateUser } = useUsers();
-  const { students, studentsWithoutCaregiver, studentsWithoutGuardian, isLoading: isLoadingStudents } = useStudents();
+  const { students: allStudents, studentsWithoutCaregiver, studentsWithoutGuardian, isLoading: isLoadingStudents } = useStudents();
 
   const [isModalOpen, setModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
@@ -28,7 +28,7 @@ export function AssignmentManagement() {
     if (!selectedUser) return;
     await updateUser.mutateAsync({
       id: selectedUser.id,
-      profileData: { role: selectedUser.role }, // Role é necessário para a lógica do hook
+      profileData: { role: selectedUser.role },
       student_ids: studentIds,
     });
     setModalOpen(false);
@@ -37,27 +37,24 @@ export function AssignmentManagement() {
 
   const isLoading = isLoadingUsers || isLoadingStudents;
 
-  /**
-   * Retorna a lista de estudantes que podem ser vinculados ao usuário selecionado.
-   * Inclui os estudantes já vinculados a este usuário e os que ainda não têm vínculo.
-   */
   const getModalOptions = () => {
-    // CORREÇÃO: Busca o usuário completo da lista para garantir que os dados de vínculo estejam presentes.
-    const fullSelectedUser = users.find(u => u.id === selectedUser?.id);
+    if (!selectedUser) return [];
+
+    const fullSelectedUser = users.find(u => u.id === selectedUser.id);
     if (!fullSelectedUser) return [];
 
     const isCaregiver = fullSelectedUser.role === 'cuidador';
     const unassignedStudents = isCaregiver ? studentsWithoutCaregiver : studentsWithoutGuardian;
 
-    const currentlyAssignedToUser = students.filter(student => {
+    const currentlyAssignedToUser = allStudents.filter(student => {
       const assignments = isCaregiver
         ? fullSelectedUser.caregivers_students
         : fullSelectedUser.guardians_students;
-      // CORREÇÃO: Acessa o ID do estudante através do objeto aninhado `students`.
       return (assignments || []).some((assignment: any) => assignment.students?.id === student.id);
     });
 
     const availableStudents = [...currentlyAssignedToUser, ...unassignedStudents];
+    // Remove duplicados e transforma no formato para o MultiSelect
     return [...new Map(availableStudents.map(item => [item.id, item])).values()].map(s => ({ value: s.id, label: s.name }));
   };
 
@@ -88,6 +85,7 @@ export function AssignmentManagement() {
             userRole="cuidador"
             onEdit={handleOpenModal}
             isLoading={isLoading}
+            allStudents={allStudents} // adiciona para referência
           />
         </TabsContent>
 
@@ -98,6 +96,7 @@ export function AssignmentManagement() {
             userRole="responsavel"
             onEdit={handleOpenModal}
             isLoading={isLoading}
+            allStudents={allStudents} // adiciona para referência
           />
         </TabsContent>
       </Tabs>
@@ -108,24 +107,27 @@ export function AssignmentManagement() {
           <DialogHeader>
             <DialogTitle>{`Editar Vínculos de ${selectedUser?.name}`}</DialogTitle>
           </DialogHeader>
-          <p className="text-muted-foreground text-sm">Selecione os estudantes que este {selectedUser?.role === 'cuidador' ? 'cuidador' : 'responsável'} irá acompanhar.</p>
+          <p className="text-muted-foreground text-sm">
+            Selecione os estudantes que este {selectedUser?.role === 'cuidador' ? 'cuidador' : 'responsável'} irá acompanhar.
+          </p>
           <MultiSelect
             options={getModalOptions()}
             selected={(() => {
-              // CORREÇÃO: Busca o usuário completo da lista para obter os vínculos corretos.
-              const fullUser = users.find(u => u.id === selectedUser?.id);
+              if (!selectedUser) return [];
+              const fullUser = users.find(u => u.id === selectedUser.id);
               if (!fullUser) return [];
               if (fullUser.role === 'cuidador') {
                 return (fullUser.caregivers_students || []).map((cs: any) => cs.students?.id).filter(Boolean);
               }
               return (fullUser.guardians_students || []).map((gs: any) => gs.students?.id).filter(Boolean);
-            })()
-            }
+            })()}
             onChange={handleSaveChanges}
             placeholder="Selecione os estudantes..."
             actionButton={
               <Button disabled={updateUser.isPending}>
-                {updateUser.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Salvando...</> : <><Save className="mr-2 h-4 w-4" />Salvar</>}
+                {updateUser.isPending
+                  ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Salvando...</>
+                  : <><Save className="mr-2 h-4 w-4" />Salvar</>}
               </Button>
             }
           />
