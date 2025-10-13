@@ -49,7 +49,19 @@ export function useUsers() {
       // CORREÇÃO: A consulta direta estava falhando devido a permissões de RLS
       // na tabela auth.users. Usar a função RPC 'get_all_users' resolve isso,
       // pois ela é executada com privilégios de administrador no servidor.
-      const { data, error } = await supabase.rpc('get_all_users');
+      const { data, error } = await supabase
+  .from('profiles')
+  .select(`
+    id, user_id, name, role, phone, cpf, function_title, work_schedule,
+    caregivers_students(student_id)
+  `);
+
+if (error) throw error;
+
+return data.map((user: any) => ({
+  ...user,
+  student_ids: user.caregivers_students?.map((c: any) => c.student_id) || [],
+}));
 
       if (error) throw error;
 
@@ -131,4 +143,5 @@ export function useUsers() {
     updateUser,
     deleteUser,
   };
+
 }
