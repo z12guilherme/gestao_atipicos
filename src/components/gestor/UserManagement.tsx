@@ -23,8 +23,8 @@ import { useProfile } from "@/hooks/useProfile";
 // Schema base para os dados do perfil, sem email e senha
 const profileSchema = z.object({
   name: z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres").max(100, "Nome muito longo"),
-  cpf: z.string().trim().max(14, "CPF inválido").optional().nullable(),
-  phone: z.string().trim().max(20, "Telefone inválido").optional(),
+  cpf: z.preprocess((val) => (typeof val === 'number' ? String(val) : val), z.string().trim().max(14, "CPF inválido").optional().nullable()),
+  phone: z.preprocess((val) => (typeof val === 'number' ? String(val) : val), z.string().trim().max(20, "Telefone inválido").optional()),
   role: z.enum(['gestor', 'cuidador', 'responsavel']),
   function_title: z.string().trim().max(100, "Função muito longa").optional(),
   work_schedule: z.string().trim().max(500, "Horário muito longo").optional(),
@@ -132,13 +132,24 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
   };
 
   const handleDownloadXlsxTemplate = async () => {
-    const worksheetData = [
-      ["name", "email", "password", "role", "cpf", "phone", "function_title", "work_schedule"], // Coluna student_ids removida
-      ["Exemplo Cuidador", "cuidador@email.com", "senhaSegura123", "cuidador", "123.456.789-00", "(99) 99999-9999", "Cuidador de Apoio", "Seg-Sex 8h-17h"]
-    ];
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Usuários");
-    worksheetData.forEach(row => worksheet.addRow(row));
+    
+    // Configura colunas com formato de Texto para evitar que CPF/Telefone virem números
+    worksheet.columns = [
+      { header: "name", key: "name", width: 30 },
+      { header: "email", key: "email", width: 30 },
+      { header: "password", key: "password", width: 20 },
+      { header: "role", key: "role", width: 15 },
+      { header: "cpf", key: "cpf", width: 20, style: { numFmt: '@' } }, // Força formato Texto
+      { header: "phone", key: "phone", width: 20, style: { numFmt: '@' } }, // Força formato Texto
+      { header: "function_title", key: "function_title", width: 20 },
+      { header: "work_schedule", key: "work_schedule", width: 20 },
+    ];
+
+    // Adiciona linha de exemplo
+    worksheet.addRow({ name: "Exemplo Cuidador", email: "cuidador@email.com", password: "senhaSegura123", role: "cuidador", cpf: "123.456.789-00", phone: "(99) 99999-9999", function_title: "Cuidador de Apoio", work_schedule: "Seg-Sex 8h-17h" });
+
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     const link = document.createElement("a");
