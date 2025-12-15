@@ -28,6 +28,15 @@ O bug foi corrigido e o painel do responsável agora funciona como esperado.
 
 ---
 
+## ✅ Concluído (Dez/2025) - Hardening & UI
+
+1.  **Auditoria de Segurança (Pentest):**
+    *   Testes de Escalação de Privilégio Vertical (Mitigado via RLS).
+    *   Verificação de IDOR e proteção de rotas API.
+2.  **Melhorias de UI/UX (Gestor):**
+    *   Modernização dos gráficos do Dashboard (Recharts com visual clean).
+    *   Correção de bugs de visualização no Dark Mode (Tooltips).
+
 ## Contexto do Problema
 
 **PROBLEMA RESOLVIDO:** Ao tentar criar um novo "Cuidador" ou importar usuários em massa a partir da interface web, um erro de **CORS (Cross-Origin Resource Sharing)** era disparado pelo navegador.

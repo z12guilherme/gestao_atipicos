@@ -4,6 +4,7 @@
 **Gestão Atípicos**  
 Plataforma web hospedada em Vercel, utilizando Supabase como backend (Auth, REST e Database).
 
+**Status de Segurança:** 🛡️ **Auditado & Aprovado** (Dez/2025)
 ---
 
 ## 🛡️ Compromisso com a Segurança
@@ -112,6 +113,19 @@ Os testes foram realizados **exclusivamente no ambiente do próprio projeto**, s
 
 ---
 
+### ⬆️ Escalação de Privilégios
+
+- Tentativa de escalação vertical (Cuidador -> Gestor)
+- Manipulação de parâmetro `role` via `PATCH /profiles`
+- Teste de Mass Assignment em campos sensíveis
+
+**Resultado:**
+✔️ RLS bloqueou a alteração (0 linhas afetadas)
+✔️ O servidor ignorou silenciosamente o campo `role`
+✔️ Perfil do usuário manteve-se inalterado
+
+---
+
 ### 💥 XSS (Cross‑Site Scripting)
 
 Testes realizados com payloads como:
@@ -199,10 +213,7 @@ Para elevar ainda mais o nível de segurança ("Fortaleza"), os seguintes testes
 ### 2. 🏎️ Race Conditions
 - **Integridade Lógica:** Testar requisições simultâneas para vincular o mesmo aluno a múltiplos cuidadores, verificando a consistência do banco.
 
-### 3. 🎁 Mass Assignment
-- **Injeção de Campos:** Tentar injetar campos não autorizados (ex: `"role": "admin"`) em requisições de atualização de perfil (`PATCH`).
-
-### 4. 📦 Supply Chain
+### 3. 📦 Supply Chain
 - **Auditoria de Dependências:** Execução periódica de `npm audit` para identificar CVEs em bibliotecas de terceiros.
 
 ---

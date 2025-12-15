@@ -11,6 +11,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/status-concluído-green?style=for-the-badge" alt="Status do Projeto">
   <img src="https://img.shields.io/github/license/z12guilherme/gestao_atipicos?style=for-the-badge" alt="Licença">
+  <img src="https://img.shields.io/badge/Security_Audit-Passed-success?style=for-the-badge&logo=security&logoColor=white" alt="Security Audit Passed">
   <a href="./SECURITY.md"><img src="https://img.shields.io/badge/Security-Policy-blue?style=for-the-badge&logo=security&logoColor=white" alt="Security Policy"></a>
 </p>
 

@@ -35,6 +35,7 @@ O projeto "Gestão Atípicos" consiste no desenvolvimento de uma plataforma web 
     5.2. [Painel do Responsável](#52-painel-do-responsável)
     5.3. [Painel do Cuidador](#53-painel-do-cuidador)
 6.  [Conclusão e Trabalhos Futuros](#6-conclusão-e-trabalhos-futuros)
+7.  [Solução de Problemas (Troubleshooting)](#7-solução-de-problemas-troubleshooting)
 
 ---
 
@@ -119,7 +120,7 @@ A segurança do projeto adota uma estratégia de **Defesa em Profundidade (Defen
 - **Criptografia:** Dados em trânsito (TLS 1.3) e em repouso (AES-256).
 
 #### 3.3.2. Segurança Ofensiva e Defensiva
-- **Pentest Blackbox:** A aplicação foi submetida a testes de intrusão (Dez/2025), sem detecção de vulnerabilidades críticas.
+ - **Pentest Blackbox:** A aplicação foi submetida a testes de intrusão rigorosos (Dez/2025), incluindo tentativas de escalação de privilégio vertical e manipulação de API, sem detecção de vulnerabilidades críticas.
 - **Defesa Ativa (Active Defense):** Implementação de **Honeytokens** (credenciais isca) e endpoints monitorados para detectar tentativas de exploração.
 - **Monitoramento (SIEM):** Integração com infraestrutura de SIEM dedicada para correlação de logs e detecção de ameaças em tempo real.
 - **Conformidade:** Aderência ao checklist **OWASP ASVS (Nível 1)** e diretrizes da **LGPD**.
@@ -161,7 +162,7 @@ Ao fazer login, o gestor é recebido com um painel interativo que exibe:
 - **Ações Rápidas:** Um card dedicado oferece um atalho para a tela de "Gerenciar Vínculos", uma das funcionalidades centrais do sistema.
 - **Gráficos de Análise:**
   - **Alunos por Turma:** Um gráfico de barras que ilustra a distribuição de estudantes nas turmas cadastradas, permitindo uma análise rápida da lotação.
-  - **Distribuição de Usuários:** Um gráfico de pizza que mostra a proporção de cada perfil (Gestores, Cuidadores, Responsáveis, etc.) no sistema.
+   - **Distribuição de Usuários:** Um gráfico de rosca (Donut Chart) moderno que mostra a proporção de cada perfil no sistema, com legendas claras e cores padronizadas.
 
 #### Funcionalidades de Gerenciamento (CRUD)
 Através do menu lateral, o gestor pode acessar as seguintes áreas:
@@ -215,3 +216,36 @@ Como próximos passos, o projeto pode evoluir nas seguintes áreas:
 - **Plano de Desenvolvimento Individual (PDI):** Módulo para criar, acompanhar e avaliar metas e objetivos específicos para cada estudante, com a colaboração de professores, cuidadores e responsáveis.
 
 Este projeto demonstra o grande potencial da tecnologia para resolver problemas reais no setor educacional, oferecendo ferramentas que apoiam e valorizam o trabalho de todos os envolvidos no processo de inclusão.
+
+---
+
+## 7. Solução de Problemas (Troubleshooting)
+
+### Problema: Logout não funciona / Sessão travada
+
+Em alguns casos, ao tentar sair do sistema, o logout pode falhar devido a uma sessão inválida ou expirou. Isso é detectado com erros como:
+
+- `AuthSessionMissingError: Auth session missing!`
+- `Failed to load resource: the server responded with a status of 403`
+
+#### Solução
+
+Para limpar completamente a sessão do navegador, você pode executar o seguinte snippet no **Console do DevTools**:
+
+> ⚠️ **Aviso:** Digite `allow pasting` no Console antes de colar este código.
+
+```javascript
+// Limpa dados de sessão
+localStorage.clear();
+sessionStorage.clear();
+
+// Remove cookies de autenticação
+document.cookie.split(";").forEach(function(c) {
+  document.cookie = c
+    .replace(/^ +/, "")
+    .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+});
+
+// Recarrega a página para aplicar mudanças
+location.reload();
+```

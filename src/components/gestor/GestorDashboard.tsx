@@ -4,7 +4,7 @@ import { useUsers } from '@/hooks/useUsers';
 import { useStudents } from '@/hooks/useStudents';
 import { useClasses } from '@/hooks/useClasses';
 import { useProfile } from '@/hooks/useProfile';
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, PieChart, Pie, Cell, Tooltip } from "recharts";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, PieChart, Pie, Cell, Tooltip, CartesianGrid, Legend } from "recharts";
 
 export function GestorDashboard() {
   // Hooks para buscar os dados e popular os cards
@@ -36,12 +36,15 @@ export function GestorDashboard() {
     return acc;
   }, {} as Record<string, number>);
   
-  const chartDataUsers = Object.entries(usersByRole).map(([name, value]) => ({ name, value, fill: '' }));
-  const PIE_COLORS = ["#818cf8", "#a78bfa", "#4ade80", "#f97316"];
-  chartDataUsers.forEach((entry, index) => {
-    entry.fill = PIE_COLORS[index % PIE_COLORS.length];
-  });
+  const ROLE_COLORS: Record<string, string> = {
+    'Gestores': '#8b5cf6', // violet-500
+    'Cuidadores': '#22c55e', // green-500
+    'Responsáveis': '#f97316', // orange-500
+    'Professores': '#3b82f6', // blue-500
+    'Outros': '#94a3b8', // slate-400
+  };
 
+  const chartDataUsers = Object.entries(usersByRole).map(([name, value]) => ({ name, value, fill: ROLE_COLORS[name] || ROLE_COLORS['Outros'] }));
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -108,10 +111,11 @@ export function GestorDashboard() {
               <BarChart data={chartDataStudents}>
                 <defs>
                   <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#8884d8" stopOpacity={0.1}/>
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
                   </linearGradient>
                 </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                 <XAxis
                   dataKey="name"
                   stroke="#888888"
@@ -126,7 +130,12 @@ export function GestorDashboard() {
                   axisLine={false}
                   tickFormatter={(value) => `${value}`}
                 />
-                <Tooltip cursor={{fill: 'rgba(150, 150, 150, 0.1)'}} />
+                <Tooltip 
+                  cursor={{fill: 'rgba(150, 150, 150, 0.1)'}}
+                  contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  itemStyle={{ color: '#1f2937' }}
+                  labelStyle={{ color: '#1f2937', fontWeight: 'bold' }}
+                />
                 <Bar dataKey="total" fill="url(#colorUv)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -140,18 +149,22 @@ export function GestorDashboard() {
           <CardContent>
             <ResponsiveContainer width="100%" height={350}>
               <PieChart>
-                <Tooltip content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    return (
-                      <div className="p-2 bg-background border rounded-md shadow-lg">
-                        <p className="font-medium">{`${payload[0].name}: ${payload[0].value}`}</p>
-                      </div>
-                    );
-                  }
-                  return null;
-                }} />
-                <Pie data={chartDataUsers} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={120} labelLine={false} label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}>
-                  {chartDataUsers.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  itemStyle={{ color: '#1f2937' }}
+                />
+                <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                <Pie 
+                  data={chartDataUsers} 
+                  dataKey="value" 
+                  nameKey="name" 
+                  cx="50%" 
+                  cy="50%" 
+                  innerRadius={60} 
+                  outerRadius={100} 
+                  paddingAngle={2}
+                >
+                  {chartDataUsers.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} strokeWidth={0} />)}
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
