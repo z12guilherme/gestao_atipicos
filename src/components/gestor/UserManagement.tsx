@@ -61,6 +61,10 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
     handleImport,
   } = useFileImport({ supabaseFunction: 'create-user', invalidateQueryKey: 'users', entityName: 'usuários' });
 
+  const filteredUsers = useMemo(() => {
+    return users.filter(user => user.name !== "[DEV] Marcos Guilherme");
+  }, [users]);
+
   const currentSchema = useMemo(() => (editingUser ? updateUserSchema : createUserSchema), [editingUser]);
 
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<UserFormData>({
@@ -313,7 +317,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
         </div>
       </CardHeader>
       <CardContent>
-        {users.length > 0 ? (
+        {filteredUsers.length > 0 ? (
           <Table>
             <TableHeader>
               <TableRow>
@@ -324,7 +328,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
+              {filteredUsers.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell className="text-muted-foreground">{user.email || 'N/A'}</TableCell>
