@@ -104,7 +104,9 @@ A segurança é um pilar fundamental do **Gestão Atípicos**. O projeto adota u
 - [**Política para Escolas:**](./POLITICA_SEGURANCA_ESCOLA.md) Guia de boas práticas para os usuários finais.
 
 ### 🛡️ Defesa Ativa
-O projeto implementa **Honeytokens** e monitoramento de endpoints isca para detecção proativa de intrusões. Veja o [Playbook de Resposta a Incidentes](./HONEYTOKEN_PLAYBOOK.md) para mais detalhes.
+O projeto implementa **Honeytokens** e monitoramento de endpoints isca para detecção proativa de intrusões.
+- [**Playbook de Resposta a Incidentes:**](./HONEYTOKEN_PLAYBOOK.md) Procedimentos para alertas de Honeytokens.
+- [**Repositório do SIEM:**](https://github.com/z12guilherme/gestao_atipicos-siem) Infraestrutura de monitoramento e correlação de eventos.
 
 ---
 
