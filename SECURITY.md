@@ -207,13 +207,11 @@ Caso você identifique qualquer falha de segurança:
 
 ---
 
-## 📅 Atualizações
+## 📅 Histórico de Auditorias
 
-Este documento será atualizado conforme:
+| Data | Tipo de Teste | Escopo | Resultado |
+| :--- | :--- | :--- | :--- |
+| **15/12/2025** | **Pentest Blackbox** | Full Stack (Auth, RLS, API) | ✅ **0 Vulnerabilidades Críticas** |
 
-- Novas funcionalidades
-- Alterações arquiteturais
-- Novos testes de segurança
-
-**Última revisão:** Dezembro de 2025
+**Última revisão:** 15 de Dezembro de 2025
 **Status:** ✅ Aplicação aprovada nos testes realizados

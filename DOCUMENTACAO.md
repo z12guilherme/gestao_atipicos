@@ -119,7 +119,7 @@ A segurança do projeto adota uma estratégia de **Defesa em Profundidade (Defen
 - **Criptografia:** Dados em trânsito (TLS 1.3) e em repouso (AES-256).
 
 #### 3.3.2. Segurança Ofensiva e Defensiva
-- **Pentest Blackbox:** A aplicação foi submetida a testes de intrusão, com resultados e mitigações documentados.
+- **Pentest Blackbox:** A aplicação foi submetida a testes de intrusão (Dez/2025), sem detecção de vulnerabilidades críticas.
 - **Defesa Ativa (Active Defense):** Implementação de **Honeytokens** (credenciais isca) e endpoints monitorados para detectar tentativas de exploração.
 - **Monitoramento (SIEM):** Integração com infraestrutura de SIEM dedicada para correlação de logs e detecção de ameaças em tempo real.
 - **Conformidade:** Aderência ao checklist **OWASP ASVS (Nível 1)** e diretrizes da **LGPD**.
