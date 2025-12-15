@@ -41,11 +41,16 @@ export function useUsers() {
 
       const response = await supabase.functions.invoke('create-user', {
         headers: { 'Authorization': `Bearer ${session.access_token}` },
-        body: { records: [userData] },
+        body: [userData],
       });
 
       if (response.error) throw new Error(response.error.message);
-      return response.data.data;
+      
+      const { errorCount, errors } = response.data;
+      if (errorCount > 0 && errors?.length > 0) {
+        throw new Error(errors[0].error);
+      }
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
