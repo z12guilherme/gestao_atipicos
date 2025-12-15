@@ -18,11 +18,13 @@ import ExcelJS from 'exceljs';
 import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog";
 import { useProfile } from "@/hooks/useProfile";
 import { MultiSelect } from "@/components/ui/MultiSelect";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const guardianSchema = z.object({
   name: z.string().trim().min(2, "Nome é obrigatório"),
   email: z.string().trim().email("Email inválido").min(1, "Email é obrigatório"),
-  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres").optional(),
+  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
   phone: z.string().trim().optional(),
   student_ids: z.array(z.string()).default([]),
 });
@@ -77,12 +79,36 @@ export function GuardianManagement() {
   const onSubmit = async (data: GuardianFormData) => {
     const { student_ids, ...profileData } = data;
     const payload = { ...profileData, role: 'responsavel' };
-    if (editingGuardian) {
-      await updateUser.mutateAsync({ id: editingGuardian.id, profileData: payload, student_ids });
-    } else {
-      await createUser.mutateAsync({ ...payload, student_ids });
+    
+    try {
+      if (editingGuardian) {
+        // 1. Atualiza dados do perfil
+        await updateUser.mutateAsync({ id: editingGuardian.id, profileData: payload });
+        
+        // 2. Atualiza vínculos (Remove todos e insere os novos)
+        await supabase.from('guardians_students').delete().eq('guardian_id', editingGuardian.id);
+        if (student_ids.length > 0) {
+          const inserts = student_ids.map(sid => ({ guardian_id: editingGuardian.id, student_id: sid, relationship: 'Responsável' }));
+          await supabase.from('guardians_students').insert(inserts);
+        }
+      } else {
+        // 1. Cria o usuário
+        await createUser.mutateAsync(payload);
+        
+        // 2. Busca o ID do usuário recém-criado pelo email (já que a função create-user não retorna o ID diretamente)
+        const { data: newUser } = await supabase.from('profiles').select('id').eq('email', payload.email).single();
+        
+        // 3. Cria os vínculos se houver usuário e estudantes selecionados
+        if (newUser && student_ids.length > 0) {
+          const inserts = student_ids.map(sid => ({ guardian_id: newUser.id, student_id: sid, relationship: 'Responsável' }));
+          await supabase.from('guardians_students').insert(inserts);
+        }
+      }
+      handleDialogChange(false);
+    } catch (error) {
+      console.error("Erro ao salvar responsável:", error);
+      toast.error("Erro ao salvar dados ou vínculos.");
     }
-    handleDialogChange(false);
   };
 
   const handleDownloadTemplate = async (format: 'csv' | 'xlsx') => {

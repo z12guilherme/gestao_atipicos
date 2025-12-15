@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -20,7 +20,7 @@ import { useProfile } from "@/hooks/useProfile";
 const caregiverSchema = z.object({
   name: z.string().trim().min(2, "Nome é obrigatório"),
   email: z.string().trim().email("Email inválido").min(1, "Email é obrigatório"),
-  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres").optional(),
+  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
   phone: z.string().trim().optional(),
   function_title: z.string().trim().optional(),
   work_schedule: z.string().trim().optional(),
@@ -45,8 +45,12 @@ export function CaregiverManagement() {
     handleImport,
   } = useFileImport({ supabaseFunction: 'create-user', invalidateQueryKey: 'users', entityName: 'cuidadores' });
 
+  const currentSchema = useMemo(() => {
+    return editingCaregiver ? caregiverSchema.omit({ password: true }) : caregiverSchema;
+  }, [editingCaregiver]);
+
   const { register, handleSubmit, reset, formState: { errors } } = useForm<CaregiverFormData>({
-    resolver: zodResolver(caregiverSchema),
+    resolver: zodResolver(currentSchema),
   });
 
   const handleOpenEditModal = (caregiver: User) => {
