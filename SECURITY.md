@@ -180,7 +180,7 @@ Como parte de nossa estratégia de segurança em profundidade, este projeto util
 
 - **Honeytokens:** Credenciais falsas (ex: chaves de API, JWTs) inseridas intencionalmente em locais estratégicos para detectar vazamentos ou varreduras não autorizadas.
 - **Canary Endpoints:** Rotas de API monitoradas que simulam endpoints administrativos ou sensíveis, mas servem apenas para alertar sobre tentativas de enumeração.
-- **SIEM Dedicado:** Infraestrutura de monitoramento e correlação de eventos de segurança em tempo real. [Repositório do SIEM](https://github.com/z12guilherme/gestao_atipicos-siem).
+- **SIEM Dedicado:** Infraestrutura de monitoramento e correlação de eventos de segurança em tempo real. [Repositório do SIEM](https://github.com/z12guilherme/gestao_atipicos-siem). 👀 **Estamos de OLHO**.
 
 ⚠️ **Aviso aos Pesquisadores:**
 Se você encontrar uma credencial que aparenta ter privilégios elevados (como `service_role`), considere a possibilidade de ser um artefato de defesa. O uso dessas credenciais é monitorado e gera alertas de segurança imediatos.
