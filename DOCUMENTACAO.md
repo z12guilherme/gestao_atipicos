@@ -109,13 +109,20 @@ O banco de dados no Supabase foi modelado para refletir as entidades principais 
 
 ### 3.3. Controle de Acesso e Segurança
 
-A segurança é um pilar do projeto. Ela é garantida principalmente pelo **Row Level Security (RLS)** do PostgreSQL, configurado no Supabase. As políticas de RLS garantem que:
+A segurança do projeto adota uma estratégia de **Defesa em Profundidade (Defense in Depth)**, indo muito além do controle de acesso básico.
 
+#### 3.3.1. Segurança de Dados (Data Security)
+- **Row Level Security (RLS):** A lógica de autorização reside no banco de dados.
 - **Gestores** possam ver e modificar todos os dados.
 - **Responsáveis** possam visualizar apenas os dados dos estudantes vinculados a eles.
 - **Cuidadores** possam visualizar apenas os dados dos estudantes que lhes foram atribuídos.
+- **Criptografia:** Dados em trânsito (TLS 1.3) e em repouso (AES-256).
 
-Essa abordagem move a lógica de segurança para o banco de dados, tornando a aplicação inerentemente mais segura.
+#### 3.3.2. Segurança Ofensiva e Defensiva
+- **Pentest Blackbox:** A aplicação foi submetida a testes de intrusão, com resultados e mitigações documentados.
+- **Defesa Ativa (Active Defense):** Implementação de **Honeytokens** (credenciais isca) e endpoints monitorados para detectar tentativas de exploração.
+- **Monitoramento (SIEM):** Integração com infraestrutura de SIEM dedicada para correlação de logs e detecção de ameaças em tempo real.
+- **Conformidade:** Aderência ao checklist **OWASP ASVS (Nível 1)** e diretrizes da **LGPD**.
 
 ### 3.4. Funcionalidades Implementadas
 

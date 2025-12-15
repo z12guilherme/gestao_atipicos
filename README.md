@@ -110,7 +110,7 @@ O projeto implementa **Honeytokens** e monitoramento de endpoints isca para dete
 
 ---
 
-## � Tecnologias Utilizadas
+## 🚀 Tecnologias Utilizadas
 
 - **Frontend:**
     - [![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)
