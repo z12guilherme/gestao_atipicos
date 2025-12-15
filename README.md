@@ -11,6 +11,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/status-concluído-green?style=for-the-badge" alt="Status do Projeto">
   <img src="https://img.shields.io/github/license/z12guilherme/gestao_atipicos?style=for-the-badge" alt="Licença">
+  <a href="./SECURITY.md"><img src="https://img.shields.io/badge/Security-Policy-blue?style=for-the-badge&logo=security&logoColor=white" alt="Security Policy"></a>
 </p>
 
 <p align="center">
@@ -90,7 +91,23 @@ O sistema foi projetado com diferentes níveis de acesso, oferecendo um dashboar
 
 ---
 
-## 🚀 Tecnologias Utilizadas
+## 🔐 Segurança e Privacidade
+
+A segurança é um pilar fundamental do **Gestão Atípicos**. O projeto adota uma abordagem de *Security by Design* e *Privacy by Design*, com documentação robusta e práticas de defesa ativa.
+
+### Documentação de Segurança
+- [**Política de Segurança (Security Policy):**](./SECURITY.md) Visão geral, escopo de testes e processo de reporte.
+- [**Modelo de Ameaças (STRIDE):**](./THREAT_MODEL_STRIDE.md) Análise técnica de vetores de ataque e mitigações.
+- [**Checklist OWASP ASVS:**](./OWASP_ASVS_CHECKLIST.md) Verificação de conformidade com padrões internacionais (Nível 1).
+- [**Conformidade LGPD:**](./LGPD_COMPLIANCE.md) Diretrizes sobre tratamento de dados sensíveis e direitos dos titulares.
+- [**Política para Escolas:**](./POLITICA_SEGURANCA_ESCOLA.md) Guia de boas práticas para os usuários finais.
+
+### 🛡️ Defesa Ativa
+O projeto implementa **Honeytokens** e monitoramento de endpoints isca para detecção proativa de intrusões. Veja o [Playbook de Resposta a Incidentes](./HONEYTOKEN_PLAYBOOK.md) para mais detalhes.
+
+---
+
+## � Tecnologias Utilizadas
 
 - **Frontend:**
     - [![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)

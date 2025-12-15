@@ -2,7 +2,7 @@
 
 **Autor:** Marcos Guilherme  
 **Email:** mguimarcos39@gmail.com  
-**Data:** Outubro de 2025
+**Data:** Dezembro de 2025
 
 ---
 

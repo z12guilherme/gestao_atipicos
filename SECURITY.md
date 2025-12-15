@@ -18,6 +18,18 @@ Este documento descreve:
 
 ---
 
+## 📚 Documentação de Segurança Relacionada
+
+Para detalhes mais técnicos e políticas específicas, consulte:
+
+- [Modelo de Ameaças (STRIDE)](./THREAT_MODEL_STRIDE.md)
+- [Checklist OWASP ASVS](./OWASP_ASVS_CHECKLIST.md)
+- [Playbook de Resposta a Incidentes (Honeytokens)](./HONEYTOKEN_PLAYBOOK.md)
+- [Política de Segurança para Escolas](./POLITICA_SEGURANCA_ESCOLA.md)
+- [Conformidade LGPD](./LGPD_COMPLIANCE.md)
+
+---
+
 ## 🔍 Escopo do Pentest
 
 Os testes foram realizados **exclusivamente no ambiente do próprio projeto**, sem impacto a terceiros.
