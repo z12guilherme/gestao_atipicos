@@ -8,12 +8,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { MultiSelect } from "@/components/ui/MultiSelect";
 import { Loader2, Save, HeartHandshake } from "lucide-react";
 import { AssignmentTabContent } from "./AssignmentTabContent";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function AssignmentManagement() {
-  const { users, isLoading: isLoadingUsers, updateUser } = useUsers();
+  const queryClient = useQueryClient();
+  const { users, isLoading: isLoadingUsers } = useUsers();
   const { students: allStudents, studentsWithoutCaregiver, studentsWithoutGuardian, isLoading: isLoadingStudents } = useStudents();
 
   const [isModalOpen, setModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
 
   const caregivers = users.filter(u => u.role === 'cuidador');
@@ -26,13 +31,47 @@ export function AssignmentManagement() {
 
   const handleSaveChanges = async (studentIds: string[]) => {
     if (!selectedUser) return;
-    await updateUser.mutateAsync({
-      id: selectedUser.id,
-      profileData: { role: selectedUser.role },
-      student_ids: studentIds,
-    });
-    setModalOpen(false);
-    setSelectedUser(null);
+    setIsSaving(true);
+
+    const userId = selectedUser.id;
+    const isCaregiver = selectedUser.role === 'cuidador';
+    const table = isCaregiver ? 'caregivers_students' : 'guardians_students';
+    const userColumn = isCaregiver ? 'caregiver_id' : 'guardian_id';
+
+    try {
+      // 1. Remove vínculos existentes para este usuário
+      const { error: deleteError } = await supabase
+        .from(table)
+        .delete()
+        .eq(userColumn, userId);
+
+      if (deleteError) throw deleteError;
+
+      // 2. Adiciona os novos vínculos selecionados
+      if (studentIds.length > 0) {
+        const inserts = studentIds.map(studentId => {
+          const record: any = { [userColumn]: userId, student_id: studentId };
+          if (!isCaregiver) record.relationship = 'Responsável';
+          return record;
+        });
+
+        const { error: insertError } = await supabase.from(table).insert(inserts);
+        if (insertError) throw insertError;
+      }
+
+      toast.success("Vínculos atualizados com sucesso!");
+      
+      // Atualiza as listas de usuários e estudantes para refletir as mudanças
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+      
+      setModalOpen(false);
+      setSelectedUser(null);
+    } catch (error: any) {
+      toast.error(`Erro ao salvar vínculos: ${error.message}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const isLoading = isLoadingUsers || isLoadingStudents;
@@ -124,8 +163,8 @@ export function AssignmentManagement() {
             onChange={handleSaveChanges}
             placeholder="Selecione os estudantes..."
             actionButton={
-              <Button disabled={updateUser.isPending}>
-                {updateUser.isPending
+              <Button disabled={isSaving}>
+                {isSaving
                   ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Salvando...</>
                   : <><Save className="mr-2 h-4 w-4" />Salvar</>}
               </Button>

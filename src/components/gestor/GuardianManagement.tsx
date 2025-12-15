@@ -15,7 +15,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import ExcelJS from 'exceljs';
-import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog.tsx";
+import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog";
 import { useProfile } from "@/hooks/useProfile";
 import { MultiSelect } from "@/components/ui/MultiSelect";
 
@@ -45,7 +45,7 @@ export function GuardianManagement() {
     importErrors,
     isErrorsDialogOpen, setErrorsDialogOpen,
     handleImport,
-  } = useFileImport({ supabaseFunction: 'bulk-create-users', invalidateQueryKey: 'users', entityName: 'responsáveis' });
+  } = useFileImport({ supabaseFunction: 'create-user', invalidateQueryKey: 'users', entityName: 'responsáveis' });
 
   const currentSchema = useMemo(() => {
     return editingGuardian ? guardianSchema.omit({ password: true }) : guardianSchema;

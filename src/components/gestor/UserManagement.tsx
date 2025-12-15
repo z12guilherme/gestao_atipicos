@@ -17,7 +17,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import ExcelJS from 'exceljs';
-import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog.tsx";
+import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog";
 import { useProfile } from "@/hooks/useProfile";
 
 // Schema base para os dados do perfil, sem email e senha

@@ -14,7 +14,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import ExcelJS from 'exceljs';
-import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog.tsx";
+import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog";
 import { useProfile } from "@/hooks/useProfile";
 
 const caregiverSchema = z.object({
@@ -43,7 +43,7 @@ export function CaregiverManagement() {
     importErrors,
     isErrorsDialogOpen, setErrorsDialogOpen,
     handleImport,
-  } = useFileImport({ supabaseFunction: 'bulk-create-users', invalidateQueryKey: 'users', entityName: 'cuidadores' });
+  } = useFileImport({ supabaseFunction: 'create-user', invalidateQueryKey: 'users', entityName: 'cuidadores' });
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<CaregiverFormData>({
     resolver: zodResolver(caregiverSchema),
