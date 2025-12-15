@@ -97,6 +97,7 @@ A segurança é um pilar fundamental do **Gestão Atípicos**. O projeto adota u
 
 ### Documentação de Segurança
 - [**Política de Segurança (Security Policy):**](./SECURITY.md) Visão geral, escopo de testes e processo de reporte.
+- [**Relatório de Pentest (Blackbox):**](./SECURITY.md) Resultados completos dos testes de intrusão, cobrindo autenticação, RLS e API.
 - [**Modelo de Ameaças (STRIDE):**](./THREAT_MODEL_STRIDE.md) Análise técnica de vetores de ataque e mitigações.
 - [**Checklist OWASP ASVS:**](./OWASP_ASVS_CHECKLIST.md) Verificação de conformidade com padrões internacionais (Nível 1).
 - [**Conformidade LGPD:**](./LGPD_COMPLIANCE.md) Diretrizes sobre tratamento de dados sensíveis e direitos dos titulares.
