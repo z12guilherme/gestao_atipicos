@@ -77,6 +77,7 @@ Este documento analisa as potenciais ameaças à segurança da aplicação utili
 1.  **Auditoria (Repudiation):** Implementar tabela de logs de auditoria (`audit_logs`) para ações sensíveis (criação/exclusão de usuários e alunos).
 2.  **Storage (DoS):** Configurar regras de tamanho máximo e tipos de arquivo permitidos (apenas imagens/docs) no Supabase Storage.
 3.  **Treinamento (Spoofing):** Divulgar a `POLITICA_SEGURANCA_ESCOLA.md` para os usuários.
+4.  **Dependências (Supply Chain):** Substituir a biblioteca `xlsx` (vulnerável) por `exceljs` ou `read-excel-file` para mitigar CVEs conhecidas.
 
 ---
 **Legenda:**

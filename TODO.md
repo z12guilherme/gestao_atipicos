@@ -59,3 +59,4 @@ Com a retomada do projeto, o foco pode se voltar para as funcionalidades futuras
 - **[ ] Registro de Ocorrências e Evolução:** Permitir que cuidadores registrem observações diárias sobre o progresso e comportamento de cada estudante. O painel do responsável (`ResponsavelDashboard.tsx`) já tem a estrutura para exibir esses dados.
 - **[ ] Relatórios e Análises:** Criar um módulo para gestores gerarem relatórios personalizados.
 - **[ ] Notificações:** Implementar um sistema de notificações (e-mail ou na plataforma) para eventos importantes.
+- **[ ] Segurança (Supply Chain):** Substituir dependência `xlsx` por `exceljs` ou `read-excel-file` devido a vulnerabilidades de segurança.

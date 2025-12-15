@@ -14,7 +14,7 @@ import { useFileImport } from "@/hooks/useFileImport";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog.tsx";
 import { useProfile } from "@/hooks/useProfile";
 import { MultiSelect } from "@/components/ui/MultiSelect";
@@ -85,7 +85,7 @@ export function GuardianManagement() {
     handleDialogChange(false);
   };
 
-  const handleDownloadTemplate = (format: 'csv' | 'xlsx') => {
+  const handleDownloadTemplate = async (format: 'csv' | 'xlsx') => {
     const headers = ["name", "email", "password", "phone"];
     const example = ["Exemplo Responsável", "responsavel@email.com", "senhaSegura123", "(99) 99999-9999"];
     if (format === 'csv') {
@@ -96,10 +96,17 @@ export function GuardianManagement() {
       link.download = "modelo_importacao_responsaveis.csv";
       link.click();
     } else {
-      const worksheet = XLSX.utils.aoa_to_sheet([headers, example]);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Responsáveis");
-      XLSX.writeFile(workbook, "modelo_importacao_responsaveis.xlsx");
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Responsáveis");
+      worksheet.addRow(headers);
+      worksheet.addRow(example);
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "modelo_importacao_responsaveis.xlsx";
+      link.click();
+      URL.revokeObjectURL(link.href);
     }
   };
 

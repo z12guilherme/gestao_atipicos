@@ -187,6 +187,26 @@ Se você encontrar uma credencial que aparenta ter privilégios elevados (como `
 
 ---
 
+## 🚀 Roadmap de Testes Avançados
+
+Para elevar ainda mais o nível de segurança ("Fortaleza"), os seguintes testes estão planejados para o próximo ciclo de auditoria:
+
+### 1. 📂 Upload e Storage
+- **Malicious File Upload:** Testar upload de extensões perigosas (`.php`, `.exe`, `.sh`) e arquivos de dupla extensão.
+- **Stored XSS via SVG:** Verificar se arquivos `.svg` ou `.html` carregados executam scripts no navegador.
+- **DoS via Imagem:** Testar upload de "Pixel Floods" (imagens com dimensões gigantescas).
+
+### 2. 🏎️ Race Conditions
+- **Integridade Lógica:** Testar requisições simultâneas para vincular o mesmo aluno a múltiplos cuidadores, verificando a consistência do banco.
+
+### 3. 🎁 Mass Assignment
+- **Injeção de Campos:** Tentar injetar campos não autorizados (ex: `"role": "admin"`) em requisições de atualização de perfil (`PATCH`).
+
+### 4. 📦 Supply Chain
+- **Auditoria de Dependências:** Execução periódica de `npm audit` para identificar CVEs em bibliotecas de terceiros.
+
+---
+
 ## ✅ Conclusão
 
 Com base nos testes realizados:

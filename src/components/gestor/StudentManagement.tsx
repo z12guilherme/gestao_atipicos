@@ -23,7 +23,7 @@ import { useFileImport } from "@/hooks/useFileImport";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod"; 
 import { z, ZodError } from "zod";
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { useUsers } from "@/hooks/useUsers";
 import { MultiSelect } from "@/components/ui/MultiSelect";
 import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog.tsx";
@@ -158,7 +158,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
     return <Badge variant={variants[status as keyof typeof variants] || 'outline'}>{status}</Badge>;
   };
 
-  const handleDownloadTemplate = (format: 'csv' | 'xlsx') => {
+  const handleDownloadTemplate = async (format: 'csv' | 'xlsx') => {
     const headers = ["name", "birth_date", "status", "class_name", "period", "diagnosis", "medical_info"];
     const example = ["Exemplo Aluno", "2015-08-20", "ativo", "Turma A", "Manhã", "TEA", "Alergia a amendoim"];
 
@@ -173,10 +173,17 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
       link.click();
       document.body.removeChild(link);
     } else {
-      const worksheet = XLSX.utils.aoa_to_sheet([headers, example]);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Estudantes");
-      XLSX.writeFile(workbook, "modelo_importacao_estudantes.xlsx");
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Estudantes");
+      worksheet.addRow(headers);
+      worksheet.addRow(example);
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "modelo_importacao_estudantes.xlsx";
+      link.click();
+      URL.revokeObjectURL(link.href);
     }
   };
 

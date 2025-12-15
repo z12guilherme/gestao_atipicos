@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import Papa from "papaparse";
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { supabase } from "@/integrations/supabase/client";
 
 interface UseFileImportProps {
@@ -82,23 +82,53 @@ export function useFileImport({ supabaseFunction, invalidateQueryKey, entityName
       }
     };
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const data = new Uint8Array(e.target?.result as ArrayBuffer);
-      const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const json = XLSX.utils.sheet_to_json(worksheet);
-      processData(json);
-    };
-    reader.onerror = (error) => {
-      toast.error("Erro ao ler o arquivo.", { description: error.message });
-      setIsImporting(false);
-    };
-
     if (importFile.type === 'text/csv' || importFile.name.endsWith('.csv')) {
       Papa.parse(importFile, { header: true, skipEmptyLines: true, complete: (results) => processData(results.data) });
     } else if (importFile.type.includes('spreadsheetml') || importFile.name.endsWith('.xlsx')) {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const buffer = e.target?.result as ArrayBuffer;
+          const workbook = new ExcelJS.Workbook();
+          await workbook.xlsx.load(buffer);
+          
+          const worksheet = workbook.worksheets[0];
+          if (!worksheet) throw new Error("Planilha vazia ou inválida.");
+
+          const jsonData: any[] = [];
+          let headers: string[] = [];
+
+          worksheet.eachRow((row, rowNumber) => {
+            if (rowNumber === 1) {
+              // ExcelJS retorna [undefined, 'col1', 'col2'] (baseado em 1)
+              headers = (row.values as any[]).map(v => v ? String(v) : '');
+            } else {
+              const rowData: any = {};
+              for (let i = 1; i < headers.length; i++) {
+                const header = headers[i];
+                if (header) {
+                  let value = row.getCell(i).value;
+                  // Tratamento simples para objetos (ex: hyperlinks)
+                  if (value && typeof value === 'object' && 'text' in value) {
+                    value = (value as any).text;
+                  }
+                  rowData[header] = value;
+                }
+              }
+              jsonData.push(rowData);
+            }
+          });
+          processData(jsonData);
+        } catch (error: any) {
+          console.error("Erro ao processar Excel:", error);
+          toast.error("Erro ao ler o arquivo Excel.", { description: error.message });
+          setIsImporting(false);
+        }
+      };
+      reader.onerror = (error) => {
+        toast.error("Erro ao ler o arquivo.", { description: error.message });
+        setIsImporting(false);
+      };
       reader.readAsArrayBuffer(importFile);
     } else {
       toast.error("Formato de arquivo não suportado. Use CSV ou XLSX.");

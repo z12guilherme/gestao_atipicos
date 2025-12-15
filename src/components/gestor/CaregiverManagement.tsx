@@ -13,7 +13,7 @@ import { useFileImport } from "@/hooks/useFileImport";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog.tsx";
 import { useProfile } from "@/hooks/useProfile";
 
@@ -79,7 +79,7 @@ export function CaregiverManagement() {
     handleDialogChange(false);
   };
 
-  const handleDownloadTemplate = (format: 'csv' | 'xlsx') => {
+  const handleDownloadTemplate = async (format: 'csv' | 'xlsx') => {
     const headers = ["name", "email", "password", "phone", "function_title", "work_schedule"];
     const example = ["Exemplo Cuidador", "cuidador@email.com", "senhaSegura123", "(99) 99999-9999", "Cuidador de Apoio", "Seg-Sex 8h-17h"];
     if (format === 'csv') {
@@ -90,10 +90,17 @@ export function CaregiverManagement() {
       link.download = "modelo_importacao_cuidadores.csv";
       link.click();
     } else {
-      const worksheet = XLSX.utils.aoa_to_sheet([headers, example]);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Cuidadores");
-      XLSX.writeFile(workbook, "modelo_importacao_cuidadores.xlsx");
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Cuidadores");
+      worksheet.addRow(headers);
+      worksheet.addRow(example);
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "modelo_importacao_cuidadores.xlsx";
+      link.click();
+      URL.revokeObjectURL(link.href);
     }
   };
 
