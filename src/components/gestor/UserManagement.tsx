@@ -59,7 +59,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
     importErrors,
     isErrorsDialogOpen, setErrorsDialogOpen, 
     handleImport,
-  } = useFileImport({ supabaseFunction: 'bulk-create-users', invalidateQueryKey: 'users', entityName: 'usuários' });
+  } = useFileImport({ supabaseFunction: 'create-user', invalidateQueryKey: 'users', entityName: 'usuários' });
 
   const currentSchema = useMemo(() => (editingUser ? updateUserSchema : createUserSchema), [editingUser]);
 
