@@ -67,7 +67,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
 
   const currentSchema = useMemo(() => (editingUser ? updateUserSchema : createUserSchema), [editingUser]);
 
-  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<UserFormData>({
+  const { register, handleSubmit, watch, setValue, reset, setError, formState: { errors } } = useForm<UserFormData>({
     resolver: zodResolver(currentSchema),
     defaultValues: { name: "", email: "", password: "", role: "responsavel" },
   });
@@ -104,8 +104,11 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
       }
       setEditingUser(null);
       setDialogOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Falha ao salvar usuário:', error);
+      if (error.message?.includes("already been registered") || error.message?.includes("already registered")) {
+        setError("email", { type: "manual", message: "Este e-mail já está cadastrado no sistema." });
+      }
     }
   };
 
