@@ -23,7 +23,10 @@ export function GestorDashboard() {
 
   // Dados para os gráficos
   const studentsByClass = students.reduce((acc, student) => {
-    const className = student.class_name?.trim() || "Sem Turma";
+    // Normaliza espaços: remove espaços extras no meio, início e fim
+    const className = student.class_name 
+      ? student.class_name.replace(/\s+/g, ' ').trim() 
+      : "Sem Turma";
     acc[className] = (acc[className] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
