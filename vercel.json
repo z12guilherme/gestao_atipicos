@@ -1,8 +1,6 @@
 --- /dev/null
-+++ c:\Users\santa fe\Desktop\gestao_atipicos\vercel.json
-@@ -0,0 +1,6 @@
 +{
 +  "rewrites": [
 +    { "source": "/(.*)", "destination": "/index.html" }
-+  ]
-+}
+  ]
+}
