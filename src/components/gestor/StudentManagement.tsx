@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useMemo } from "react";
+import { Dispatch, SetStateAction, useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { UserPlus, Edit, Save, Trash2, Upload, FileDown, Loader2, GraduationCap, X } from "lucide-react";
+import { UserPlus, Edit, Save, Trash2, Upload, FileDown, Loader2, GraduationCap, X, Search } from "lucide-react";
 import { useStudents, Student } from "@/hooks/useStudents";
 import {
   Form,
@@ -54,6 +54,10 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
   const { students, isLoading, createStudent, updateStudent, deleteStudent } = useStudents();
   const { users: allUsers } = useUsers();
 
+  // Estados para filtros
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedClass, setSelectedClass] = useState("all");
+
   const caregivers = useMemo(() => allUsers.filter(u => u.role === 'cuidador'), [allUsers]);
   const guardians = useMemo(() => allUsers.filter(u => u.role === 'responsavel'), [allUsers]);
 
@@ -66,6 +70,26 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
     handleImport,
   } = useFileImport({ supabaseFunction: 'bulk-create-students', invalidateQueryKey: 'students', entityName: 'estudantes' }); 
   
+  // Lógica de Filtros e Ordenação
+  const uniqueClasses = useMemo(() => {
+    const classes = students
+      .map(s => s.class_name ? s.class_name.replace(/\s+/g, ' ').trim() : "")
+      .filter((c): c is string => !!c && c !== "");
+    return Array.from(new Set(classes)).sort();
+  }, [students]);
+
+  const filteredStudents = useMemo(() => {
+    return students
+      .filter(student => {
+        const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const normalizedClass = student.class_name ? student.class_name.replace(/\s+/g, ' ').trim() : "";
+        const matchesClass = selectedClass === "all" || normalizedClass === selectedClass;
+        return matchesSearch && matchesClass;
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [students, searchTerm, selectedClass]);
+
+
   const form = useForm<StudentFormData>({
     resolver: zodResolver(studentSchema),
     values: editingStudent ? {
@@ -367,6 +391,32 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
           </div>
         </CardHeader>
         <CardContent>
+          {/* Filtros e Busca */}
+          {students.length > 0 && (
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
+              <div className="relative flex-1">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nome..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+              <Select value={selectedClass} onValueChange={setSelectedClass}>
+                <SelectTrigger className="w-full md:w-[200px]">
+                  <SelectValue placeholder="Filtrar por Turma" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as Turmas</SelectItem>
+                  {uniqueClasses.map((cls) => (
+                    <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           {students.length > 0 ? (
             <Table>
               <TableHeader>
@@ -378,7 +428,8 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {students.map((student) => (
+                {filteredStudents.length > 0 ? (
+                  filteredStudents.map((student) => (
                   <TableRow key={student.id}>
                     <TableCell className="font-medium">{student.name}</TableCell>
                     <TableCell>{student.class_name || 'N/A'}</TableCell>
@@ -401,7 +452,14 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                       </AlertDialog>
                     </TableCell>
                   </TableRow>
-                ))}
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                    Nenhum estudante encontrado com os filtros selecionados.
+                  </TableCell>
+                </TableRow>
+              )}
               </TableBody>
             </Table>
           ) : (
