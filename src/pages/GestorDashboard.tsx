@@ -5,7 +5,6 @@ import { useStudents } from '@/hooks/useStudents';
 import { useClasses } from '@/hooks/useClasses';
 import { useProfile } from '@/hooks/useProfile';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, PieChart, Pie, Cell, Tooltip } from "recharts";
-import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function GestorDashboard() {
