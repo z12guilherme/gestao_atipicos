@@ -1,6 +1,6 @@
 --- /dev/null
-+{
-+  "rewrites": [
-+    { "source": "/(.*)", "destination": "/index.html" }
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
