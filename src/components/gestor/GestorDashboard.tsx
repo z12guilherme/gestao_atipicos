@@ -23,7 +23,7 @@ export function GestorDashboard() {
 
   // Dados para os gráficos
   const studentsByClass = students.reduce((acc, student) => {
-    const className = student.class_name || "Sem Turma";
+    const className = student.class_name?.trim() || "Sem Turma";
     acc[className] = (acc[className] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);

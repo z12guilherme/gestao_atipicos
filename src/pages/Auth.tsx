@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -195,6 +195,11 @@ export default function Auth() {
                     )}
                   </Button>
                 </form>
+                <div className="mt-4 text-center">
+                  <Link to="/tutorial" className="text-sm text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400">
+                    Saiba mais sobre o sistema, segurança e LGPD
+                  </Link>
+                </div>
                 <CardFooter className="text-xs text-muted-foreground pt-6 justify-center">
                   <p>
                     Todos os Direitos Reservados &copy; {new Date().getFullYear()} | Dev: Marcos Guilherme
