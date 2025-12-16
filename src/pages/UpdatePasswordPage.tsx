@@ -33,6 +33,7 @@ export default function UpdatePasswordPage() {
       if (event === 'PASSWORD_RECOVERY') {
         // O usuário está autenticado e pronto para definir uma nova senha.
         // Não precisamos fazer nada aqui, apenas permitir que o formulário seja usado.
+        toast.info('Link verificado. Crie sua nova senha abaixo.');
       }
     });
 
