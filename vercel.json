@@ -1,6 +1,0 @@
---- /dev/null
-{
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
-}
