@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { UserPlus, Edit, Save, Trash2, Upload, FileDown, Loader2, Users2, KeyRound } from "lucide-react";
+import { UserPlus, Edit, Save, Trash2, Upload, FileDown, Loader2, Users2, KeyRound, Search } from "lucide-react";
 import { useUsers, User } from "@/hooks/useUsers"; // Hook para buscar usuários
 import { useFileImport } from "@/hooks/useFileImport";
 import { useForm } from "react-hook-form";
@@ -50,6 +50,8 @@ interface UserManagementProps {
 
 export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEditingUser }: UserManagementProps) {
   const [resettingId, setResettingId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterRole, setFilterRole] = useState("all");
 
   const { profile } = useProfile();
   const { users, isLoading, createUser, updateUser, deleteUser, sendPasswordReset } = useUsers();
@@ -63,8 +65,14 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
   } = useFileImport({ supabaseFunction: 'create-user', invalidateQueryKey: 'users', entityName: 'usuários' });
 
   const filteredUsers = useMemo(() => {
-    return users.filter(user => user.name !== "[DEV] Marcos Guilherme");
-  }, [users]);
+    return users.filter(user => {
+      if (user.name === "[DEV] Marcos Guilherme") return false;
+      const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                            (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesRole = filterRole === "all" || user.role === filterRole;
+      return matchesSearch && matchesRole;
+    });
+  }, [users, searchTerm, filterRole]);
 
   const currentSchema = useMemo(() => (editingUser ? updateUserSchema : createUserSchema), [editingUser]);
 
@@ -340,6 +348,29 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
         </div>
       </CardHeader>
       <CardContent>
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome ou e-mail..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+          <Select value={filterRole} onValueChange={setFilterRole}>
+            <SelectTrigger className="w-full md:w-[200px]">
+              <SelectValue placeholder="Filtrar por Perfil" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os Perfis</SelectItem>
+              <SelectItem value="gestor">Gestor</SelectItem>
+              <SelectItem value="cuidador">Cuidador</SelectItem>
+              <SelectItem value="responsavel">Responsável</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         {filteredUsers.length > 0 ? (
           <Table>
             <TableHeader>
@@ -393,7 +424,11 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
           <div className="text-center py-12">
             <Users2 className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-4 text-lg font-semibold">Nenhum usuário encontrado</h3>
-            <p className="mt-2 text-sm text-muted-foreground">Comece cadastrando um novo usuário para vê-lo aqui.</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {users.length > 0 
+                ? "Tente ajustar os filtros de busca." 
+                : "Comece cadastrando um novo usuário para vê-lo aqui."}
+            </p>
           </div>
         )}
       </CardContent>
