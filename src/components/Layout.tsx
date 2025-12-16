@@ -14,7 +14,6 @@ import {
   Code,
   School,
   Search,
-  HeartHandshake,
 } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile"; // 1. Importa o hook de perfil
 import { Skeleton } from "@/components/ui/skeleton"; 
@@ -85,10 +84,6 @@ export function Layout() {
 
   // Adiciona itens de menu específicos para o gestor
   const navItems = [...baseNavItems];
-  if (profile?.role === "gestor") {
-    // Insere "Gestão de Vínculos" após "Turmas" para melhor organização
-    navItems.splice(4, 0, { to: "/gestor/assignments", icon: HeartHandshake, label: "Gestão de Vínculos" });
-  }
 
 
 
@@ -97,7 +92,7 @@ export function Layout() {
       <div className="hidden border-r bg-muted/40 md:block">
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-            <NavLink to="/gestor/assignments" className="flex items-center gap-2 font-semibold">
+            <NavLink to="/" className="flex items-center gap-2 font-semibold">
               <Heart className="h-6 w-6 text-blue-600" />
               <span className="">Gestão Atípicos</span>
             </NavLink>

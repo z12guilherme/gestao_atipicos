@@ -15,7 +15,6 @@ import NotFound from "./pages/NotFound";
 import { StudentsPage } from "./pages/StudentsPage";
 import { UsersPage } from "./pages/UsersPage";
 import { ClassManagement } from "./components/gestor/ClassManagement";
-import { AssignmentManagement } from "@/components/gestor/AssignmentManagement";
 import Settings from "./pages/Settings";
 import UpdatePasswordPage from "./pages/UpdatePasswordPage"; // Importa a nova página
 
@@ -36,7 +35,6 @@ function App() {
                 element={<ProtectedRoute><Layout /></ProtectedRoute>}
               >
                 {/* Rotas mais específicas primeiro */}
-                <Route path="/gestor/assignments" element={<AssignmentManagement />} />
                 <Route path="/students" element={<StudentsPage />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/classes" element={<ClassManagement />} />

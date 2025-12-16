@@ -46,24 +46,14 @@ export function useUsers() {
   const { data: users, isLoading } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {
-      // CORREÇÃO: A consulta direta estava falhando devido a permissões de RLS
-      // na tabela auth.users. Usar a função RPC 'get_all_users' resolve isso,
-      // pois ela é executada com privilégios de administrador no servidor.
-      const { data, error } = await supabase
-  .from('profiles')
-  .select(`
-    id, user_id, name, role, phone, cpf, function_title, work_schedule,
-    caregivers_students(student_id)
-  `);
+      // Usar a função RPC 'get_all_users' que busca os dados do perfil
+      // e o e-mail da tabela de autenticação.
+      const { data, error } = await supabase.rpc('get_all_users');
 
-if (error) throw error;
-
-return data.map((user: any) => ({
-  ...user,
-  student_ids: user.caregivers_students?.map((c: any) => c.student_id) || [],
-}));
-
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao buscar usuários com RPC:", error);
+        throw new Error(`Falha ao buscar usuários: ${error.message}`);
+      }
 
       // A função RPC já retorna os dados no formato que precisamos.
       // Apenas garantimos que o retorno seja um array.
@@ -122,6 +112,20 @@ return data.map((user: any) => ({
     },
   });
 
+  const sendPasswordReset = useMutation({
+    mutationFn: async (email: string) => {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/update-password`,
+      });
+
+      if (error) {
+        // Lança o erro para ser capturado pelo `onError` do `toast.promise`
+        throw new Error(error.message);
+      }
+    },
+    // Não precisamos de onSuccess/onError aqui, pois o toast.promise já lida com isso.
+  });
+
   const deleteUser = useMutation({
     mutationFn: async (userId: string) => {
       const { error } = await supabase.functions.invoke('delete-user', { body: { userId } });
@@ -142,6 +146,7 @@ return data.map((user: any) => ({
     createUser,
     updateUser,
     deleteUser,
+    sendPasswordReset,
   };
 
 }

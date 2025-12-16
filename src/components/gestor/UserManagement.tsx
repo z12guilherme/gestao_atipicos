@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useMemo, useEffect } from "react";
+import { Dispatch, SetStateAction, useMemo, useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -49,6 +49,7 @@ interface UserManagementProps {
 }
 
 export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEditingUser }: UserManagementProps) {
+  const [resettingId, setResettingId] = useState<string | null>(null);
 
   const { profile } = useProfile();
   const { users, isLoading, createUser, updateUser, deleteUser, sendPasswordReset } = useUsers();
@@ -110,6 +111,25 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
         setError("email", { type: "manual", message: "Este e-mail já está cadastrado no sistema." });
       }
     }
+  };
+
+  const handlePasswordReset = (user: User) => {
+    if (!user.email) {
+      toast.error("Este usuário não possui um e-mail para redefinição de senha.");
+      return;
+    }
+    setResettingId(user.id);
+
+    const promise = sendPasswordReset.mutateAsync(user.email);
+
+    toast.promise(promise, {
+      loading: `Enviando link para ${user.email}...`,
+      success: `Link de redefinição enviado com sucesso para ${user.email}.`,
+      error: (err: any) => `Erro ao enviar e-mail: ${err.message}`,
+      finally: () => {
+        setResettingId(null);
+      },
+    });
   };
 
   const handleDialogChange = (isOpen: boolean) => {
@@ -346,7 +366,9 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
                         <AlertDialogHeader><AlertDialogTitle>Redefinir Senha</AlertDialogTitle><AlertDialogDescription>Um e-mail será enviado para **{user.email}** com instruções para criar uma nova senha. Deseja continuar?</AlertDialogDescription></AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => sendPasswordReset?.mutate(user.email!)} disabled={sendPasswordReset?.isPending ?? false}>{sendPasswordReset?.isPending ? 'Enviando...' : 'Enviar E-mail'}</AlertDialogAction>
+                          <AlertDialogAction onClick={() => handlePasswordReset(user)} disabled={resettingId === user.id}>
+                            {resettingId === user.id ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...</> : 'Enviar E-mail'}
+                          </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
@@ -358,7 +380,7 @@ export function UserManagement({ isDialogOpen, setDialogOpen, editingUser, setEd
                         <AlertDialogHeader><AlertDialogTitle>Você tem certeza?</AlertDialogTitle><AlertDialogDescription>Esta ação não pode ser desfeita. Isso excluirá permanentemente o usuário e seus dados de nossos servidores.</AlertDialogDescription></AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => deleteUser?.mutate(user.user_id)} disabled={deleteUser?.isPending ?? false}>{deleteUser?.isPending ? 'Excluindo...' : 'Excluir'}</AlertDialogAction>
+                          <AlertDialogAction onClick={() => deleteUser.mutate(user.user_id)} disabled={deleteUser.isPending}>{deleteUser.isPending ? 'Excluindo...' : 'Excluir'}</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
