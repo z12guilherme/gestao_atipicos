@@ -18,6 +18,7 @@ import {
 import { useProfile } from "@/hooks/useProfile"; // 1. Importa o hook de perfil
 import { Skeleton } from "@/components/ui/skeleton"; 
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { ModeToggle } from "@/components/mode-toggle";
 
 export function Layout() {
   const { signOut, loading: authLoading } = useAuth(); // Adiciona o loading do useAuth
@@ -133,6 +134,7 @@ export function Layout() {
             </form>
           </div>
           <div className="flex items-center gap-4">
+            <ModeToggle />
             <Button variant="ghost" size="icon" className="relative rounded-full">
               <Bell className="h-5 w-5" />
               <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>

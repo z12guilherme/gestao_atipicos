@@ -99,18 +99,6 @@ export function GestorDashboard() {
             <p className="text-xs text-orange-700 dark:text-orange-300">Turmas cadastradas</p>
           </CardContent>
         </Card>
-        {/* MELHORIA: Adicionado um card para a nova funcionalidade de vínculos */}
-        <Card className="border-0 bg-gradient-to-r from-cyan-50 to-sky-100 dark:from-cyan-950/50 dark:to-sky-900/50 col-span-1 md:col-span-2 lg:col-span-4">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-cyan-800 dark:text-cyan-200">Gerenciar Vínculos</CardTitle>
-            <Link to="/gestor/assignments">
-              <HeartHandshake className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-            </Link>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-cyan-700 dark:text-cyan-300">Acesse a nova tela para vincular estudantes a cuidadores e responsáveis.</p>
-          </CardContent>
-        </Card>
           </>
         )}
       </div>
@@ -138,19 +126,26 @@ export function GestorDashboard() {
                   </defs>
                   <XAxis
                     dataKey="name"
-                    stroke="#888888"
+                    stroke="hsl(var(--muted-foreground))"
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
+                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
                   />
                   <YAxis
-                    stroke="#888888"
+                    stroke="hsl(var(--muted-foreground))"
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={(value) => `${value}`}
+                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
                   />
-                  <Tooltip cursor={{fill: 'rgba(150, 150, 150, 0.1)'}} />
+                  <Tooltip 
+                    cursor={{fill: 'hsl(var(--muted))', opacity: 0.2}}
+                    contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px', color: 'hsl(var(--card-foreground))' }}
+                    itemStyle={{ color: 'hsl(var(--foreground))' }}
+                    labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 'bold' }}
+                  />
                   <Bar dataKey="total" fill="url(#colorUv)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -170,16 +165,10 @@ export function GestorDashboard() {
             ) : (
               <ResponsiveContainer width="100%" height={350}>
                 <PieChart>
-                  <Tooltip content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="p-2 bg-background border rounded-md shadow-lg">
-                          <p className="font-medium">{`${payload[0].name}: ${payload[0].value}`}</p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px', color: 'hsl(var(--card-foreground))' }}
+                    itemStyle={{ color: 'hsl(var(--foreground))' }}
+                  />
                   <Pie data={chartDataUsers} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={120} labelLine={false} label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}>
                     {chartDataUsers.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} />)}
                   </Pie>
