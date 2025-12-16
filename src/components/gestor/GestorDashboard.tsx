@@ -115,26 +115,28 @@ export function GestorDashboard() {
                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                 <XAxis
                   dataKey="name"
-                  stroke="#888888"
+                  stroke="hsl(var(--muted-foreground))"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
                 />
                 <YAxis
-                  stroke="#888888"
+                  stroke="hsl(var(--muted-foreground))"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                   tickFormatter={(value) => `${value}`}
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
                 />
                 <Tooltip 
-                  cursor={{fill: 'rgba(150, 150, 150, 0.1)'}}
-                  contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  itemStyle={{ color: '#1f2937' }}
-                  labelStyle={{ color: '#1f2937', fontWeight: 'bold' }}
+                  cursor={{fill: 'hsl(var(--muted))', opacity: 0.2}}
+                  contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px', color: 'hsl(var(--card-foreground))' }}
+                  itemStyle={{ color: 'hsl(var(--foreground))' }}
+                  labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 'bold' }}
                 />
                 <Bar dataKey="total" fill="url(#colorUv)" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -150,10 +152,10 @@ export function GestorDashboard() {
             <ResponsiveContainer width="100%" height={350}>
               <PieChart>
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  itemStyle={{ color: '#1f2937' }}
+                  contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '8px', color: 'hsl(var(--card-foreground))' }}
+                  itemStyle={{ color: 'hsl(var(--foreground))' }}
                 />
-                <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ color: 'hsl(var(--muted-foreground))' }} />
                 <Pie 
                   data={chartDataUsers} 
                   dataKey="value" 
