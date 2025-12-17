@@ -27,23 +27,10 @@ O projeto utiliza uma arquitetura de baixo custo e alta escalabilidade (*Serverl
 O sistema adota uma arquitetura **Serverless** e **Event-Driven** baseada em nuvem.
 
 ### 2.1. Diagrama de Arquitetura
-```mermaid
-graph TD
-    User[Usuário Final] -->|HTTPS/TLS 1.3| CDN[Vercel Edge Network]
-    CDN -->|Serve Frontend| SPA[React SPA]
-    
-    SPA -->|REST/Realtime| Gateway[Supabase API Gateway]
-    
-    subgraph "Backend & Data Layer (Supabase)"
-        Gateway --> Auth[Auth Service (GoTrue)]
-        Gateway --> DB[(PostgreSQL)]
-        Gateway --> Storage[File Storage]
-        Gateway --> Edge[Edge Functions (Deno)]
-    end
-    
-    Edge -->|Processamento em Lote| DB
-    DB -->|RLS Policies| DB
-```
+
+![Diagrama de Arquitetura do Sistema Gestão Atípicos](./img/arquitetura.png)
+
+*Diagrama de arquitetura de alto nível, ilustrando o fluxo de dados desde o usuário final até a camada de persistência e serviços de backend.*
 
 ## 3. Stack Tecnológica
 
@@ -145,43 +132,76 @@ Esta abordagem garante o princípio do **Privilégio Mínimo**, onde cada usuár
 
 ## 6. Modelagem de Dados (DER)
 
-Estrutura relacional simplificada do banco de dados:
+A estrutura de dados foi projetada para ser relacional e segura, utilizando o PostgreSQL do Supabase. A seguir, o Diagrama Entidade-Relacionamento (DER) e a descrição detalhada de cada tabela.
 
-```mermaid
-erDiagram
-    PROFILES ||--o{ GUARDIANS_STUDENTS : "é responsável por"
-    PROFILES ||--o{ CAREGIVERS_STUDENTS : "cuida de"
-    STUDENTS ||--o{ GUARDIANS_STUDENTS : "tem responsável"
-    STUDENTS ||--o{ CAREGIVERS_STUDENTS : "tem cuidador"
-    CLASSES ||--o{ STUDENTS : "contém"
+### 6.1. Diagrama Entidade-Relacionamento
 
-    PROFILES {
-        uuid id PK
-        string name
-        enum role "gestor, cuidador, responsavel"
-        string email
-    }
+![Diagrama do Banco de Dados](./img/Diagrama-Banco%20de-Dados.png)
 
-    STUDENTS {
-        uuid id PK
-        string name
-        date birth_date
-        string diagnosis
-        uuid class_id FK
-    }
+### 6.2. Estrutura Detalhada das Tabelas
 
-    CLASSES {
-        uuid id PK
-        string name
-        string period
-    }
-```
+Esta seção detalha as colunas, tipos e responsabilidades de cada tabela no banco de dados.
+
+#### Tabela `profiles`
+Armazena os dados de perfil de todos os usuários do sistema, vinculados à tabela `auth.users` do Supabase.
+
+| Coluna | Tipo | Chave | Descrição |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | PK/FK | Chave primária, referenciando `auth.users.id`. |
+| `name` | `text` | | Nome completo do usuário. |
+| `email` | `text` | | Email de login do usuário, sincronizado com `auth.users`. |
+| `role` | `role_enum` | | Perfil do usuário (`gestor`, `cuidador`, `responsavel`). |
+| `cpf` | `text` | | CPF do usuário (opcional). |
+| `phone` | `text` | | Telefone de contato (opcional). |
+| `function_title`| `text` | | Cargo ou função, relevante para cuidadores (opcional). |
+| `work_schedule`| `text` | | Horário de trabalho, relevante para cuidadores (opcional). |
+
+#### Tabela `students`
+Contém todas as informações sobre os estudantes atípicos.
+
+| Coluna | Tipo | Chave | Descrição |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | PK | Identificador único do estudante. |
+| `name` | `text` | | Nome completo do estudante. |
+| `birth_date` | `date` | | Data de nascimento. |
+| `status` | `status_enum`| | Status do estudante (`ativo`, `inativo`, `aguardando`). |
+| `class_name` | `text` | | Nome da turma do estudante (campo de texto livre, opcional). |
+| `period` | `period_enum`| | Período de estudo (`Manhã`, `Tarde`, `Integral`, opcional). |
+| `diagnosis` | `text` | | Diagnóstico ou laudo principal (opcional). |
+| `medical_info` | `text` | | Informações médicas relevantes (alergias, medicações, etc., opcional). |
+
+#### Tabela `classes`
+Armazena os nomes das turmas existentes para sugestão e organização.
+
+| Coluna | Tipo | Chave | Descrição |
+| :--- | :--- | :--- | :--- |
+| `id` | `uuid` | PK | Identificador único da turma. |
+| `name` | `text` | | Nome da turma (ex: "Turma A - Matutino"). |
+
+*Observação: Atualmente, não há uma chave estrangeira (foreign key) forçando o vínculo entre `students.class_name` e `classes.name` para maior flexibilidade administrativa.*
+
+#### Tabela `caregivers_students` (Tabela de Junção)
+Tabela associativa (N-para-N) que vincula cuidadores a estudantes.
+
+| Coluna | Tipo | Chave | Descrição |
+| :--- | :--- | :--- | :--- |
+| `caregiver_id` | `uuid` | PK/FK | Referencia `profiles.id` do cuidador. |
+| `student_id` | `uuid` | PK/FK | Referencia `students.id` do estudante. |
+
+#### Tabela `guardians_students` (Tabela de Junção)
+Tabela associativa (N-para-N) que vincula responsáveis a estudantes.
+
+| Coluna | Tipo | Chave | Descrição |
+| :--- | :--- | :--- | :--- |
+| `guardian_id` | `uuid` | PK/FK | Referencia `profiles.id` do responsável. |
+| `student_id` | `uuid` | PK/FK | Referencia `students.id` do estudante. |
+| `relationship`| `text` | | Tipo de relacionamento (ex: "Responsável", "Mãe"). |
 
 ## 7. Funcionalidades e Módulos
 
 ### 7.1. Gestão de Vínculos
 Módulo crítico que associa Cuidadores e Responsáveis aos Estudantes. Esta lógica garante que as informações de um aluno (como diário de bordo e ocorrências) sejam visíveis apenas para a equipe autorizada.
-
+    
 ### 7.2. Dashboard Analítico
 Visualização de dados agregados para tomada de decisão:
 *   Total de alunos e usuários.

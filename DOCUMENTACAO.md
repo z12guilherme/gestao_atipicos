@@ -103,6 +103,8 @@ A aplicação segue uma arquitetura cliente-servidor, onde o frontend (React/Vit
 
 O banco de dados no Supabase foi modelado para refletir as entidades principais do sistema:
 
+![Diagrama do Banco de Dados](./img/Diagrama-Banco%20de-Dados.png)
+
 - **`profiles`:** Armazena os dados de todos os usuários (gestores, cuidadores, responsáveis), incluindo nome, email e o perfil (`role`). Está vinculada à tabela `auth.users` do Supabase.
 - **`students`:** Contém todas as informações dos estudantes, como nome, data de nascimento, status, turma, diagnóstico e dados médicos.
 - **`caregivers_students`:** Tabela de associação (N-para-N) que vincula um cuidador a um ou mais estudantes.

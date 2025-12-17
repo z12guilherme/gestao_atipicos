@@ -119,6 +119,7 @@ O projeto implementa **Honeytokens** e monitoramento de endpoints isca para dete
     - [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 - **Backend & Banco de Dados:**
     - [![Supabase](https://img.shields.io/badge/Supabase-181818?style=flat&logo=supabase&logoColor=white)](https://supabase.io/) (PostgreSQL, Auth e Edge Functions)
+    - *Capacidade do Banco (Plano Gratuito): ~500MB (aprox. 10.000 usuários).*
 - **UI & Estilização:**
     - [![Shadcn/UI](https://img.shields.io/badge/shadcn%2Fui-000000?style=flat&logo=shadcn%2Fui&logoColor=white)](https://ui.shadcn.com/)
     - [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
@@ -130,6 +131,14 @@ O projeto implementa **Honeytokens** e monitoramento de endpoints isca para dete
     - [![Zod](https://img.shields.io/badge/Zod-3E67B1?style=flat&logo=zod&logoColor=white)](https://zod.dev/)
 - **Utilitários:**
     - [![SheetJS](https://img.shields.io/badge/SheetJS-007C3D?style=flat&logo=excel&logoColor=white)](https://sheetjs.com/) (xlsx)
+
+---
+
+## 🗄️ Modelagem de Dados
+
+<p align="center">
+  <img src="./img/Diagrama-Banco%20de-Dados.png" alt="Diagrama do Banco de Dados" width="800">
+</p>
 
 ---
 
@@ -207,4 +216,4 @@ Feito com ❤️ por **Marcos Guilherme**
   - 📍 Belo Jardim - PE
 
 [](https://www.google.com/search?q=https://github.com/z12guilherme)
-[](https://www.google.com/search?q=https://www.linkedin.com/in/seu-linkedin/) \`\`\`
+[](https://www.google.com/search?q=https://www.linkedin.com/in/marcos-guilherme-3a00022ab/) \`\`\`
