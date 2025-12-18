@@ -69,3 +69,12 @@ Com a retomada do projeto, o foco pode se voltar para as funcionalidades futuras
 - **[ ] Relatórios e Análises:** Criar um módulo para gestores gerarem relatórios personalizados.
 - **[ ] Notificações:** Implementar um sistema de notificações (e-mail ou na plataforma) para eventos importantes.
 - **[ ] Segurança (Supply Chain):** Substituir dependência `xlsx` por `exceljs` ou `read-excel-file` devido a vulnerabilidades de segurança.
+
+## 🛠️ Refatoração & Segurança (Pós-Avaliação Técnica)
+
+- **[x] Arquitetura (BFF):** Lógica de negócio movida para uma Supabase Edge Function transacional.
+- **[x] Observabilidade (SIEM):** Logger estruturado (JSON) e Correlation ID implementados.
+- **[x] Segurança de Dados (PII):** Sanitização de logs configurada para remover dados sensíveis.
+- **[x] UX/Feedback:** Notificações visuais (Toasts) para sucesso e erro implementadas.
+- **[x] Centralização de Erros:** `ErrorBoundary` implementado para capturar erros de renderização.
+- **[x] Tipagem de Erros & Rastreabilidade:** Classes de erro customizadas e `correlationId` para logs implementados.

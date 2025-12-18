@@ -28,6 +28,9 @@ import { useUsers } from "@/hooks/useUsers";
 import { MultiSelect } from "@/components/ui/MultiSelect";
 import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog.tsx";
 import { Textarea } from "../ui/textarea";
+import { correlationLogger as logger } from "@/lib/correlation";
+import { toast } from "sonner";
+import { ApiError } from "@/lib/errors";
 
 const studentSchema = z.object({
   name: z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres").max(100, "Nome muito longo"),
@@ -118,55 +121,35 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
   };
 
   const onSubmit = async (data: StudentFormData) => {
+    const action = editingStudent ? "atualizar" : "criar";
+    const studentIdForLog = editingStudent ? editingStudent.id : "new";
+
+    logger.info({ student: data, action }, `Tentando ${action} estudante.`);
+
     try {
-      const { guardian_ids, caregiver_ids, ...studentInfo } = data;
+      const payload = {
+        ...data,
+        id: editingStudent ? editingStudent.id : undefined,
+      };
 
-      if (editingStudent) {
-        const studentId = editingStudent.id;
-        // 1. Atualiza os dados do estudante
-        await updateStudent.mutateAsync({ id: studentId, ...studentInfo });
+      // A lógica de negócio foi movida para uma Edge Function segura e transacional.
+      const { error } = await supabase.functions.invoke('upsert-student', {
+        body: payload,
+      });
 
-        // 2. Atualiza os vínculos de responsáveis
-        await supabase.from('guardians_students').delete().eq('student_id', studentId);
-        if (guardian_ids && guardian_ids.length > 0) {
-          const guardianAssignments = guardian_ids.map(guardianId => ({ 
-            student_id: studentId,
-            guardian_id: guardianId,
-            relationship: 'Responsável'
-          }));
-          await supabase.from('guardians_students').insert(guardianAssignments);
-        }
-
-        // 3. Atualiza os vínculos de cuidadores
-        await supabase.from('caregivers_students').delete().eq('student_id', studentId);
-        if (caregiver_ids && caregiver_ids.length > 0) {
-          const caregiverAssignments = caregiver_ids.map(caregiver_id => ({ student_id: studentId, caregiver_id }));
-          await supabase.from('caregivers_students').insert(caregiverAssignments);
-        }
-
-      } else {
-        // Lógica de criação com vínculos
-        const savedStudent = await createStudent.mutateAsync(studentInfo);
-        if (!savedStudent) throw new Error("Falha ao criar estudante.");
-
-        const studentId = savedStudent.id;
-        if (guardian_ids && guardian_ids.length > 0) {
-          const guardianAssignments = guardian_ids.map(guardianId => ({ 
-            student_id: studentId,
-            guardian_id: guardianId,
-            relationship: 'Responsável'
-          }));
-          await supabase.from('guardians_students').insert(guardianAssignments);
-        }
-        if (caregiver_ids && caregiver_ids.length > 0) {
-          const caregiverAssignments = caregiver_ids.map(caregiver_id => ({ student_id: studentId, caregiver_id }));
-          await supabase.from('caregivers_students').insert(caregiverAssignments);
-        }
+      if (error) {
+        throw new ApiError(error.message, 500, { context: error.context });
       }
+
+      const successMessage = editingStudent ? "Estudante atualizado com sucesso!" : "Estudante criado com sucesso!";
+      toast.success(successMessage);
+      logger.info({ studentId: studentIdForLog, studentData: data }, successMessage);
+
       setEditingStudent(null);
       setDialogOpen(false);
     } catch (error) {
-      console.error('Falha ao salvar estudante:', error);
+      logger.error({ err: error, studentData: data }, `Falha ao ${action} estudante.`);
+      toast.error(`Erro ao ${action} estudante. Por favor, tente novamente.`);
     }
   };
 

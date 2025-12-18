@@ -196,6 +196,13 @@ Como parte de nossa estratégia de segurança em profundidade, este projeto util
 - **Canary Endpoints:** Rotas de API monitoradas que simulam endpoints administrativos ou sensíveis, mas servem apenas para alertar sobre tentativas de enumeração.
 - **SIEM Dedicado:** Infraestrutura de monitoramento e correlação de eventos de segurança em tempo real. [Repositório do SIEM](https://github.com/z12guilherme/gestao_atipicos-siem). 👀 **Estamos de OLHO**.
 
+### 🆔 Rastreabilidade e Auditoria
+
+Implementamos um sistema de **Correlation ID** (Identificador de Correlação) que:
+- Gera um ID único para cada sessão/transação.
+- Anexa este ID a todos os logs de erro e requisições críticas.
+- Permite rastrear a origem exata de uma falha ou tentativa de ataque nos logs do sistema.
+
 ⚠️ **Aviso aos Pesquisadores:**
 Se você encontrar uma credencial que aparenta ter privilégios elevados (como `service_role`), considere a possibilidade de ser um artefato de defesa. O uso dessas credenciais é monitorado e gera alertas de segurança imediatos.
 
