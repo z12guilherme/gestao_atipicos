@@ -90,6 +90,11 @@ A escolha da stack tecnológica foi pautada na busca por produtividade, escalabi
 - **React Hook Form & Zod:** Para gerenciamento de formulários e validação de schemas. O Zod, em particular, permite a validação de dados com inferência de tipos, garantindo consistência entre o frontend e o backend.
 - **Lucide React:** Biblioteca de ícones leve e customizável.
 
+### 2.4. Segurança e Observabilidade
+
+- **SIEM (Security Information and Event Management):** O sistema integra-se a uma infraestrutura de monitoramento externa ([Repositório do SIEM](https://github.com/z12guilherme/gestao_atipicos-siem)) para detecção de ameaças em tempo real, correlacionando logs de acesso, erros e eventos de segurança.
+- **Defesa Ativa:** Utilização de **Honeytokens** (credenciais isca) e endpoints monitorados para identificar e bloquear atacantes proativamente.
+
 ---
 
 ## 3. Arquitetura e Desenvolvimento do Sistema

@@ -134,6 +134,9 @@ O projeto implementa **Honeytokens** e monitoramento de endpoints isca para dete
     - [![Zod](https://img.shields.io/badge/Zod-3E67B1?style=flat&logo=zod&logoColor=white)](https://zod.dev/)
 - **Utilitários:**
     - [![SheetJS](https://img.shields.io/badge/SheetJS-007C3D?style=flat&logo=excel&logoColor=white)](https://sheetjs.com/) (xlsx)
+- **Segurança & Observabilidade:**
+    - [![SIEM](https://img.shields.io/badge/SIEM-Monitoramento-FF5722?style=flat&logo=security&logoColor=white)](https://github.com/z12guilherme/gestao_atipicos-siem)
+    - **Honeytokens** & **Canary Endpoints**
 
 ---
 
