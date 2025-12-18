@@ -1,12 +1,14 @@
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGuardianData, StudentWithReports } from "@/hooks/useGuardianData";
 import { useProfile } from "@/hooks/useProfile";
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { HeartHandshake, User, FileText, Calendar, GraduationCap, Clock, CalendarDays } from "lucide-react";
+import { HeartHandshake, User, FileText, Calendar, GraduationCap, Clock, CalendarDays, Download, Eye } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { PdfViewerDialog } from '@/components/shared/PdfViewerDialog';
 
 /**
  * Componente para exibir os detalhes de um único estudante no painel do responsável.
@@ -29,7 +31,16 @@ function StudentCard({ student }: { student: StudentWithReports }) {
     },
   });
 
+  const [isPdfViewerOpen, setPdfViewerOpen] = useState(false);
+
   return (
+    <>
+    <PdfViewerDialog
+      isOpen={isPdfViewerOpen}
+      onOpenChange={setPdfViewerOpen}
+      filePath={student.laudo_url}
+      fileName={`Laudo de ${student.name}`}
+    />
     <Card className="overflow-hidden shadow-lg border-0 bg-white dark:bg-gray-800">
       <CardHeader className="bg-gray-50 dark:bg-gray-700/50 p-4 border-b">
         <div className="flex items-center space-x-3">
@@ -42,6 +53,15 @@ function StudentCard({ student }: { student: StudentWithReports }) {
               {student.class_name || "Turma não definida"}
             </CardDescription>
           </div>
+          {student.laudo_url && (
+            <button
+              onClick={() => setPdfViewerOpen(true)}
+              className="ml-auto p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              title="Visualizar Laudo"
+            >
+              <Eye className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+            </button>
+          )}
         </div>
       </CardHeader>
       <CardContent className="p-4 space-y-4">
@@ -102,6 +122,7 @@ function StudentCard({ student }: { student: StudentWithReports }) {
         </div>
       </CardContent>
     </Card>
+    </>
   );
 }
 

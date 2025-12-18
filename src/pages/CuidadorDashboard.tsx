@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PdfViewerDialog } from "@/components/shared/PdfViewerDialog";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,15 +18,47 @@ import {
   CheckCircle,
   MessageSquare,
   FileText,
-  Star
+  Star,
+  Download,
+  Eye
 } from "lucide-react";
-import { useCaregiverData } from "@/hooks/useCaregiverData";
+import { useCaregiverData, Student } from "@/hooks/useCaregiverData";
 import { useCaregiverDashboardData } from "@/hooks/useCaregiverDashboardData";
 import { useProfile } from "@/hooks/useProfile";
 import { ScheduleManagement } from "@/pages/ScheduleManagement";
 import { NewNoteDialog } from "@/pages/NewNoteDialog";
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+function StudentCard({ student }: { student: Student }) {
+  const [isPdfViewerOpen, setPdfViewerOpen] = useState(false);
+
+  return (
+    <>
+      <PdfViewerDialog
+        isOpen={isPdfViewerOpen}
+        onOpenChange={setPdfViewerOpen}
+        filePath={student.laudo_url}
+        fileName={`Laudo de ${student.name}`}
+      />
+      <div className="flex items-center space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+        <div className="h-10 w-10 rounded-full bg-gradient-to-r from-green-500 to-teal-500 flex items-center justify-center text-white font-medium">
+          {student.name.charAt(0)}
+        </div>
+        <div className="flex-1">
+          <p className="font-medium text-sm">{student.name}</p>
+          <p className="text-xs text-muted-foreground">{student.class_name || 'Sem turma'}</p>
+        </div>
+        {student.laudo_url && (
+          <button onClick={() => setPdfViewerOpen(true)} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" title="Visualizar Laudo">
+            <Eye className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+          </button>
+        )}
+        <Badge variant={student.status === 'ativo' ? 'default' : 'secondary'} className="text-xs">{student.status}</Badge>
+      </div>
+    </>
+  );
+}
 
 export function CuidadorDashboard() {
   const { profile } = useProfile();
@@ -189,24 +224,7 @@ export function CuidadorDashboard() {
                   <p className="mt-2 text-sm text-muted-foreground">Você ainda não tem estudantes sob seus cuidados.</p>
                   <p className="text-xs text-muted-foreground">Peça a um gestor para atribuir estudantes a você.</p>
                 </div>
-              ) : (
-                assignedStudents.map((student) => (
-                  <div key={student.id} className="flex items-center space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-r from-green-500 to-teal-500 flex items-center justify-center text-white font-medium">
-                      {student.name.charAt(0)}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{student.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {student.class_name || 'Sem turma'}
-                      </p>
-                    </div>
-                    <Badge variant={student.status === 'ativo' ? 'default' : 'secondary'} className="text-xs">
-                      {student.status}
-                    </Badge>
-                  </div>
-                ))
-              )}
+              ) : (assignedStudents.map((student) => <StudentCard key={student.id} student={student} />))}
             </CardContent>
           </Card>
 

@@ -81,14 +81,17 @@ O sistema foi projetado com diferentes níveis de acesso, oferecendo um dashboar
 - **Ações Rápidas:** Cadastro e gerenciamento ágil de usuários e estudantes.
 - **Importação em Massa:** Cadastramento via arquivos CSV ou XLSX, otimizando a inserção de dados.
 - **Vínculos Inteligentes:** Associação dinâmica entre cuidadores e estudantes.
+- **Gestão de Documentos:** Upload e gerenciamento seguro de laudos médicos (PDF) com visualizador integrado.
 
 ### ❤️ Dashboard do Responsável
 - **Privacidade em Primeiro Lugar:** Visualização apenas dos dependentes vinculados.
 - **Acompanhamento Detalhado:** Acesso a dados de turma, diagnóstico e necessidades especiais.
+- **Documentação:** Visualização segura de laudos médicos diretamente na plataforma.
 
 ### 🤝 Dashboard do Cuidador
 - **Foco no Cuidado:** Exibição dos estudantes sob sua responsabilidade.
 - **Agenda e Observações:** Registro de atividades diárias, progresso e comunicação com a equipe.
+- **Acesso Rápido:** Visualização de laudos e informações médicas essenciais para o suporte diário.
 
 ---
 

@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { UserPlus, Edit, Save, Trash2, Upload, FileDown, Loader2, GraduationCap, X, Search } from "lucide-react";
+import { UserPlus, Edit, Save, Trash2, Upload, FileDown, Loader2, GraduationCap, X, Search, FileText, Eye } from "lucide-react";
 import { useStudents, Student } from "@/hooks/useStudents";
 import {
   Form,
@@ -27,10 +27,12 @@ import ExcelJS from 'exceljs';
 import { useUsers } from "@/hooks/useUsers";
 import { MultiSelect } from "@/components/ui/MultiSelect";
 import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog.tsx";
+import { PdfViewerDialog } from "@/components/shared/PdfViewerDialog";
 import { Textarea } from "../ui/textarea";
 import { correlationLogger as logger } from "@/lib/correlation";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/errors";
+import { useQueryClient } from "@tanstack/react-query";
 
 const studentSchema = z.object({
   name: z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres").max(100, "Nome muito longo"),
@@ -42,6 +44,12 @@ const studentSchema = z.object({
   medical_info: z.string().optional().nullable(),
   guardian_ids: z.array(z.string()).optional(),
   caregiver_ids: z.array(z.string()).optional(),
+  laudo_file: z
+    .any()
+    .refine((files) => !files || files.length === 0 || files[0]?.type === 'application/pdf', {
+      message: "Apenas arquivos PDF são permitidos.",
+    })
+    .optional(),
 });
 
 type StudentFormData = z.infer<typeof studentSchema>;
@@ -55,11 +63,15 @@ interface StudentManagementProps {
 
 export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent, setEditingStudent }: StudentManagementProps) {
   const { students, isLoading, createStudent, updateStudent, deleteStudent } = useStudents();
+  const queryClient = useQueryClient();
   const { users: allUsers } = useUsers();
 
   // Estados para filtros
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClass, setSelectedClass] = useState("all");
+  // Estado para o modal do PDF
+  const [isPdfViewerOpen, setPdfViewerOpen] = useState(false);
+  const [pdfPath, setPdfPath] = useState<string | null>(null);
 
   const caregivers = useMemo(() => allUsers.filter(u => u.role === 'cuidador'), [allUsers]);
   const guardians = useMemo(() => allUsers.filter(u => u.role === 'responsavel'), [allUsers]);
@@ -123,22 +135,57 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
   const onSubmit = async (data: StudentFormData) => {
     const action = editingStudent ? "atualizar" : "criar";
     const studentIdForLog = editingStudent ? editingStudent.id : "new";
+    
+    // Separa o arquivo do restante dos dados
+    const { laudo_file, ...studentData } = data;
+    const file = laudo_file && laudo_file.length > 0 ? laudo_file[0] : null;
 
-    logger.info({ student: data, action }, `Tentando ${action} estudante.`);
+    logger.info({ student: studentData, action }, `Tentando ${action} estudante.`);
 
     try {
       const payload = {
-        ...data,
+        ...studentData,
         id: editingStudent ? editingStudent.id : undefined,
       };
 
+      // Garante que o token de sessão mais recente seja usado
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Sua sessão expirou. Por favor, faça login novamente.");
+        throw new ApiError("Sessão de usuário não encontrada.", 401);
+      }
+
       // A lógica de negócio foi movida para uma Edge Function segura e transacional.
-      const { error } = await supabase.functions.invoke('upsert-student', {
+      const { data: result, error } = await supabase.functions.invoke('upsert-student', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
         body: payload,
       });
 
       if (error) {
         throw new ApiError(error.message, 500, { context: error.context });
+      }
+
+      // Lógica de Upload do Laudo
+      const studentId = editingStudent ? editingStudent.id : result?.id;
+
+      if (file && studentId) {
+        toast.info("Enviando laudo...");
+        const filePath = `${studentId}/${Date.now()}-${file.name}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('laudos')
+          .upload(filePath, file, { upsert: true });
+
+        if (uploadError) throw uploadError;
+
+        const { error: updateError } = await supabase
+          .from('students')
+          .update({ laudo_url: filePath })
+          .eq('id', studentId);
+
+        if (updateError) throw updateError;
+        
+        toast.success("Laudo enviado com sucesso!");
       }
 
       const successMessage = editingStudent ? "Estudante atualizado com sucesso!" : "Estudante criado com sucesso!";
@@ -148,9 +195,49 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
       setEditingStudent(null);
       setDialogOpen(false);
     } catch (error) {
+      console.error("Erro detalhado ao salvar estudante:", error); // Log explícito para debug
       logger.error({ err: error, studentData: data }, `Falha ao ${action} estudante.`);
       toast.error(`Erro ao ${action} estudante. Por favor, tente novamente.`);
     }
+  };
+
+  const handleRemoveLaudo = async () => {
+    // @ts-ignore - laudo_url pode não estar na tipagem Student ainda
+    if (!editingStudent?.laudo_url || !editingStudent.id) return;
+
+    try {
+      toast.info("Removendo laudo...");
+      
+      // 1. Remove do Storage
+      // @ts-ignore
+      const { error: storageError } = await supabase.storage
+        .from('laudos')
+        .remove([editingStudent.laudo_url]);
+
+      if (storageError) throw storageError;
+
+      // 2. Atualiza o Banco de Dados
+      const { error: dbError } = await supabase
+        .from('students')
+        .update({ laudo_url: null })
+        .eq('id', editingStudent.id);
+
+      if (dbError) throw dbError;
+
+      toast.success("Laudo removido com sucesso!");
+      // @ts-ignore - Atualiza estado local e invalida query
+      setEditingStudent((prev) => prev ? { ...prev, laudo_url: null } : null);
+      queryClient.invalidateQueries({ queryKey: ['students'] });
+    } catch (error: any) {
+      console.error("Erro ao remover laudo:", error);
+      toast.error("Erro ao remover laudo.");
+    }
+  };
+
+  const handleViewLaudo = () => {
+    // @ts-ignore - laudo_url pode não estar na tipagem Student ainda
+    setPdfPath(editingStudent?.laudo_url || null);
+    setPdfViewerOpen(true);
   };
 
   const handleDialogChange = (isOpen: boolean) => {
@@ -214,6 +301,12 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
 
   return (
     <>
+      <PdfViewerDialog
+        isOpen={isPdfViewerOpen}
+        onOpenChange={setPdfViewerOpen}
+        filePath={pdfPath}
+        fileName={`Laudo de ${editingStudent?.name || 'Estudante'}`}
+      />
       <ImportErrorsDialog
         isOpen={isErrorsDialogOpen}
         onOpenChange={setErrorsDialogOpen}
@@ -333,6 +426,37 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                      <div className="space-y-2">
                       <Label htmlFor="medical_info">Informações Médicas Relevantes</Label>
                       <Textarea id="medical_info" {...form.register("medical_info")} />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="laudo_file">Laudo Médico (PDF)</Label>
+                      {/* @ts-ignore - Verifica se existe laudo_url no estudante em edição */}
+                      {editingStudent?.laudo_url ? (
+                        <div className="flex items-center justify-between p-3 border rounded-md bg-muted/40">
+                          <div className="flex items-center space-x-3">
+                            <div className="p-2 bg-blue-100 rounded-full dark:bg-blue-900/30">
+                              <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div className="space-y-0.5">
+                              <p className="text-sm font-medium">Laudo Anexado</p>
+                              <p className="text-xs text-muted-foreground">PDF disponível</p>
+                            </div>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button type="button" variant="outline" size="sm" onClick={handleViewLaudo} title="Visualizar Laudo">
+                              <Eye className="h-4 w-4 mr-2" /> Visualizar
+                            </Button>
+                            <Button type="button" variant="destructive" size="sm" onClick={handleRemoveLaudo}>
+                              <Trash2 className="h-4 w-4 mr-2" /> Remover
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <Input id="laudo_file" type="file" accept="application/pdf" {...form.register("laudo_file")} />
+                          {form.formState.errors.laudo_file && <p className="text-sm text-destructive">{form.formState.errors.laudo_file.message as string}</p>}
+                        </>
+                      )}
                     </div>
 
                     <div className="space-y-2">

@@ -81,6 +81,7 @@ A escolha da stack tecnológica foi pautada na busca por produtividade, escalabi
   - **Banco de Dados PostgreSQL:** Um dos bancos de dados relacionais mais poderosos e confiáveis do mercado.
   - **Autenticação:** Sistema de gerenciamento de usuários e autenticação (JWT) integrado.
   - **Edge Functions:** Funções serverless (Deno) para executar lógica de backend, como o processamento de importações em massa, de forma segura e escalável.
+  - **Storage:** Armazenamento de arquivos (buckets) para laudos e documentos, com políticas de acesso integradas ao banco de dados.
   - **APIs em Tempo Real:** Permite que a aplicação "escute" mudanças no banco de dados e atualize a UI instantaneamente.
 
 ### 2.3. UI e Ferramentas de Desenvolvimento
@@ -116,6 +117,7 @@ A segurança do projeto adota uma estratégia de **Defesa em Profundidade (Defen
 
 #### 3.3.1. Segurança de Dados (Data Security)
 - **Row Level Security (RLS):** A lógica de autorização reside no banco de dados.
+  - **Storage Policies:** Controle de acesso a arquivos (laudos) baseado nas mesmas regras de negócio do banco de dados.
 - **Gestores** possam ver e modificar todos os dados.
 - **Responsáveis** possam visualizar apenas os dados dos estudantes vinculados a eles.
 - **Cuidadores** possam visualizar apenas os dados dos estudantes que lhes foram atribuídos.
@@ -129,7 +131,7 @@ A segurança do projeto adota uma estratégia de **Defesa em Profundidade (Defen
 
 ### 3.4. Funcionalidades Implementadas
 
-As funcionalidades descritas nos objetivos foram implementadas através de componentes React, hooks customizados (`useStudents`, `useUsers`) e interações com a API do Supabase. A importação em massa, por exemplo, utiliza uma Edge Function (`bulk-create-students`) para processar os dados no servidor, garantindo melhor performance e segurança.
+As funcionalidades descritas nos objetivos foram implementadas através de componentes React, hooks customizados (`useStudents`, `useUsers`) e interações com a API do Supabase. A importação em massa, por exemplo, utiliza uma Edge Function (`bulk-create-students`) para processar os dados no servidor, garantindo melhor performance e segurança. Recentemente, foi adicionado o módulo de **Gestão de Documentos**, permitindo o upload seguro de laudos médicos (PDF) associados aos estudantes, com visualização integrada na plataforma.
 
 ---
 
@@ -169,7 +171,7 @@ Ao fazer login, o gestor é recebido com um painel interativo que exibe:
 #### Funcionalidades de Gerenciamento (CRUD)
 Através do menu lateral, o gestor pode acessar as seguintes áreas:
 - **Gerenciar Usuários:** Criar, editar e excluir perfis de gestores, cuidadores e responsáveis.
-- **Gerenciar Alunos:** Cadastrar novos estudantes, editar suas informações (dados pessoais, médicos, diagnóstico) e vincular/desvincular responsáveis e cuidadores diretamente no perfil do aluno.
+- **Gerenciar Alunos:** Cadastrar novos estudantes, editar suas informações (dados pessoais, médicos, diagnóstico), anexar laudos médicos (PDF) e vincular/desvincular responsáveis e cuidadores diretamente no perfil do aluno.
 - **Gerenciar Vínculos:** Uma tela dedicada para visualizar e gerenciar as associações entre cuidadores e estudantes, facilitando a atribuição e identificando alunos que ainda precisam de um cuidador.
 
 #### Importação em Massa
@@ -187,6 +189,7 @@ O painel do responsável foi projetado para ser um ambiente acolhedor e informat
 O painel é dividido em duas colunas para uma organização clara:
 - **Coluna Principal:**
   - **Dados Pessoais:** Informações como data de nascimento, diagnóstico, necessidades especiais e dados médicos.
+  - **Documentação:** Botão para visualização segura do laudo médico do estudante diretamente na plataforma.
   - **Análise de Atividades:** Apresenta indicadores-chave (KPIs) como o total de observações e a data do último registro. Um gráfico de barras mostra a frequência de observações por semana, oferecendo uma visão visual do acompanhamento.
 - **Coluna Lateral:**
   - **Cronograma do Dia:** Exibe as atividades programadas para o estudante no dia corrente (ex: "Acolhimento", "Terapia Ocupacional").
@@ -200,7 +203,7 @@ O painel do cuidador é uma ferramenta de trabalho focada na organização e no 
 Ao fazer login, o cuidador visualiza uma lista clara e objetiva dos estudantes que estão sob sua responsabilidade. Cada estudante é apresentado em um card, facilitando a identificação e o acesso rápido às suas informações.
 
 #### Funcionalidades (Atuais e Futuras)
-- **Visualização de Estudantes:** Acesso rápido aos perfis dos estudantes atribuídos.
+- **Visualização de Estudantes:** Acesso rápido aos perfis dos estudantes atribuídos, incluindo visualização de laudos médicos para suporte pedagógico e de saúde.
 - **Registro de Observações:** O cuidador pode selecionar um estudante e registrar observações sobre seu progresso, comportamento ou eventos importantes do dia. Essa informação fica imediatamente disponível para o responsável no seu painel.
 
 ---

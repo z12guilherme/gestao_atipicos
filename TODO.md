@@ -37,6 +37,25 @@ O bug foi corrigido e o painel do responsável agora funciona como esperado.
     *   Modernização dos gráficos do Dashboard (Recharts com visual clean).
     *   Correção de bugs de visualização no Dark Mode (Tooltips).
 
+## ✅ Concluído (Dez/2025) - Funcionalidade: Upload de Laudos (PDF)
+
+Implementação do armazenamento e visualização de laudos médicos dos estudantes via Supabase Storage.
+
+- **[x] Banco de Dados:** Adicionar coluna `laudo_url` na tabela `students`.
+- **[x] Storage:** Criar bucket privado `laudos` no Supabase.
+- **[x] Segurança (RLS):** Configurar políticas de acesso ao bucket (Gestor: Full, Responsável/Cuidador: Select vinculado).
+- **[x] Frontend (Gestor):** Adicionar campo de upload de arquivo no formulário de estudantes (`StudentManagement`).
+- **[x] Frontend (Responsável/Cuidador):** Adicionar botão de download/visualização nos Dashboards.
+
+## ✅ Concluído (Dez/2025) - Melhoria: Visualizador de PDF
+
+- **[x] Frontend:** Criado componente `PdfViewerDialog` para exibir laudos em um modal.
+- **[x] Frontend:** Atualizados os painéis do Gestor, Responsável e Cuidador para usar o novo visualizador.
+
+## ✅ Concluído (Dez/2025) - Segurança & Infraestrutura
+
+- **[x] Segurança (Supply Chain):** Substituída dependência `xlsx` por `exceljs` para mitigação de vulnerabilidades e melhor performance na geração de planilhas.
+
 ## Contexto do Problema
 
 **PROBLEMA RESOLVIDO:** Ao tentar criar um novo "Cuidador" ou importar usuários em massa a partir da interface web, um erro de **CORS (Cross-Origin Resource Sharing)** era disparado pelo navegador.
@@ -68,7 +87,6 @@ Com a retomada do projeto, o foco pode se voltar para as funcionalidades futuras
 - **[ ] Registro de Ocorrências e Evolução:** Permitir que cuidadores registrem observações diárias sobre o progresso e comportamento de cada estudante. O painel do responsável (`ResponsavelDashboard.tsx`) já tem a estrutura para exibir esses dados.
 - **[ ] Relatórios e Análises:** Criar um módulo para gestores gerarem relatórios personalizados.
 - **[ ] Notificações:** Implementar um sistema de notificações (e-mail ou na plataforma) para eventos importantes.
-- **[ ] Segurança (Supply Chain):** Substituir dependência `xlsx` por `exceljs` ou `read-excel-file` devido a vulnerabilidades de segurança.
 
 ## 🛠️ Refatoração & Segurança (Pós-Avaliação Técnica)
 

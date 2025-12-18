@@ -20,7 +20,7 @@ export function useCaregiverData() {
       const { data: rawData, error } = await supabase
         .from('caregivers_students')
         .select(`
-          students (id, name, class_name, status, birth_date, diagnosis, medical_info, period)
+          students (id, name, class_name, status, birth_date, diagnosis, medical_info, period, laudo_url)
         `)
         .eq('caregiver_id', profile.id);
 
