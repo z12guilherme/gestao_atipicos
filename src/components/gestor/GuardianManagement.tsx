@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input"; // CORREÇÃO: Adicionada a importação do AlertDialogTrigger que estava faltando.
+import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -153,7 +153,12 @@ export function GuardianManagement() {
               <Dialog open={isImportOpen} onOpenChange={setImportOpen}>
                 <DialogTrigger asChild><Button variant="outline"><Upload className="mr-2 h-4 w-4" />Importar</Button></DialogTrigger>
                 <DialogContent>
-                  <DialogHeader><DialogTitle>Importar Responsáveis</DialogTitle></DialogHeader>
+                  <DialogHeader>
+                    <DialogTitle>Importar Responsáveis</DialogTitle>
+                    <DialogDescription>
+                      Faça o upload de um arquivo CSV ou XLSX para importar múltiplos responsáveis de uma vez.
+                    </DialogDescription>
+                  </DialogHeader>
                   <div className="space-y-4 py-4">
                     <p className="text-sm text-muted-foreground">As colunas obrigatórias são: `name`, `email`, `password`. A coluna `role` será definida como 'responsavel' automaticamente.</p>
                     <div className="flex gap-2">
@@ -171,7 +176,12 @@ export function GuardianManagement() {
               <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
                 <DialogTrigger asChild><Button><UserPlus className="mr-2 h-4 w-4" />Novo Responsável</Button></DialogTrigger>
                 <DialogContent>
-                  <DialogHeader><DialogTitle>{editingGuardian ? 'Editar Responsável' : 'Novo Responsável'}</DialogTitle></DialogHeader>
+                  <DialogHeader>
+                    <DialogTitle>{editingGuardian ? 'Editar Responsável' : 'Novo Responsável'}</DialogTitle>
+                    <DialogDescription>
+                      Preencha os dados para criar ou editar um responsável e vincular estudantes.
+                    </DialogDescription>
+                  </DialogHeader>
                   <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     <Input {...register("name")} placeholder="Nome Completo *" />{errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
                     <Input {...register("email")} placeholder="Email *" type="email" disabled={!!editingGuardian} />{errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}

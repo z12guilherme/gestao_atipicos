@@ -2,14 +2,33 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGuardianData, StudentWithReports } from "@/hooks/useGuardianData";
 import { useProfile } from "@/hooks/useProfile";
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { HeartHandshake, User, FileText, Calendar, GraduationCap } from "lucide-react";
+import { HeartHandshake, User, FileText, Calendar, GraduationCap, Clock, CalendarDays } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Componente para exibir os detalhes de um único estudante no painel do responsável.
  */
 function StudentCard({ student }: { student: StudentWithReports }) {
+  const { data: schedules } = useQuery({
+    queryKey: ['student-schedules', student.id],
+    queryFn: async () => {
+      const today = new Date().toISOString().split('T')[0];
+      const { data, error } = await supabase
+        .from('schedules')
+        .select('*')
+        .eq('student_id', student.id)
+        .gte('date', today)
+        .order('date', { ascending: true })
+        .order('start_time', { ascending: true })
+        .limit(5);
+      if (error) throw error;
+      return data;
+    },
+  });
+
   return (
     <Card className="overflow-hidden shadow-lg border-0 bg-white dark:bg-gray-800">
       <CardHeader className="bg-gray-50 dark:bg-gray-700/50 p-4 border-b">
@@ -50,6 +69,34 @@ function StudentCard({ student }: { student: StudentWithReports }) {
               ))
             ) : (
               <p className="text-sm text-center text-gray-500 dark:text-gray-400 py-4">Nenhuma observação registrada.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="pt-2 border-t dark:border-gray-700">
+          <h4 className="text-sm font-semibold mb-3 flex items-center text-gray-600 dark:text-gray-300">
+            <CalendarDays className="h-4 w-4 mr-2" />
+            Agenda Próxima
+          </h4>
+          <div className="space-y-2">
+            {schedules && schedules.length > 0 ? (
+              schedules.map(schedule => (
+                <div key={schedule.id} className="flex items-center justify-between p-2.5 rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-blue-100 dark:bg-blue-800 p-1.5 rounded-full">
+                      <Clock className="h-3.5 w-3.5 text-blue-600 dark:text-blue-300" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{schedule.activity}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {format(new Date(schedule.date), "dd 'de' MMMM", { locale: ptBR })} às {schedule.start_time.slice(0, 5)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-center text-gray-500 dark:text-gray-400 py-2 italic">Nenhuma atividade agendada.</p>
             )}
           </div>
         </div>

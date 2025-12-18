@@ -1,35 +1,46 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Clock, PlusCircle, Trash2 } from "lucide-react";
-
-// Mock de dados para o cronograma. Em uma aplicação real, viria de uma API.
-const initialSchedule = [
-  { id: 1, time: "08:00", activity: "Acolhimento matinal", student: "Ana Silva" },
-  { id: 2, time: "09:30", activity: "Atividade sensorial", student: "João Santos" },
-  { id: 3, time: "11:00", activity: "Apoio pedagógico", student: "Maria Costa" },
-  { id: 4, time: "14:00", activity: "Terapia ocupacional", student: "Ana Silva" },
-  { id: 5, time: "15:30", activity: "Recreação dirigida", student: "João Santos" }
-];
+import { useCaregiverStudents } from "@/hooks/useCaregiverStudents";
+import { useSchedules } from "@/hooks/useSchedules";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Student } from "@/hooks/useStudents";
 
 export function ScheduleManagement() {
-  const [schedule, setSchedule] = useState(initialSchedule);
   const [isModalOpen, setModalOpen] = useState(false);
-  const [newActivity, setNewActivity] = useState({ time: '', activity: '', student: '' });
+  const [newActivity, setNewActivity] = useState({ time: '', activity: '' });
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+
+  const { students: caregiverStudents, loading: studentsLoading } = useCaregiverStudents();
+  
+  const today = useMemo(() => new Date(), []);
+  
+  const { schedules, addSchedule, removeSchedule } = useSchedules(selectedStudent?.id || '', today);
 
   const handleAddActivity = () => {
-    if (newActivity.time && newActivity.activity && newActivity.student) {
-      setSchedule([...schedule, { ...newActivity, id: Date.now() }]);
-      setNewActivity({ time: '', activity: '', student: '' });
+    if (newActivity.time && newActivity.activity && selectedStudent) {
+      addSchedule({
+        student_id: selectedStudent.id,
+        activity: newActivity.activity,
+        start_time: newActivity.time,
+        date: today.toISOString().split('T')[0],
+      });
+      setNewActivity({ time: '', activity: '' });
     }
   };
 
-  const handleRemoveActivity = (id: number) => {
-    setSchedule(schedule.filter(item => item.id !== id));
+  const handleRemoveActivity = (id: string) => {
+    removeSchedule(id);
   };
+
+  const getStudentName = (studentId: string) => {
+    const student = caregiverStudents.find(s => s.id === studentId);
+    return student ? student.name : 'Desconhecido';
+  }
 
   return (
     <>
@@ -42,33 +53,53 @@ export function ScheduleManagement() {
                 <span>Cronograma de Hoje</span>
               </CardTitle>
               <CardDescription>
-                Suas atividades programadas para hoje.
+                Selecione um estudante para ver ou editar o cronograma.
               </CardDescription>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setModalOpen(true)}>
+            <Button variant="outline" size="sm" onClick={() => setModalOpen(true)} disabled={!selectedStudent}>
               Editar Cronograma
             </Button>
           </div>
+          <div className="pt-4">
+              <Select onValueChange={(studentId) => setSelectedStudent(caregiverStudents.find(s => s.id === studentId) || null)} >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione um estudante" />
+                </SelectTrigger>
+                <SelectContent>
+                  {studentsLoading ? (
+                    <SelectItem value="loading" disabled>Carregando...</SelectItem>
+                  ) : (
+                    caregiverStudents.map(student => (
+                      <SelectItem key={student.id} value={student.id}>{student.name}</SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {schedule.length > 0 ? schedule.map((item) => (
+          {selectedStudent ? (
+            schedules.length > 0 ? schedules.map((item) => (
             <div key={item.id} className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50">
               <div className="flex items-center space-x-4">
                 <div className="text-center">
-                  <div className="text-sm font-bold text-blue-600">{item.time}</div>
+                  <div className="text-sm font-bold text-blue-600">{item.start_time}</div>
                 </div>
                 <div className="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
                 <div>
                   <p className="font-medium">{item.activity}</p>
-                  <p className="text-sm text-muted-foreground">Com {item.student}</p>
+                  <p className="text-sm text-muted-foreground">Com {getStudentName(item.student_id)}</p>
                 </div>
               </div>
               <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700">
                 Agendado
               </Badge>
             </div>
-          )) : (
-            <p className="text-center text-muted-foreground py-4">Nenhuma atividade agendada para hoje.</p>
+            )) : (
+              <p className="text-center text-muted-foreground py-4">Nenhuma atividade agendada para hoje.</p>
+            )
+          ) : (
+            <p className="text-center text-muted-foreground py-4">Selecione um estudante para ver o cronograma.</p>
           )}
         </CardContent>
       </Card>
@@ -77,14 +108,14 @@ export function ScheduleManagement() {
       <Dialog open={isModalOpen} onOpenChange={setModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar Cronograma do Dia</DialogTitle>
+            <DialogTitle>Editar Cronograma para {selectedStudent?.name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             {/* Lista de atividades existentes com botão de excluir */}
             <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-              {schedule.map(item => (
+              {schedules.map(item => (
                 <div key={item.id} className="flex items-center justify-between p-2 border rounded-md">
-                  <span>{item.time} - {item.activity} ({item.student})</span>
+                  <span>{item.start_time} - {item.activity}</span>
                   <Button variant="ghost" size="icon" onClick={() => handleRemoveActivity(item.id)}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -95,7 +126,6 @@ export function ScheduleManagement() {
             <div className="flex items-center gap-2 pt-4 border-t">
               <Input placeholder="Hora (HH:MM)" value={newActivity.time} onChange={e => setNewActivity({ ...newActivity, time: e.target.value })} />
               <Input placeholder="Atividade" value={newActivity.activity} onChange={e => setNewActivity({ ...newActivity, activity: e.target.value })} />
-              <Input placeholder="Estudante" value={newActivity.student} onChange={e => setNewActivity({ ...newActivity, student: e.target.value })} />
               <Button onClick={handleAddActivity} size="icon">
                 <PlusCircle className="h-5 w-5" />
               </Button>

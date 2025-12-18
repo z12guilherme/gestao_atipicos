@@ -43,8 +43,7 @@ export function useCaregiverDashboardData() {
         .from('schedules')
         .select('*', { count: 'exact', head: true })
         .eq('caregiver_id', profile.id) // CORREÇÃO: Usa o ID do perfil
-        .gte('start_time', todayStart)
-        .lte('start_time', todayEnd);
+        .eq('date', todayStart.split('T')[0]);
 
       if (notesError || scheduleError) {
         console.error("Erro ao buscar dados do dashboard:", notesError || scheduleError);

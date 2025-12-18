@@ -12,22 +12,15 @@ import { HeartHandshake, User, FileText, Calendar, GraduationCap, Stethoscope, I
 import { useStudentReports } from "@/hooks/useStudentReports";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { cn } from "@/lib/utils";
+import { useSchedules } from "@/hooks/useSchedules";
 
-// Mock de dados para o cronograma. Em uma aplicação real, viria de uma API.
-// Adicionei atividades para diferentes estudantes para demonstrar o filtro.
-const mockSchedule = [
-  { id: 1, time: "08:00", activity: "Acolhimento matinal", studentName: "Marcos Guilherme Oliveira Lima" },
-  { id: 2, time: "09:30", activity: "Atividade sensorial com blocos", studentName: "Marcos Guilherme Oliveira Lima" },
-  { id: 3, time: "11:00", activity: "Apoio pedagógico em matemática", studentName: "Marcos Guilherme Oliveira Lima" },
-  { id: 4, time: "14:00", activity: "Terapia ocupacional", studentName: "Marcos Guilherme Oliveira Lima" },
-  { id: 5, time: "09:00", activity: "Leitura assistida", studentName: "Outro Aluno" } // Atividade para outro aluno
-];
 
 /**
  * Processa os relatórios para criar dados para o gráfico de atividades.
  * Agrupa as observações por semana dos últimos 3 meses.
  */
 const processReportDataForChart = (reports: { created_at: string }[]) => {
+  if (!reports) return [];
   const threeMonthsAgo = subDays(new Date(), 90);
   const weeklyCounts: { [key: string]: number } = {};
 
@@ -59,11 +52,10 @@ const processReportDataForChart = (reports: { created_at: string }[]) => {
 function StudentDetails({ student }: { student: Student }) {
   const { reports, isLoading: isLoadingReports } = useStudentReports(student.id);
   const age = student.birth_date ? differenceInYears(new Date(), new Date(student.birth_date)) : null;
-  const reportChartData = processReportDataForChart(reports);
+  const reportChartData = processReportDataForChart(reports || []);
 
-  const studentSchedule = useMemo(() => {
-    return mockSchedule.filter(item => item.studentName === student.name);
-  }, [student.name]);
+  const today = useMemo(() => new Date(), []);
+  const { schedules: studentSchedule, loading: isLoadingSchedule } = useSchedules(student.id, today);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -83,7 +75,7 @@ function StudentDetails({ student }: { student: Student }) {
             </div>
           </div>
           {student.status && (
-            <Badge variant={student.status === 'Ativo' ? 'default' : 'destructive'} className="capitalize text-xs">
+            <Badge variant={student.status === 'ativo' ? 'default' : 'destructive'} className="capitalize text-xs">
               {student.status}
             </Badge>
           )}
@@ -148,12 +140,12 @@ function StudentDetails({ student }: { student: Student }) {
             {/* KPIs */}
             <div className="grid grid-cols-2 gap-4 text-center">
               <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
-                <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{reports.length}</p>
+                <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{reports?.length || 0}</p>
                 <p className="text-xs text-muted-foreground">Observações Totais</p>
               </div>
               <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
                 <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
-                  {reports.length > 0 ? formatDistanceToNow(new Date(reports[0].created_at), { locale: ptBR }) : 'N/A'}
+                  {reports && reports.length > 0 ? formatDistanceToNow(new Date(reports[0].created_at), { locale: ptBR }) : 'N/A'}
                 </p>
                 <p className="text-xs text-muted-foreground">Último Registro</p>
               </div>
@@ -193,9 +185,13 @@ function StudentDetails({ student }: { student: Student }) {
             <CardTitle className="flex items-center text-lg"><Clock className="mr-2 h-5 w-5 text-green-500" /> Cronograma do Dia</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
-            {studentSchedule.length > 0 ? studentSchedule.map((item) => (
+            {isLoadingSchedule ? (
+              <div className="flex items-center justify-center p-4 text-slate-500 dark:text-slate-400">
+                <Loader2 className="h-5 w-5 animate-spin mr-2" /> Carregando...
+              </div>
+            ) : studentSchedule.length > 0 ? studentSchedule.map((item) => (
               <div key={item.id} className="flex items-center space-x-4 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-                <div className="text-sm font-bold text-green-600 dark:text-green-400">{item.time}</div>
+                <div className="text-sm font-bold text-green-600 dark:text-green-400">{item.start_time}</div>
                 <div className="h-full w-px bg-slate-200 dark:bg-slate-700"></div>
                 <div>
                   <p className="font-medium text-sm text-slate-700 dark:text-slate-200">{item.activity}</p>
@@ -257,6 +253,7 @@ export function ResponsavelDashboard() {
 
   // Define o estudante selecionado
   const selectedStudent = useMemo(() => {
+    if (!students) return null;
     const currentId = selectedStudentId || students?.[0]?.id;
     return students?.find(s => s.id === currentId);
   }, [students, selectedStudentId]);

@@ -93,6 +93,9 @@ export function ClassManagement() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>{editingClass ? 'Editar Turma' : 'Cadastrar Nova Turma'}</DialogTitle>
+                <DialogDescription>
+                  Preencha o nome para criar ou editar uma turma.
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
                 <div className="space-y-2">

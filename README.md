@@ -88,7 +88,7 @@ O sistema foi projetado com diferentes níveis de acesso, oferecendo um dashboar
 
 ### 🤝 Dashboard do Cuidador
 - **Foco no Cuidado:** Exibição dos estudantes sob sua responsabilidade.
-- **Agenda e Observações:** Funcionalidades futuras para registro de progresso e comunicação com a equipe.
+- **Agenda e Observações:** Registro de atividades diárias, progresso e comunicação com a equipe.
 
 ---
 

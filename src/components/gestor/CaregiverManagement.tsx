@@ -125,7 +125,12 @@ export function CaregiverManagement() {
               <Dialog open={isImportOpen} onOpenChange={setImportOpen}>
                 <DialogTrigger asChild><Button variant="outline"><Upload className="mr-2 h-4 w-4" />Importar</Button></DialogTrigger>
                 <DialogContent>
-                  <DialogHeader><DialogTitle>Importar Cuidadores</DialogTitle></DialogHeader>
+                  <DialogHeader>
+                    <DialogTitle>Importar Cuidadores</DialogTitle>
+                    <DialogDescription>
+                      Faça o upload de um arquivo CSV ou XLSX para importar múltiplos cuidadores de uma vez.
+                    </DialogDescription>
+                  </DialogHeader>
                   <div className="space-y-4 py-4">
                     <p className="text-sm text-muted-foreground">As colunas obrigatórias são: `name`, `email`, `password`. A coluna `role` será definida como 'cuidador' automaticamente.</p>
                     <div className="flex gap-2">
@@ -143,7 +148,12 @@ export function CaregiverManagement() {
               <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
                 <DialogTrigger asChild><Button><UserPlus className="mr-2 h-4 w-4" />Novo Cuidador</Button></DialogTrigger>
                 <DialogContent>
-                  <DialogHeader><DialogTitle>{editingCaregiver ? 'Editar Cuidador' : 'Novo Cuidador'}</DialogTitle></DialogHeader>
+                  <DialogHeader>
+                    <DialogTitle>{editingCaregiver ? 'Editar Cuidador' : 'Novo Cuidador'}</DialogTitle>
+                    <DialogDescription>
+                      Preencha os dados para criar ou editar um cuidador.
+                    </DialogDescription>
+                  </DialogHeader>
                   <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     <Input {...register("name")} placeholder="Nome Completo *" />{errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
                     <Input {...register("email")} placeholder="Email *" type="email" disabled={!!editingCaregiver} />{errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
