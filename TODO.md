@@ -56,6 +56,11 @@ Implementação do armazenamento e visualização de laudos médicos dos estudan
 
 - **[x] Segurança (Supply Chain):** Substituída dependência `xlsx` por `exceljs` para mitigação de vulnerabilidades e melhor performance na geração de planilhas.
 
+## 🚧 Em Andamento - Refatoração de Segurança
+
+- **[ ] Backend:** Criar Edge Function `upsert-guardian` para centralizar a lógica de criação/edição de responsáveis e seus vínculos de forma transacional e segura.
+- **[ ] Frontend:** Refatorar o componente `GuardianManagement` para utilizar a nova Edge Function, eliminando chamadas diretas ao banco de dados pelo cliente.
+
 ## Contexto do Problema
 
 **PROBLEMA RESOLVIDO:** Ao tentar criar um novo "Cuidador" ou importar usuários em massa a partir da interface web, um erro de **CORS (Cross-Origin Resource Sharing)** era disparado pelo navegador.

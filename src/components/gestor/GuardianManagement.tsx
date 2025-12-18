@@ -77,37 +77,30 @@ export function GuardianManagement() {
   };
 
   const onSubmit = async (data: GuardianFormData) => {
-    const { student_ids, ...profileData } = data;
-    const payload = { ...profileData, role: 'responsavel' };
-    
+    const action = editingGuardian ? "atualizar" : "criar";
     try {
-      if (editingGuardian) {
-        // 1. Atualiza dados do perfil
-        await updateUser.mutateAsync({ id: editingGuardian.id, profileData: payload });
-        
-        // 2. Atualiza vínculos (Remove todos e insere os novos)
-        await supabase.from('guardians_students').delete().eq('guardian_id', editingGuardian.id);
-        if (student_ids.length > 0) {
-          const inserts = student_ids.map(sid => ({ guardian_id: editingGuardian.id, student_id: sid, relationship: 'Responsável' }));
-          await supabase.from('guardians_students').insert(inserts);
-        }
-      } else {
-        // 1. Cria o usuário
-        await createUser.mutateAsync(payload);
-        
-        // 2. Busca o ID do usuário recém-criado pelo email (já que a função create-user não retorna o ID diretamente)
-        const { data: newUser } = await supabase.from('profiles').select('id').eq('email', payload.email).single();
-        
-        // 3. Cria os vínculos se houver usuário e estudantes selecionados
-        if (newUser && student_ids.length > 0) {
-          const inserts = student_ids.map(sid => ({ guardian_id: newUser.id, student_id: sid, relationship: 'Responsável' }));
-          await supabase.from('guardians_students').insert(inserts);
-        }
+      const payload = {
+        ...data,
+        id: editingGuardian ? editingGuardian.id : undefined,
+      };
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("Sessão de usuário não encontrada.");
       }
+
+      const { error } = await supabase.functions.invoke('upsert-guardian', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+        body: payload,
+      });
+
+      if (error) throw error;
+
+      toast.success(`Responsável ${action === 'criar' ? 'criado' : 'atualizado'} com sucesso!`);
       handleDialogChange(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao salvar responsável:", error);
-      toast.error("Erro ao salvar dados ou vínculos.");
+      toast.error(`Erro ao ${action} responsável: ${error.message || 'Tente novamente.'}`);
     }
   };
 
