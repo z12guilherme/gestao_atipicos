@@ -23,15 +23,11 @@
   <a href="https://gestao-atipicos.vercel.app/" target="_blank">
     <img src="https://img.shields.io/badge/Acessar%20Aplicação-5A67D8?style=for-the-badge&logo=vercel&logoColor=white" alt="Acessar Aplicação">
   </a>
-  <a href="https://www.youtube.com/watch?v=BjTLM1idajQ" target="_blank">
+  <a href="https://youtu.be/UHwwxxY5c00" target="_blank">
     <img src="https://img.shields.io/badge/Apresentação%20Comercial-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Apresentação Comercial">
   </a>
   <a href="https://youtu.be/7grY7RbjEIc" target="_blank">
     <img src="https://img.shields.io/badge/Apresentação%20Técnica-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Apresentação Técnica">
-
-  <a href="https://youtu.be/UHwwxxY5c00?si=hcGDw1dQy9VQx6uS" target="_blank">
-    <img src="https://img.shields.io/badge/Ver%20Demonstração-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Ver Demonstração">
-  </a>
 </p>
 
 ---
