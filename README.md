@@ -26,7 +26,7 @@
   <a href="https://youtu.be/UHwwxxY5c00" target="_blank">
     <img src="https://img.shields.io/badge/Apresentação%20Comercial-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Apresentação Comercial">
   </a>
-  <a href="https://youtu.be/7grY7RbjEIc" target="_blank">
+  <a href="https://www.youtube.com/watch?v=zyD1f6TEBWg" target="_blank">
     <img src="https://img.shields.io/badge/Apresentação%20Técnica-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Apresentação Técnica">
 </p>
 
