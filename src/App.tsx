@@ -4,6 +4,7 @@ import { Layout } from "@/components/Layout";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { DownloadAppBanner } from "@/components/ui/DownloadAppBanner";
 
 import { AuthProvider } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -49,6 +50,7 @@ function App() {
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <DownloadAppBanner />
               <Toaster />
             </AuthProvider>
           </BrowserRouter>

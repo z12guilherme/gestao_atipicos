@@ -6,6 +6,8 @@ import { useClasses } from '@/hooks/useClasses';
 import { useProfile } from '@/hooks/useProfile';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CustomReports from "./CustomReports";
 
 export function GestorDashboard() {
   // Hooks para buscar os dados e popular os cards
@@ -49,7 +51,12 @@ export function GestorDashboard() {
 
 
   return (
-    <>
+    <Tabs defaultValue="overview" className="space-y-4">
+      <TabsList>
+        <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+        <TabsTrigger value="reports">Relatórios Personalizados</TabsTrigger>
+      </TabsList>
+      <TabsContent value="overview" className="space-y-4">
       {/* Cards de Estatísticas */}
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
         {isLoading ? (
@@ -180,6 +187,10 @@ export function GestorDashboard() {
           </CardContent>
         </Card>
       </div>
-    </>
+      </TabsContent>
+      <TabsContent value="reports">
+        <CustomReports />
+      </TabsContent>
+    </Tabs>
   );
 }

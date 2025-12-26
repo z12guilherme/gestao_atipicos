@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Eye, EyeOff, Heart, Users, GraduationCap, Star, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Heart, Users, GraduationCap, Star, Loader2, Download } from "lucide-react";
 import { ThemeToggle as OriginalThemeToggle } from "./theme-toggle-button";
 
 export default function Auth() {
@@ -213,6 +213,16 @@ export default function Auth() {
 
       <footer className="absolute bottom-0 left-0 right-0 py-4">
       </footer>
+
+      <div className="fixed bottom-6 left-0 right-0 z-40 flex justify-center px-4">
+        <Button 
+          className="w-full max-w-sm shadow-lg rounded-full gap-2 animate-in slide-in-from-bottom-4 duration-700"
+          onClick={() => window.open('#', '_blank')} // TODO: Adicione o link real do seu app aqui
+        >
+          <Download className="h-4 w-4" />
+          Clique aqui para baixar nosso app
+        </Button>
+      </div>
     </div>
   );
 }
