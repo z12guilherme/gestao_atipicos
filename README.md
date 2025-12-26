@@ -28,6 +28,8 @@
   </a>
   <a href="https://www.youtube.com/watch?v=zyD1f6TEBWg" target="_blank">
     <img src="https://img.shields.io/badge/Apresentação%20Técnica-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Apresentação Técnica">
+    <a href="https://youtu.be/0AZ1_gBp2pU?si=-XinEK3vjjFkrRkq" target="_blank">
+    <img src="https://img.shields.io/badge/Apresentação%20Mobile-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Apresentação Mobile">
 </p>
 
 ---
