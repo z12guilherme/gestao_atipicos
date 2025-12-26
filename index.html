@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="/app.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#0056b3" />
     <link rel="apple-touch-icon" href="assets/icon-192.png" />
     <title>Gestão Atípicos</title>
@@ -12,6 +12,16 @@
     <meta property="og:title" content="Gestão Atípicos" />
     <meta property="og:description" content="Plataforma completa para gestão e acompanhamento de estudantes atípicos." />
     <meta property="og:type" content="website" />
+    <style>
+      /* Ajustes para comportamento nativo mobile */
+      html, body, #root {
+        height: 100%;
+        width: 100%;
+        overscroll-behavior-y: none; /* Previne o efeito elástico ao rolar a página inteira */
+        -webkit-tap-highlight-color: transparent; /* Remove o flash cinza ao tocar em links/botões */
+        touch-action: manipulation; /* Melhora a resposta ao toque */
+      }
+    </style>
   </head>
 
   <body>
