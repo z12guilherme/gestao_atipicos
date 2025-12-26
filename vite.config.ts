@@ -26,6 +26,7 @@ export default defineConfig(({ mode }) => ({
         name: 'Gestão de Atípicos',
         short_name: 'Atípicos',
         description: 'Plataforma completa para gestão e acompanhamento de estudantes atípicos.',
+        categories: ['education', 'productivity', 'management'],
         theme_color: '#0056b3',
         background_color: '#ffffff',
         display: 'standalone',

@@ -203,6 +203,33 @@ Acesse em: [http://localhost:8080](https://www.google.com/search?q=http://localh
 
 -----
 
+## 📱 Aplicativo Móvel (PWA & APK)
+
+O projeto foi configurado como uma **Progressive Web App (PWA)**, permitindo que seja instalado diretamente no celular ou computador, funcionando offline e com aparência de aplicativo nativo.
+
+### Instalação via Navegador (PWA)
+- **Android (Chrome)**: Abra o menu (três pontos) > Instalar aplicativo.
+- **iOS (Safari)**: Botão Compartilhar > Adicionar à Tela de Início.
+
+### Gerar APK (Android)
+Para gerar o arquivo `.apk` nativo utilizando o Capacitor:
+
+1. Gere o build de produção:
+   ```bash
+   npm run build
+   ```
+2. Sincronize com o projeto Android:
+   ```bash
+   npx cap sync
+   ```
+3. Abra o Android Studio para compilar:
+   ```bash
+   npx cap open android
+   ```
+   No menu do Android Studio, vá em **Build > Build Bundle(s) / APK(s) > Build APK(s)**.
+
+-----
+
 ## 🤝 Contribuição
 
 Contribuições são muito bem-vindas\! Se você tiver sugestões, encontrar bugs ou quiser adicionar novas funcionalidades, sinta-se à vontade para abrir uma [**issue**](https://www.google.com/search?q=https://github.com/z12guilherme/gestao_atipicos/issues) ou enviar um [**pull request**](https://www.google.com/search?q=https://github.com/z12guilherme/gestao_atipicos/pulls).

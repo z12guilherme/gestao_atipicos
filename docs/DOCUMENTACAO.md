@@ -155,6 +155,32 @@ A aplicação está hospedada na **Vercel**, uma plataforma otimizada para aplic
 
 **URL da Aplicação:** https://gestao-atipicos.vercel.app/
 
+### 4.3. Aplicativo Móvel (PWA & APK)
+
+O projeto foi configurado como uma **Progressive Web App (PWA)**, o que significa que ele pode ser "instalado" diretamente do navegador em qualquer dispositivo (celular ou computador), funcionando como um aplicativo nativo com suporte offline.
+
+#### Instalação via Navegador (PWA)
+- **Android (Chrome):** Abra o site, vá no menu (três pontos) e selecione "Instalar aplicativo".
+- **iOS (Safari):** Toque no botão de compartilhamento e selecione "Adicionar à Tela de Início".
+- **Desktop (Chrome/Edge):** Um ícone de instalação aparecerá na barra de endereço.
+
+#### Geração do APK (Android)
+Para distribuir o aplicativo como um arquivo `.apk` para Android, o projeto utiliza o **Capacitor**.
+
+1.  **Build do Projeto:**
+    ```bash
+    npm run build
+    ```
+2.  **Sincronização com o Android:**
+    ```bash
+    npx cap sync
+    ```
+3.  **Abertura no Android Studio:**
+    ```bash
+    npx cap open android
+    ```
+    Dentro do Android Studio, o APK pode ser gerado através do menu **Build > Build Bundle(s) / APK(s) > Build APK(s)**.
+
 ---
 
 ## 5. Resultados e Demonstração
