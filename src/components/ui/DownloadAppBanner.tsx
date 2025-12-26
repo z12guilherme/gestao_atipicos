@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Smartphone, X } from 'lucide-react';
+import { toast } from 'sonner';
 
 type OperatingSystem = 'iOS' | 'Android' | 'Desktop' | 'unknown';
 
@@ -27,15 +28,26 @@ const getOperatingSystem = (): OperatingSystem => {
 
 export const DownloadAppBanner = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const location = useLocation();
 
   useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
     const detectedOs = getOperatingSystem();
     // Mostra o banner apenas em dispositivos móveis após um pequeno delay
     if (detectedOs === 'Android' || detectedOs === 'iOS') {
       const timer = setTimeout(() => setIsVisible(true), 3000);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      };
     }
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
   }, []);
 
   // Não mostra o banner na página de login para evitar sobreposição com o botão fixo
@@ -47,23 +59,47 @@ export const DownloadAppBanner = () => {
     return null;
   }
 
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+        setIsVisible(false);
+      }
+    } else {
+      const os = getOperatingSystem();
+      if (os === 'iOS') {
+        toast.info('Instalar no iPhone/iPad', {
+          description: 'Toque no botão Compartilhar e selecione "Adicionar à Tela de Início".',
+          duration: 5000,
+        });
+      } else {
+        toast.info('Instalar Aplicativo', {
+          description: 'Procure por "Instalar aplicativo" ou "Adicionar à tela inicial" no menu do navegador.',
+          duration: 5000,
+        });
+      }
+    }
+  };
+
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-md">
       <Card 
         className="shadow-2xl animate-in slide-in-from-bottom-10 duration-500 cursor-pointer hover:bg-accent/50 transition-colors"
-        onClick={() => window.open('#', '_blank')} // TODO: Adicione o link real do seu app aqui
+        onClick={handleInstallClick}
       >
         <CardHeader className="flex-row items-center justify-between p-3 sm:p-4">
             <div className="flex items-center gap-3">
                 <Smartphone className="h-5 w-5 text-primary flex-shrink-0" />
-                <p className="text-sm font-medium">Leve o sistema com você. Baixe o app!</p>
+                <p className="text-sm font-medium">Instale o app para acesso rápido!</p>
             </div>
             <Button 
               variant="ghost" 
               size="icon" 
               className="h-7 w-7" 
               onClick={(e) => {
-                e.stopPropagation(); // Evita que o clique no botão feche e abra o link ao mesmo tempo
+                e.stopPropagation(); 
                 setIsVisible(false);
               }}
             >

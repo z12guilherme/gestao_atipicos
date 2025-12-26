@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,15 +9,36 @@ import { toast } from "sonner";
 import { Eye, EyeOff, Heart, Users, GraduationCap, Star, Loader2, Download } from "lucide-react";
 import { ThemeToggle as OriginalThemeToggle } from "./theme-toggle-button";
 
+type OperatingSystem = 'iOS' | 'Android' | 'Desktop' | 'unknown';
+
+const getOperatingSystem = (): OperatingSystem => {
+  if (typeof window === 'undefined') return 'unknown';
+  const userAgent = window.navigator.userAgent;
+  if (/android/i.test(userAgent)) return 'Android';
+  if (/iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream) return 'iOS';
+  return 'Desktop';
+};
+
 export default function Auth() {
   const { user, signIn } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   const [loginForm, setLoginForm] = useState({
     email: "",
     password: "",
   });
+
+  // IMPORTANTE: Este useEffect deve vir ANTES do 'if (user)' para evitar o erro #300
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -46,6 +67,29 @@ export default function Auth() {
     }
 
     setLoading(false);
+  };
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    } else {
+      const os = getOperatingSystem();
+      if (os === 'iOS') {
+        toast.info('Instalar no iPhone/iPad', {
+          description: 'Toque no botão Compartilhar e selecione "Adicionar à Tela de Início".',
+          duration: 5000,
+        });
+      } else {
+        toast.info('Instalar Aplicativo', {
+          description: 'Procure por "Instalar aplicativo" ou "Adicionar à tela inicial" no menu do navegador.',
+          duration: 5000,
+        });
+      }
+    }
   };
 
   return (
@@ -217,10 +261,10 @@ export default function Auth() {
       <div className="fixed bottom-6 left-0 right-0 z-40 flex justify-center px-4">
         <Button 
           className="w-full max-w-sm shadow-lg rounded-full gap-2 animate-in slide-in-from-bottom-4 duration-700"
-          onClick={() => window.open('#', '_blank')} // TODO: Adicione o link real do seu app aqui
+          onClick={handleInstallClick}
         >
           <Download className="h-4 w-4" />
-          Clique aqui para baixar nosso app
+          Instalar App
         </Button>
       </div>
     </div>
