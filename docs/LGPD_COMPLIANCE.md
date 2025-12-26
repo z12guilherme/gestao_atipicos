@@ -53,7 +53,8 @@ Adotamos medidas técnicas e administrativas aptas a proteger os dados pessoais:
 1.  **Coleta:** Inserção manual pelo Gestor ou Importação em Massa.
 2.  **Processamento:** Armazenamento, estruturação e disponibilização para Cuidadores/Responsáveis.
 3.  **Compartilhamento:** Não há compartilhamento de dados com terceiros para fins comerciais/publicitários.
-4.  **Descarte:** Após o término do vínculo escolar ou solicitação, os dados podem ser excluídos ou anonimizados, salvo se houver obrigação legal de retenção.
+4.  **Geração de Relatórios:** Processamento de dados de estudantes e atividades para a criação de relatórios em PDF, com a finalidade de análise de desempenho e apoio à gestão pedagógica.
+5.  **Descarte:** Após o término do vínculo escolar ou solicitação, os dados podem ser excluídos ou anonimizados, salvo se houver obrigação legal de retenção.
 
 ---
 

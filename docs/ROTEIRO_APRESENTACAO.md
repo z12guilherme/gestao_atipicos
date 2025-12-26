@@ -33,6 +33,8 @@ Este documento contém os scripts sugeridos para a gravação dos vídeos de dem
 - "No frontend, destaque para a importação em massa. Substituí a biblioteca `xlsx` por `exceljs` para mitigar vulnerabilidades de Supply Chain."
 - **[Mostrar o Visualizador de PDF]**
 - "Implementei também o gerenciamento de documentos. Os laudos médicos são armazenados em buckets privados. Para visualização, geramos **Signed URLs** temporárias, exibindo o PDF em um modal seguro sem expor o link público."
+- **[Mostrar a tela de Relatórios]**
+- "Expandindo a gestão de documentos, o novo **Módulo de Relatórios** permite aos gestores gerar análises consolidadas em PDF sobre o progresso dos estudantes, utilizando os dados registrados pelos cuidadores para uma visão completa do desenvolvimento."
 
 ### 5. Conclusão (4:00 - Fim)
 - **[Voltar para a câmera ou Dashboard]**

@@ -44,6 +44,7 @@ Os testes foram realizados **exclusivamente no ambiente do próprio projeto**, s
 - Controle de acesso
 - Validação de entradas
 - Proteções contra ataques comuns (OWASP Top 10)
+- Endpoints da API de Relatórios (ex: `/rest/v1/reports`)
 
 ---
 

@@ -49,6 +49,7 @@ Este documento analisa as potenciais ameaças à segurança da aplicação utili
 | **Frontend** | Dados sensíveis cacheados em computadores públicos. | Cabeçalhos de Cache-Control apropriados; Logout limpa LocalStorage. | ✅ |
 | **GitHub** | Vazamento de chaves de API (`service_role`). | Uso de variáveis de ambiente (`.env`); Honeytokens para detecção. | ✅ |
 | **Erro** | Mensagens de erro detalhadas expondo stack trace. | Tratamento de erros no frontend (mensagens genéricas). | ✅ |
+| **Módulo de Relatórios** | Gestor gera relatórios de dados que não tem permissão para ver. | Reforçar e testar as políticas de RLS para os novos endpoints de relatórios. | 📝 |
 
 ---
 

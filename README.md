@@ -23,9 +23,6 @@
   <a href="https://gestao-atipicos.vercel.app/" target="_blank">
     <img src="https://img.shields.io/badge/Acessar%20Aplicação-5A67D8?style=for-the-badge&logo=vercel&logoColor=white" alt="Acessar Aplicação">
   </a>
-   <a href="https://www.youtube.com/shorts/0AZ1_gBp2pU" target="_blank">
-    <img src="https://img.shields.io/badge/Apresentação%20Mobile-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Apresentação Mobile">
-  </a>
   <a href="https://youtu.be/UHwwxxY5c00" target="_blank">
     <img src="https://img.shields.io/badge/Apresentação%20Comercial-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Apresentação Comercial">
   </a>
@@ -87,6 +84,7 @@ O sistema foi projetado com diferentes níveis de acesso, oferecendo um dashboar
 - **Importação em Massa:** Cadastramento via arquivos CSV ou XLSX, otimizando a inserção de dados.
 - **Vínculos Inteligentes:** Associação dinâmica entre cuidadores e estudantes.
 - **Gestão de Documentos:** Upload e gerenciamento seguro de laudos médicos (PDF) com visualizador integrado.
+- **Módulo de Relatórios:** Geração de relatórios detalhados sobre o progresso dos estudantes, frequência e atividades registradas pelos cuidadores, permitindo uma análise aprofundada e exportação em formato PDF.
 
 ### ❤️ Dashboard do Responsável
 - **Privacidade em Primeiro Lugar:** Visualização apenas dos dependentes vinculados.
