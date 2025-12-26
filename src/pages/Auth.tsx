@@ -30,7 +30,6 @@ export default function Auth() {
     password: "",
   });
 
-  // IMPORTANTE: Este useEffect deve vir ANTES do 'if (user)' para evitar o erro #300
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
@@ -84,8 +83,8 @@ export default function Auth() {
           duration: 5000,
         });
       } else {
-        toast.info('Instalar Aplicativo', {
-          description: 'Procure por "Instalar aplicativo" ou "Adicionar à tela inicial" no menu do navegador.',
+        toast.info('Instalação Manual Necessária', {
+          description: 'O navegador bloqueou a instalação automática. Abra o menu do navegador (três pontinhos) e selecione "Instalar aplicativo" ou "Adicionar à tela inicial".',
           duration: 5000,
         });
       }

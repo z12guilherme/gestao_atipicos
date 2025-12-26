@@ -40,14 +40,14 @@ export const DownloadAppBanner = () => {
 
     const detectedOs = getOperatingSystem();
     // Mostra o banner apenas em dispositivos móveis após um pequeno delay
+    let timer: any;
     if (detectedOs === 'Android' || detectedOs === 'iOS') {
-      const timer = setTimeout(() => setIsVisible(true), 3000);
-      return () => {
-        clearTimeout(timer);
-        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      };
+      timer = setTimeout(() => setIsVisible(true), 3000);
     }
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
   }, []);
 
   // Não mostra o banner na página de login para evitar sobreposição com o botão fixo
@@ -75,8 +75,8 @@ export const DownloadAppBanner = () => {
           duration: 5000,
         });
       } else {
-        toast.info('Instalar Aplicativo', {
-          description: 'Procure por "Instalar aplicativo" ou "Adicionar à tela inicial" no menu do navegador.',
+        toast.info('Instalação Manual Necessária', {
+          description: 'O navegador bloqueou a instalação automática. Abra o menu do navegador e selecione "Instalar aplicativo" ou "Adicionar à tela inicial".',
           duration: 5000,
         });
       }
