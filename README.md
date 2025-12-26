@@ -24,7 +24,7 @@
     <img src="https://img.shields.io/badge/Acessar%20Aplicação-5A67D8?style=for-the-badge&logo=vercel&logoColor=white" alt="Acessar Aplicação">
   </a>
    <a href="https://www.youtube.com/shorts/0AZ1_gBp2pU" target="_blank">
-    <img src="https://img.shields.io/badge/Apresentação%20CMobile-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Apresentação Mobile">
+    <img src="https://img.shields.io/badge/Apresentação%20Mobile-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Apresentação Mobile">
   </a>
   <a href="https://youtu.be/UHwwxxY5c00" target="_blank">
     <img src="https://img.shields.io/badge/Apresentação%20Comercial-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Apresentação Comercial">
