@@ -19,30 +19,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchSession = async () => {
-      setLoading(true);
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    let mounted = true;
 
-      if (sessionError) {
-        console.error("Erro ao buscar sessão:", sessionError);
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (mounted) {
+          if (error) {
+            console.error("Erro ao verificar sessão inicial:", error);
+          }
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+      } catch (error) {
+        console.error("Erro inesperado ao buscar sessão:", error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
     };
 
-    fetchSession();
+    getInitialSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        // A lógica de perfil agora é tratada exclusivamente pelo useProfile.ts
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
+        }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -68,8 +82,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Erro ao fazer logout:", error);
+      }
+    } catch (error) {
+      console.error("Erro inesperado no logout:", error);
+    } finally {
+      setUser(null);
+      setSession(null);
+    }
   };
 
   const value = {
