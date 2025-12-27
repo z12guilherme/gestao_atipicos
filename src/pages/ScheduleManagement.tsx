@@ -22,7 +22,7 @@ export function ScheduleManagement() {
   
   const today = useMemo(() => new Date(), []);
   
-  const { schedules, addSchedule, removeSchedule } = useSchedules(selectedStudent?.id || '', today);
+  const { schedules, addSchedule, removeSchedule, refetch } = useSchedules(selectedStudent?.id || '', today);
 
   const handleAddActivity = () => {
     if (newActivity.time && newActivity.activity && selectedStudent) {
@@ -66,6 +66,7 @@ export function ScheduleManagement() {
                   onSuccess={() => {
                     // Invalida o cache para recarregar os dados automaticamente sem refresh
                     queryClient.invalidateQueries({ queryKey: ['schedules'] });
+                    if (refetch) refetch();
                   }} 
                 />
               )}
