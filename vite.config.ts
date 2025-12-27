@@ -15,12 +15,27 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
+      filename: "service-worker.js",
       manifestFilename: "manifest.json",
       devOptions: {
         enabled: true,
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 5000000, // 5MB
+        navigateFallback: "/index.html",
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.destination === "image",
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "images",
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 dias
+              },
+            },
+          },
+        ],
       },
       includeAssets: [
         "favicon.ico",
