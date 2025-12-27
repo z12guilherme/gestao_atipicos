@@ -64,8 +64,18 @@ export function ScheduleManagement() {
                 <ScheduleImportModal 
                   studentId={selectedStudent.id} 
                   onSuccess={() => {
-                    // Invalida todas as queries para garantir a atualização dos dados
-                    queryClient.invalidateQueries();
+                    const promise = new Promise<void>((resolve) => {
+                      // Espera um período para garantir que o banco de dados processe a inserção.
+                      setTimeout(() => {
+                        queryClient.invalidateQueries().then(() => resolve());
+                      }, 1200); // Aumentado para 1.2 segundos para maior confiabilidade.
+                    });
+
+                    toast.promise(promise, {
+                      loading: 'Sincronizando novo cronograma...',
+                      success: 'Cronograma atualizado com sucesso!',
+                      error: 'Falha ao atualizar o cronograma.',
+                    });
                   }} 
                 />
               )}

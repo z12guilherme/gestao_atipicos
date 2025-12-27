@@ -1,9 +1,11 @@
 import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useGuardianData, Student } from "@/hooks/useGuardianData";
+import { Student } from "@/hooks/useGuardianData";
 import { useProfile } from "@/hooks/useProfile";
 import { format, formatDistanceToNow, differenceInYears } from 'date-fns';
 import { subDays, startOfWeek } from 'date-fns';
@@ -89,7 +91,7 @@ function StudentDetails({ student }: { student: Student }) {
           <CardHeader>
             <CardTitle className="flex items-center text-lg"><User className="mr-2 h-5 w-5 text-blue-500" /> Dados Pessoais</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5 text-sm">
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5 text-sm max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
             {student.birth_date && (
               <div className="flex items-start space-x-3">
                 <Cake className="h-4 w-4 mt-0.5 text-pink-500 flex-shrink-0" />
@@ -248,7 +250,25 @@ function StudentDetails({ student }: { student: Student }) {
  */
 export function ResponsavelDashboard() {
   const { profile, isLoading: isLoadingProfile } = useProfile();
-  const { data: students, isLoading } = useGuardianData();
+  
+  // Busca direta dos estudantes vinculados para garantir que os dados apareçam corretamente
+  const { data: students, isLoading } = useQuery({
+    queryKey: ['guardianStudents', profile?.id],
+    queryFn: async () => {
+      if (!profile?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('guardians_students')
+        .select('students(*)')
+        .eq('guardian_id', profile.id);
+        
+      if (error) throw error;
+      
+      return data.map((item: any) => item.students) as Student[];
+    },
+    enabled: !!profile?.id,
+  });
+
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
   // Define o estudante selecionado

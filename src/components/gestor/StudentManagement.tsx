@@ -26,7 +26,7 @@ import { z, ZodError } from "zod";
 import ExcelJS from 'exceljs';
 import { useUsers } from "@/hooks/useUsers";
 import { MultiSelect } from "@/components/ui/MultiSelect";
-import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog.tsx";
+import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog";
 import { PdfViewerDialog } from "@/components/shared/PdfViewerDialog";
 import { Textarea } from "../ui/textarea";
 import { correlationLogger as logger } from "@/lib/correlation";
@@ -366,13 +366,14 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                     <DialogDescription>Preencha os campos abaixo.</DialogDescription>
                   </DialogHeader>
                   <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Nome Completo *</Label>
-                      <Input id="name" {...form.register("name")} />
-                      {form.formState.errors.name && <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>}
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                  <form onSubmit={form.handleSubmit(onSubmit)}>
+                    <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-4 custom-scrollbar">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Nome Completo *</Label>
+                        <Input id="name" {...form.register("name")} />
+                        {form.formState.errors.name && <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>}
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="birth_date">Data de Nascimento *</Label>
                         <Input id="birth_date" type="date" {...form.register("birth_date")} />
@@ -480,8 +481,8 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                         className="w-full"
                       />
                     </div>
-
-                    <div className="flex justify-end space-x-2 pt-2">
+                    </div>
+                    <div className="flex justify-end space-x-2 pt-4 mt-4 border-t">
                       <Button type="button" variant="ghost" onClick={() => handleDialogChange(false)}>Cancelar</Button>
                       <Button type="submit" disabled={createStudent.isPending || updateStudent.isPending}>
                         {editingStudent
@@ -496,11 +497,9 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
               </Dialog>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          {/* Filtros e Busca */}
+          {/* Filtros e Busca movidos para o cabeçalho */}
           {students.length > 0 && (
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="flex flex-col md:flex-row gap-4 pt-6">
               <div className="relative flex-1">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -523,18 +522,20 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
               </Select>
             </div>
           )}
-
+        </CardHeader>
+        <CardContent className="max-h-[60vh] overflow-y-auto custom-scrollbar">
           {students.length > 0 ? (
-            <Table>
-              <TableHeader>
+            <div className="relative border rounded-lg">
+              <Table>
+                <TableHeader className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm">
                 <TableRow>
                   <TableHead>Nome</TableHead>
                   <TableHead>Turma</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
+                </TableHeader>
+                <TableBody>
                 {filteredStudents.length > 0 ? (
                   filteredStudents.map((student) => (
                   <TableRow key={student.id}>
@@ -568,7 +569,8 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                 </TableRow>
               )}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
           ) : (
             <div className="text-center py-12">
               <GraduationCap className="mx-auto h-12 w-12 text-muted-foreground" />
