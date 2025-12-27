@@ -28,8 +28,10 @@
   </a>
   <a href="https://www.youtube.com/watch?v=zyD1f6TEBWg" target="_blank">
     <img src="https://img.shields.io/badge/Apresentação%20Técnica-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Apresentação Técnica">
-    <a href="https://youtu.be/0AZ1_gBp2pU?si=-XinEK3vjjFkrRkq" target="_blank">
+  </a>
+  <a href="https://youtu.be/0AZ1_gBp2pU?si=-XinEK3vjjFkrRkq" target="_blank">
     <img src="https://img.shields.io/badge/Apresentação%20Mobile-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Apresentação Mobile">
+  </a>
 </p>
 
 ---
@@ -97,6 +99,7 @@ O sistema foi projetado com diferentes níveis de acesso, oferecendo um dashboar
 - **Foco no Cuidado:** Exibição dos estudantes sob sua responsabilidade.
 - **Agenda e Observações:** Registro de atividades diárias, progresso e comunicação com a equipe.
 - **Acesso Rápido:** Visualização de laudos e informações médicas essenciais para o suporte diário.
+- **Importação de Cronograma:** Facilidade para importar a agenda diária de atividades dos estudantes via planilha Excel, otimizando o planejamento.
 
 ---
 

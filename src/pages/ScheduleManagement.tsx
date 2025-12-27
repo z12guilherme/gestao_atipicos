@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,8 +10,10 @@ import { useCaregiverStudents } from "@/hooks/useCaregiverStudents";
 import { useSchedules } from "@/hooks/useSchedules";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Student } from "@/hooks/useStudents";
+import { ScheduleImportModal } from "@/components/shared/ScheduleImportModal";
 
 export function ScheduleManagement() {
+  const queryClient = useQueryClient();
   const [isModalOpen, setModalOpen] = useState(false);
   const [newActivity, setNewActivity] = useState({ time: '', activity: '' });
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -56,9 +59,20 @@ export function ScheduleManagement() {
                 Selecione um estudante para ver ou editar o cronograma.
               </CardDescription>
             </div>
-            <Button variant="outline" size="sm" onClick={() => setModalOpen(true)} disabled={!selectedStudent}>
-              Editar Cronograma
-            </Button>
+            <div className="flex gap-2">
+              {selectedStudent && (
+                <ScheduleImportModal 
+                  studentId={selectedStudent.id} 
+                  onSuccess={() => {
+                    // Invalida o cache para recarregar os dados automaticamente sem refresh
+                    queryClient.invalidateQueries({ queryKey: ['schedules'] });
+                  }} 
+                />
+              )}
+              <Button variant="outline" size="sm" onClick={() => setModalOpen(true)} disabled={!selectedStudent}>
+                Editar Cronograma
+              </Button>
+            </div>
           </div>
           <div className="pt-4">
               <Select onValueChange={(studentId) => setSelectedStudent(caregiverStudents.find(s => s.id === studentId) || null)} >

@@ -27,6 +27,7 @@ Este documento analisa as potenciais ameaças à segurança da aplicação utili
 | **Banco de Dados** | Alteração direta via SQL Injection. | Uso de ORM/Query Builder e Prepared Statements do Supabase. | ✅ |
 | **Trânsito** | Interceptação e modificação de requisições (MitM). | HTTPS forçado (HSTS) via Vercel/Cloudflare. | ✅ |
 | **Lógica** | Usuário edita dados de outro usuário via API. | **Row Level Security (RLS)** rigoroso no PostgreSQL. | ✅ |
+| **Upload (Cuidador)** | Cuidador envia cronograma para estudante não atribuído a ele. | A Edge Function de importação deve validar se o `caregiver_id` tem permissão sobre o `student_id` antes de inserir os dados. | 📝 |
 
 ---
 
@@ -60,6 +61,7 @@ Este documento analisa as potenciais ameaças à segurança da aplicação utili
 | :--- | :--- | :--- | :---: |
 | **API** | Múltiplas requisições pesadas (Brute Force/Flood). | Rate Limiting nativo do Supabase e proteção DDoS da Vercel. | ✅ |
 | **Storage** | Upload de arquivos gigantes para esgotar cota. | Limite de tamanho de arquivo no Bucket do Supabase. | 📝 |
+| **Upload (Planilha)** | Upload de planilha malformada ou gigante para causar crash no parser. | Limitar o tamanho do arquivo no frontend e backend. Usar um parser robusto (como `exceljs`) com tratamento de exceções. | 📝 |
 
 ---
 

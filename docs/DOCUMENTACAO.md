@@ -136,7 +136,7 @@ A segurança do projeto adota uma estratégia de **Defesa em Profundidade (Defen
 
 ### 3.4. Funcionalidades Implementadas
 
-As funcionalidades descritas nos objetivos foram implementadas através de componentes React, hooks customizados (`useStudents`, `useUsers`) e interações com a API do Supabase. A importação em massa, por exemplo, utiliza uma Edge Function (`bulk-create-students`) para processar os dados no servidor, garantindo melhor performance e segurança. Recentemente, foi adicionado o módulo de **Gestão de Documentos**, permitindo o upload seguro de laudos médicos (PDF) associados aos estudantes, com visualização integrada na plataforma.
+As funcionalidades descritas nos objetivos foram implementadas através de componentes React, hooks customizados (`useStudents`, `useUsers`) e interações com a API do Supabase. A importação em massa para gestores, por exemplo, utiliza uma Edge Function (`bulk-create-students`) para processar os dados no servidor, garantindo melhor performance e segurança. Recentemente, foram adicionados o módulo de **Gestão de Documentos**, permitindo o upload seguro de laudos médicos (PDF), e a **importação de cronogramas** para cuidadores via planilha.
 
 ---
 
@@ -229,6 +229,7 @@ O painel é dividido em duas colunas para uma organização clara:
 ### 5.3. Painel do Cuidador
 
 O painel do cuidador é uma ferramenta de trabalho focada na organização e no registro de informações.
+Para otimizar o planejamento, o cuidador pode importar o cronograma diário de atividades de seus estudantes através de uma planilha Excel, que é processada e validada pelo sistema para popular a agenda.
 
 #### Dashboard Principal
 Ao fazer login, o cuidador visualiza uma lista clara e objetiva dos estudantes que estão sob sua responsabilidade. Cada estudante é apresentado em um card, facilitando a identificação e o acesso rápido às suas informações.

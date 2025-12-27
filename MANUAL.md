@@ -107,6 +107,14 @@ O painel do cuidador foi projetado para focar nas suas atividades diárias e no 
 
 A tela principal exibe uma lista clara de todos os estudantes que foram atribuídos a você pelo gestor.
 
+### Importando o Cronograma Diário
+
+Para facilitar o planejamento, você pode importar a agenda de atividades de múltiplos estudantes de uma vez.
+1. Na tela principal, clique no botão **"Importar Cronograma"**.
+2. Baixe o modelo de planilha **XLSX**.
+3. Preencha a planilha com o CPF do estudante, a descrição da atividade e o horário.
+4. Selecione o arquivo e clique em **"Iniciar Importação"**. O sistema validará os dados e atualizará a agenda dos estudantes correspondentes.
+
 ### Agenda Diária e Observações (Funcionalidades Futuras)
 
 Em breve, você terá acesso a:
