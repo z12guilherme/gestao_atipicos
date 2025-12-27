@@ -360,7 +360,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                 <DialogTrigger asChild>
                   <Button><UserPlus className="mr-2 h-4 w-4" />Novo Estudante</Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
+                <DialogContent className="sm:max-w-[425px] w-[95vw]">
                   <DialogHeader>
                     <DialogTitle>{editingStudent ? 'Editar Estudante' : 'Cadastrar Novo Estudante'}</DialogTitle>
                     <DialogDescription>Preencha os campos abaixo.</DialogDescription>
@@ -523,7 +523,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
             </div>
           )}
         </CardHeader>
-        <CardContent className="max-h-[60vh] overflow-y-auto custom-scrollbar">
+        <CardContent className="max-h-[60vh] overflow-auto custom-scrollbar">
           {students.length > 0 ? (
             <div className="relative border rounded-lg">
               <Table>

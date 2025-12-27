@@ -319,8 +319,8 @@ export function ResponsavelDashboard() {
       ) : students && (
         <div className="space-y-6">
           {/* Seletor de Estudantes (Abas) */}
-          <div className="border-b border-slate-200 dark:border-slate-800">
-            <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+          <div className="border-b border-slate-200 dark:border-slate-800 overflow-x-auto pb-1">
+            <nav className="-mb-px flex space-x-6 min-w-max px-1" aria-label="Tabs">
               {students.map((student) => (
                 <Button
                   key={student.id}
