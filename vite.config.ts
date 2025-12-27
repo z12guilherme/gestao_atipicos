@@ -21,13 +21,12 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         maximumFileSizeToCacheInBytes: 5000000, // 5MB
       },
-      // Inclui todos os assets estáticos importantes
       includeAssets: [
         "favicon.ico",
         "apple-touch-icon.png",
         "masked-icon.svg",
         "icons/icon-192.png",
-        "icons/icon-512.png",
+        "icons/icon-512.png"
       ],
       manifest: {
         name: "Gestão Atípicos",
@@ -38,20 +37,23 @@ export default defineConfig(({ mode }) => ({
         background_color: "#ffffff",
         display: "standalone",
         start_url: "/",
+        scope: "/",
         orientation: "portrait",
         icons: [
           {
             src: "icons/icon-192.png",
             sizes: "192x192",
             type: "image/png",
+            purpose: "any maskable"
           },
           {
             src: "icons/icon-512.png",
             sizes: "512x512",
             type: "image/png",
-          },
-        ],
-      },
+            purpose: "any maskable"
+          }
+        ]
+      }
     }),
   ].filter(Boolean),
   resolve: {
