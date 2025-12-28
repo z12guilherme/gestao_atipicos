@@ -218,21 +218,33 @@ O projeto foi configurado como uma **Progressive Web App (PWA)**, permitindo que
 - **iOS (Safari)**: Botão Compartilhar > Adicionar à Tela de Início.
 
 ### Gerar APK (Android)
-Para gerar o arquivo `.apk` nativo utilizando o Capacitor:
+Para gerar o arquivo `.apk` nativo utilizando o Capacitor, é necessário ter o **Android Studio** instalado.
 
-1. Gere o build de produção:
+1. **Gere o build de produção:**
    ```bash
    npm run build
    ```
-2. Sincronize com o projeto Android:
+
+2. **Configure o ambiente (apenas na primeira vez):**
+   ```bash
+   npm install @capacitor/android
+   npx cap add android
+   ```
+
+3. **Sincronize com o projeto Android:**
    ```bash
    npx cap sync
    ```
-3. Abra o Android Studio para compilar:
+
+4. **Abra o Android Studio para compilar:**
    ```bash
    npx cap open android
    ```
+   
+5. **Compilação:**
    No menu do Android Studio, vá em **Build > Build Bundle(s) / APK(s) > Build APK(s)**.
+   
+   *O APK será salvo em: `android/app/build/outputs/apk/debug/`*
 
 -----
 
