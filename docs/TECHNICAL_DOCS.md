@@ -130,7 +130,22 @@ USING (
 
 Esta abordagem garante o princípio do **Privilégio Mínimo**, onde cada usuário acessa estritamente o necessário para sua função.
 
-## 6. Modelagem de Dados (DER)
+## 6. Desenvolvimento de Aplicação Nativa (Android APK)
+
+O desenvolvimento da versão móvel nativa utiliza o **Capacitor** para encapsular a aplicação web em um container nativo Android. Esta abordagem híbrida permite o reaproveitamento integral da base de código React/TypeScript.
+
+### 6.1. Pipeline de Construção
+1.  **Compilação Web:** O Vite gera os arquivos estáticos otimizados (`dist/`).
+2.  **Sincronização:** O Capacitor copia os assets para o projeto Android (`npx cap sync`).
+3.  **Recursos Nativos:** Ícones e Splash Screens são gerados via `@capacitor/assets`.
+4.  **Build Gradle:** O projeto é compilado em um arquivo `.apk`.
+
+### 6.2. Estratégia de Distribuição
+Para facilitar o acesso sem dependência de lojas de aplicativos:
+-   **PWA:** A aplicação é instalável via navegador.
+-   **Download Direto:** A tela de login detecta dispositivos Android e oferece o download do APK (`GestaoAtipicos.apk`) hospedado publicamente, caso a instalação PWA não seja realizada.
+
+## 7. Modelagem de Dados (DER)
 
 A estrutura de dados foi projetada para ser relacional e segura, utilizando o PostgreSQL do Supabase. A seguir, o Diagrama Entidade-Relacionamento (DER) e a descrição detalhada de cada tabela.
 
@@ -138,7 +153,7 @@ A estrutura de dados foi projetada para ser relacional e segura, utilizando o Po
 
 ![Diagrama do Banco de Dados](./img/Diagrama-Banco%20de-Dados.png)
 
-### 6.2. Estrutura Detalhada das Tabelas
+### 7.2. Estrutura Detalhada das Tabelas
 
 Esta seção detalha as colunas, tipos e responsabilidades de cada tabela no banco de dados.
 
@@ -197,27 +212,27 @@ Tabela associativa (N-para-N) que vincula responsáveis a estudantes.
 | `student_id` | `uuid` | PK/FK | Referencia `students.id` do estudante. |
 | `relationship`| `text` | | Tipo de relacionamento (ex: "Responsável", "Mãe"). |
 
-## 7. Funcionalidades e Módulos
+## 8. Funcionalidades e Módulos
 
-### 7.1. Gestão de Vínculos
+### 8.1. Gestão de Vínculos
 Módulo crítico que associa Cuidadores e Responsáveis aos Estudantes. Esta lógica garante que as informações de um aluno (como diário de bordo e ocorrências) sejam visíveis apenas para a equipe autorizada.
     
-### 7.2. Dashboard Analítico
+### 8.2. Dashboard Analítico
 Visualização de dados agregados para tomada de decisão:
 *   Total de alunos e usuários.
 *   Distribuição por turmas.
 *   Gráficos interativos (Recharts) com suporte a temas (Claro/Escuro).
 
-### 7.3. Importação em Massa
+### 8.3. Importação em Massa
 Funcionalidade desenvolvida com *Edge Functions* para processar grandes volumes de dados (CSV/XLSX), permitindo a migração rápida de legados para o novo sistema.
 
-## 8. Qualidade e Testes
+## 9. Qualidade e Testes
 
 *   **Validação de Dados:** O uso de `Zod` impede que dados inválidos (ex: CPF incorreto, datas futuras) cheguem ao banco de dados.
 *   **Testes de Integração:** O fluxo de autenticação e recuperação de senha foi validado em ambientes de produção.
 *   **Performance:** Otimização de *bundles* via Vite, garantindo carregamento rápido mesmo em redes móveis (3G).
 
-## 9. Metodologia de Desenvolvimento
+## 10. Metodologia de Desenvolvimento
 
 O projeto seguiu metodologias ágeis com entregas incrementais:
 1.  **Levantamento de Requisitos:** Análise das necessidades das prefeituras e escolas.
@@ -225,13 +240,13 @@ O projeto seguiu metodologias ágeis com entregas incrementais:
 3.  **Desenvolvimento Iterativo:** Ciclos de codificação, testes e feedback.
 4.  **Deploy Contínuo (CI/CD):** Cada alteração no código fonte (GitHub) dispara automaticamente pipelines de build e deploy na Vercel, garantindo que a versão em produção esteja sempre atualizada.
 
-## 10. Diferenciais Técnicos
+## 11. Diferenciais Técnicos
 
 - **Performance:** O uso de *Code Splitting* e *Lazy Loading* garante que o sistema carregue instantaneamente, mesmo em conexões móveis (3G/4G).
 - **Modo Escuro (Dark Mode):** Suporte nativo para conforto visual e economia de energia, respeitando as preferências do sistema operacional do usuário.
 - **Importação em Massa:** Funcionalidade otimizada via *Edge Functions* para processar grandes volumes de dados (planilhas de alunos/usuários) sem travar a interface.
 
-## 11. Conclusão
+## 12. Conclusão
 
 O **Gestão Atípicos** representa uma solução madura, segura e escalável. Sua arquitetura moderna reduz custos operacionais para a administração pública, enquanto suas rigorosas políticas de segurança garantem a proteção dos dados sensíveis dos cidadãos, em total conformidade com a legislação vigente.
 

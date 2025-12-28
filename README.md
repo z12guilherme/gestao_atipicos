@@ -44,6 +44,7 @@
   <a href="https://www.typescriptlang.org/" target="_blank"><img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"></a>
   <a href="https://supabase.io/" target="_blank"><img src="https://img.shields.io/badge/Supabase-181818?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase"></a>
   <a href="https://ui.shadcn.com/" target="_blank"><img src="https://img.shields.io/badge/shadcn/ui-000000?style=for-the-badge&logo=shadcn%2Fui&logoColor=white" alt="Shadcn/UI"></a>
+  <a href="https://capacitorjs.com/" target="_blank"><img src="https://img.shields.io/badge/Capacitor-1199EE?style=for-the-badge&logo=capacitor&logoColor=white" alt="Capacitor"></a>
 </p>
 
 ---
@@ -145,6 +146,9 @@ O projeto implementa **Honeytokens** e monitoramento de endpoints isca para dete
 - **Segurança & Observabilidade:**
     - [![SIEM](https://img.shields.io/badge/SIEM-Monitoramento-FF5722?style=flat&logo=security&logoColor=white)](https://github.com/z12guilherme/gestao_atipicos-siem)
     - **Honeytokens** & **Canary Endpoints**
+- **Mobile:**
+    - [![Capacitor](https://img.shields.io/badge/Capacitor-1199EE?style=flat&logo=capacitor&logoColor=white)](https://capacitorjs.com/)
+    - [![PWA](https://img.shields.io/badge/PWA-5A0FC8?style=flat&logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
 
 ---
 
@@ -219,11 +223,13 @@ O projeto foi configurado como uma **Progressive Web App (PWA)**, permitindo que
 
 ### Download Direto (Android)
 Na tela de login, o sistema detecta dispositivos Android e oferece o download direto do APK (`GestaoAtipicos.apk`) caso a instalação via navegador não seja realizada.
+> **Nota:** Para que o download funcione, o arquivo `GestaoAtipicos.apk` gerado deve ser colocado na pasta `public/` do projeto.
 
 ### Gerar APK (Android)
 Para gerar o arquivo `.apk` nativo utilizando o Capacitor:
 
 1. **Gere o build de produção:**
+   *Certifique-se de que o arquivo `.env` com as chaves do Supabase está presente na raiz antes de compilar.*
    ```bash
    npm run build
    ```
@@ -241,6 +247,7 @@ Para gerar o arquivo `.apk` nativo utilizando o Capacitor:
    ```
 
 4. **Gere os ícones e Splash Screen (Opcional):**
+   *Coloque seus arquivos `icon.png` e `splash.png` na pasta `assets/` na raiz do projeto.*
    ```bash
    npx @capacitor/assets generate --android
    ```

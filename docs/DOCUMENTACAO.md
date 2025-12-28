@@ -164,22 +164,48 @@ O projeto foi configurado como uma **Progressive Web App (PWA)**, o que signific
 - **iOS (Safari):** Toque no botão de compartilhamento e selecione "Adicionar à Tela de Início".
 - **Desktop (Chrome/Edge):** Um ícone de instalação aparecerá na barra de endereço.
 
+#### Download Direto (Android)
+Na tela de login, o sistema detecta dispositivos Android e oferece o download direto do APK (`GestaoAtipicos.apk`) caso a instalação via navegador não seja realizada.
+> **Nota:** Para que o download funcione, o arquivo `GestaoAtipicos.apk` gerado deve ser colocado na pasta `public/` do projeto.
+
 #### Geração do APK (Android)
 Para distribuir o aplicativo como um arquivo `.apk` para Android, o projeto utiliza o **Capacitor**.
 
 1.  **Build do Projeto:**
+    *Certifique-se de que o arquivo `.env` com as chaves do Supabase está presente na raiz antes de compilar.*
     ```bash
     npm run build
     ```
-2.  **Sincronização com o Android:**
+2.  **Instalação de Dependências (Primeira vez):**
+    ```bash
+    npm install @capacitor/android
+    npx cap add android
+    npm install @capacitor/assets --save-dev
+    ```
+3.  **Sincronização com o Android:**
     ```bash
     npx cap sync
     ```
-3.  **Abertura no Android Studio:**
+4.  **Geração de Ícones e Splash Screen:**
+    *Coloque seus arquivos `icon.png` e `splash.png` na pasta `assets/` na raiz do projeto.*
+    ```bash
+    npx @capacitor/assets generate --android
+    ```
+5.  **Compilação do APK:**
+    
+    **Opção A (Via Terminal - Recomendado):**
+    ```bash
+    cd android
+    ./gradlew assembleDebug
+    ```
+    
+    **Opção B (Via Android Studio):**
     ```bash
     npx cap open android
     ```
     Dentro do Android Studio, o APK pode ser gerado através do menu **Build > Build Bundle(s) / APK(s) > Build APK(s)**.
+
+    *O arquivo final estará em: `android/app/build/outputs/apk/debug/app-debug.apk`*
 
 ---
 

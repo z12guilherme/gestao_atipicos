@@ -1,5 +1,10 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -13,6 +18,7 @@ import {
   Heart,
   Code,
   School,
+  Menu,
   Search,
 } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile"; // 1. Importa o hook de perfil
@@ -118,9 +124,38 @@ export function Layout() {
           </div>
         </div>
       </div>
-      <div className="flex flex-col">
+      <div className="flex flex-col pt-[env(safe-area-inset-top)]">
         <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
-          {/* Mobile menu can be added here later */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="shrink-0 md:hidden"
+              >
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Alternar menu de navegação</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="pt-[calc(2.5rem+env(safe-area-inset-top))]">
+              <nav className="grid gap-2 text-lg font-medium">
+                <NavLink to="/" className="flex items-center gap-2 text-lg font-semibold mb-4">
+                  <Heart className="h-6 w-6 text-blue-600" />
+                  <span>Gestão Atípicos</span>
+                </NavLink>
+                {navItems.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
+                  >
+                    <item.icon className="h-5 w-5" />
+                    {item.label}
+                  </NavLink>
+                ))}
+              </nav>
+            </SheetContent>
+          </Sheet>
           <div className="w-full flex-1">
             <form>
               <div className="relative">
@@ -166,7 +201,7 @@ export function Layout() {
             </Button>
           </div>
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-slate-50 dark:bg-slate-900">
+        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-slate-50 dark:bg-slate-900 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <Outlet /> {/* react-router-dom will render nested routes here */}
         </main>
       </div>
