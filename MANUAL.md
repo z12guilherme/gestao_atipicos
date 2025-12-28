@@ -9,6 +9,15 @@ Para começar, acesse a plataforma através do link fornecido pela sua institui�
 - **Página de Login:** Insira suas credenciais.
 - **Esqueci minha senha:** Caso tenha esquecido sua senha, utilize a opção de recuperação para redefini-la.
 
+### 1.1. Instalação do Aplicativo (Android)
+
+Para usuários de dispositivos Android, a plataforma oferece um aplicativo nativo para facilitar o acesso:
+
+1.  Acesse o sistema pelo navegador do seu celular (Google Chrome).
+2.  Na tela de login, clique no botão **"Instalar App"** (localizado na parte inferior) ou no link **"Baixar APK para Android"**.
+3.  O download do arquivo `GestaoAtipicos.apk` será iniciado automaticamente.
+4.  Após a conclusão, abra o arquivo baixado e confirme a instalação.
+
 A plataforma possui três perfis de acesso principais, cada um com seu próprio painel e funcionalidades específicas.
 
 ---

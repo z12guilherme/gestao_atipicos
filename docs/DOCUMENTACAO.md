@@ -202,10 +202,15 @@ Para distribuir o aplicativo como um arquivo `.apk` para Android, o projeto util
     **Opção B (Via Android Studio):**
     ```bash
     npx cap open android
-    ```
     Dentro do Android Studio, o APK pode ser gerado através do menu **Build > Build Bundle(s) / APK(s) > Build APK(s)**.
 
     *O arquivo final estará em: `android/app/build/outputs/apk/debug/app-debug.apk`*
+
+### Distribuição do APK
+Para habilitar o download direto na tela de login:
+1.  Copie o arquivo gerado (`app-debug.apk`) para a pasta `public/` na raiz do projeto.
+2.  Renomeie o arquivo para **`GestaoAtipicos.apk`** (exatamente com este nome).
+3.  Faça o deploy da aplicação.
 
 ---
 
