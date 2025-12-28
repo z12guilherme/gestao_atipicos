@@ -105,17 +105,17 @@ export function ScheduleManagement() {
           {selectedStudent ? (
             schedules.length > 0 ? schedules.map((item) => (
             <div key={item.id} className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-              <div className="flex items-center space-x-4">
-                <div className="text-center">
+              <div className="flex items-center space-x-4 overflow-hidden">
+                <div className="text-center shrink-0">
                   <div className="text-sm font-bold text-blue-600">{item.start_time}</div>
                 </div>
-                <div className="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
-                <div>
-                  <p className="font-medium">{item.activity}</p>
-                  <p className="text-sm text-muted-foreground">Com {getStudentName(item.student_id)}</p>
+                <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 shrink-0"></div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium truncate">{item.activity}</p>
+                  <p className="text-sm text-muted-foreground truncate">Com {getStudentName(item.student_id)}</p>
                 </div>
               </div>
-              <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700">
+              <Badge variant="outline" className="bg-green-50 border-green-200 text-green-700 shrink-0 ml-2">
                 Agendado
               </Badge>
             </div>
