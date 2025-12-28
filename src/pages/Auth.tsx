@@ -45,14 +45,23 @@ export default function Auth() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Fecha o teclado virtual em dispositivos móveis ao submeter
+    (document.activeElement as HTMLElement)?.blur();
+
     setLoading(true);
 
     try {
-      const { error } = await signIn(loginForm.email, loginForm.password);
+      // .trim() remove espaços extras que teclados mobile costumam adicionar
+      // .toLowerCase() garante que o email esteja no formato correto
+      const { error } = await signIn(loginForm.email.trim().toLowerCase(), loginForm.password);
       
       if (error) {
+        const isApiKeyError = error.message?.includes("Invalid API key");
         toast.error("Erro no login", {
-          description: "Email ou senha inválidos. Por favor, verifique suas credenciais.",
+          description: isApiKeyError
+            ? "Erro de Configuração: A API Key no .env está incorreta."
+            : (error.message === "Invalid login credentials" ? "Email ou senha inválidos." : error.message || "Verifique suas credenciais."),
         });
       } else {
         toast.success("Login realizado com sucesso!", {
@@ -69,6 +78,19 @@ export default function Auth() {
   };
 
   const handleInstallClick = async () => {
+    const os = getOperatingSystem();
+
+    // Prioriza o download do APK nativo se for Android
+    if (os === 'Android') {
+      const link = document.createElement('a');
+      link.href = '/GestaoAtipicos.apk';
+      link.setAttribute('download', 'GestaoAtipicos.apk');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
@@ -76,7 +98,6 @@ export default function Auth() {
         setDeferredPrompt(null);
       }
     } else {
-      const os = getOperatingSystem();
       if (os === 'iOS') {
         toast.info('Instalar no iPhone/iPad', {
           description: 'Toque no botão Compartilhar e selecione "Adicionar à Tela de Início".',
@@ -92,7 +113,9 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    // pt-[env(safe-area-inset-top)] evita que o conteúdo fique embaixo da barra de status (relógio/bateria)
+    // min-h-[100dvh] garante que o app ocupe a altura correta no mobile, sem cortes
+    <div className="min-h-[100dvh] bg-slate-50 dark:bg-slate-900 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       <div className="absolute top-4 right-4">
         <OriginalThemeToggle />
       </div>
@@ -242,6 +265,11 @@ export default function Auth() {
                   <Link to="/tutorial" className="text-sm text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400">
                     Saiba mais sobre o sistema, segurança e LGPD
                   </Link>
+                  <div className="mt-2 lg:hidden">
+                    <a href="/GestaoAtipicos.apk" download="GestaoAtipicos.apk" className="text-xs text-muted-foreground hover:text-blue-600 underline">
+                      Baixar APK para Android (Versão Nativa)
+                    </a>
+                  </div>
                 </div>
                 <CardFooter className="text-xs text-muted-foreground pt-6 justify-center">
                   <p>

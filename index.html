@@ -11,6 +11,9 @@
     <meta property="og:title" content="Gestão Atípicos" />
     <meta property="og:description" content="Plataforma completa para gestão e acompanhamento de estudantes atípicos." />
     <meta property="og:type" content="website" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Gestão Atípicos" />
     <style>
       /* Ajustes para comportamento nativo mobile */
       html, body {
@@ -20,6 +23,8 @@
         overscroll-behavior-y: none; /* Previne o efeito elástico ao rolar a página inteira */
         -webkit-tap-highlight-color: transparent; /* Remove o flash cinza ao tocar em links/botões */
         touch-action: manipulation; /* Melhora a resposta ao toque */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
       }
       #root {
         min-height: 100%; /* Permite que o app cresça verticalmente */
