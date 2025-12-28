@@ -217,18 +217,22 @@ O projeto foi configurado como uma **Progressive Web App (PWA)**, permitindo que
 - **Android (Chrome)**: Abra o menu (três pontos) > Instalar aplicativo.
 - **iOS (Safari)**: Botão Compartilhar > Adicionar à Tela de Início.
 
+### Download Direto (Android)
+Na tela de login, o sistema detecta dispositivos Android e oferece o download direto do APK (`GestaoAtipicos.apk`) caso a instalação via navegador não seja realizada.
+
 ### Gerar APK (Android)
-Para gerar o arquivo `.apk` nativo utilizando o Capacitor, é necessário ter o **Android Studio** instalado.
+Para gerar o arquivo `.apk` nativo utilizando o Capacitor:
 
 1. **Gere o build de produção:**
    ```bash
    npm run build
    ```
 
-2. **Configure o ambiente (apenas na primeira vez):**
+2. **Instale as dependências (apenas na primeira vez):**
    ```bash
    npm install @capacitor/android
    npx cap add android
+   npm install @capacitor/assets --save-dev
    ```
 
 3. **Sincronize com o projeto Android:**
@@ -236,15 +240,26 @@ Para gerar o arquivo `.apk` nativo utilizando o Capacitor, é necessário ter o 
    npx cap sync
    ```
 
-4. **Abra o Android Studio para compilar:**
+4. **Gere os ícones e Splash Screen (Opcional):**
+   ```bash
+   npx @capacitor/assets generate --android
+   ```
+
+5. **Compile o APK:**
+   
+   **Opção A (Via Terminal - Recomendado):**
+   ```bash
+   cd android
+   ./gradlew assembleDebug
+   ```
+   
+   **Opção B (Via Android Studio):**
    ```bash
    npx cap open android
    ```
-   
-5. **Compilação:**
-   No menu do Android Studio, vá em **Build > Build Bundle(s) / APK(s) > Build APK(s)**.
-   
-   *O APK será salvo em: `android/app/build/outputs/apk/debug/`*
+   Vá em **Build > Build Bundle(s) / APK(s) > Build APK(s)**.
+
+   *O arquivo final estará em: `android/app/build/outputs/apk/debug/app-debug.apk`*
 
 -----
 

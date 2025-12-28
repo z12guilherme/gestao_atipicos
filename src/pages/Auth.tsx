@@ -104,9 +104,15 @@ export default function Auth() {
           duration: 5000,
         });
       } else {
-        toast.info('Instalação Manual Necessária', {
-          description: 'O navegador bloqueou a instalação automática. Abra o menu do navegador (três pontinhos) e selecione "Instalar aplicativo" ou "Adicionar à tela inicial".',
-          duration: 5000,
+        // Fallback: Se não houver prompt de instalação, força o download do APK
+        const link = document.createElement('a');
+        link.href = '/GestaoAtipicos.apk';
+        link.setAttribute('download', 'GestaoAtipicos.apk');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.info('Iniciando Download', {
+          description: 'Baixando o aplicativo Android...',
         });
       }
     }
