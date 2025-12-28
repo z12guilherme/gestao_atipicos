@@ -83,8 +83,8 @@ export default function Auth() {
     // Prioriza o download do APK nativo se for Android
     if (os === 'Android') {
       const link = document.createElement('a');
-      link.href = '/Gestao Atipicos.apk';
-      link.setAttribute('download', 'Gestao Atipicos.apk');
+      link.href = '/GestaoAtipicos.apk';
+      link.setAttribute('download', 'GestaoAtipicos.apk');
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -106,8 +106,8 @@ export default function Auth() {
       } else {
         // Fallback: Se não houver prompt de instalação, força o download do APK
         const link = document.createElement('a');
-        link.href = '/Gestao Atipicos.apk';
-        link.setAttribute('download', 'Gestao Atipicos.apk');
+        link.href = '/GestaoAtipicos.apk';
+        link.setAttribute('download', 'GestaoAtipicos.apk');
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -272,7 +272,7 @@ export default function Auth() {
                     Saiba mais sobre o sistema, segurança e LGPD
                   </Link>
                   <div className="mt-2 lg:hidden">
-                    <a href="/Gestao Atipicos.apk" download="Gestao Atipicos.apk" className="text-xs text-muted-foreground hover:text-blue-600 underline">
+                    <a href="/GestaoAtipicos.apk" download="GestaoAtipicos.apk" className="text-xs text-muted-foreground hover:text-blue-600 underline">
                       Baixar APK para Android (Versão Nativa)
                     </a>
                   </div>
