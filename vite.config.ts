@@ -10,6 +10,10 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
+  define: {
+    'import.meta.env.VITE_SUPABASE_URL': JSON.stringify('https://exmygldiabwqfjktrjax.supabase.co'),
+    'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4bXlnbGRpYWJ3cWZqa3RyamF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4ODUyODYsImV4cCI6MjA3NDQ2MTI4Nn0.Le-CeWHfo7Tf_-fgsPwoFfz-y1bbSFsXnf4OvAyfwqw'),
+  },
   plugins: [
     react(),
     mode === "development" && componentTagger(),
