@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Auth from '../pages/Auth';
 import { BrowserRouter } from 'react-router-dom';
+import { toast } from 'sonner';
 
 // 1. Mock do hook useAuth
 // Interceptamos o hook para não chamar o Supabase de verdade
@@ -60,5 +61,32 @@ describe('Fluxo de Autenticação', () => {
     // Verificamos se a função de login foi chamada com os parâmetros certos
     expect(signInMock).toHaveBeenCalledTimes(1);
     expect(signInMock).toHaveBeenCalledWith('teste@exemplo.com', 'senha123');
+  });
+
+  it('deve exibir mensagem de erro quando as credenciais são inválidas', async () => {
+    const user = userEvent.setup();
+    
+    // Forçamos o mock a retornar um erro apenas para este teste
+    signInMock.mockResolvedValueOnce({ 
+      error: { message: 'Invalid login credentials' } 
+    });
+
+    render(
+      <BrowserRouter>
+        <Auth />
+      </BrowserRouter>
+    );
+
+    await user.type(screen.getByLabelText(/Email/i), 'errado@exemplo.com');
+    await user.type(screen.getByLabelText(/Senha/i), 'senhaerrada');
+    await user.click(screen.getByRole('button', { name: /Entrar/i }));
+
+    // Verificamos se o toast.error foi chamado com a mensagem amigável
+    expect(toast.error).toHaveBeenCalledWith(
+      "Erro no login",
+      expect.objectContaining({
+        description: "Email ou senha inválidos."
+      })
+    );
   });
 });
