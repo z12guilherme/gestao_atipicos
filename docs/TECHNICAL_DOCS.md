@@ -195,6 +195,18 @@ Armazena os nomes das turmas existentes para sugestão e organização.
 
 *Observação: Atualmente, não há uma chave estrangeira (foreign key) forçando o vínculo entre `students.class_name` e `classes.name` para maior flexibilidade administrativa.*
 
+#### Tabela `reports` (Diário de Bordo)
+Registra as observações diárias feitas pelos cuidadores sobre os estudantes.
+
+| Coluna | Tipo | Chave | Descrição |
+| :--- | :--- | :--- | :--- |
+| `id` | `bigint` | PK | Identificador sequencial da observação. |
+| `student_id` | `uuid` | FK | Referencia `students.id`. |
+| `caregiver_id` | `uuid` | FK | Referencia `profiles.id` (autor). |
+| `content` | `text` | | Texto da observação/relato. |
+| `title` | `text` | | Título resumido da observação. |
+| `created_at` | `timestamp`| | Data e hora do registro. |
+
 #### Tabela `caregivers_students` (Tabela de Junção)
 Tabela associativa (N-para-N) que vincula cuidadores a estudantes.
 

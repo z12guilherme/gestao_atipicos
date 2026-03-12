@@ -158,6 +158,18 @@ O projeto implementa **Honeytokens** e monitoramento de endpoints isca para dete
   <img src="./img/Diagrama-Banco%20de-Dados.png" alt="Diagrama do Banco de Dados" width="800">
 </p>
 
+### 🗃️ Migrations e Schema
+
+O versionamento do banco de dados é gerenciado via CLI do Supabase. A estrutura completa (Tabelas, RLS Policies, Functions e Triggers) está consolidada em uma única migration para facilitar o setup:
+
+- **Arquivo de Schema:** `supabase/migrations/20260101000000_full_schema.sql`
+
+Para aplicar este esquema em um ambiente de desenvolvimento local (requer Docker):
+
+```bash
+npx supabase db reset
+```
+
 ---
 
 ## ⚙️ Como Executar o Projeto Localmente
