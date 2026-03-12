@@ -998,7 +998,6 @@ GRANT USAGE ON SCHEMA "public" TO "postgres";
 GRANT USAGE ON SCHEMA "public" TO "anon";
 GRANT USAGE ON SCHEMA "public" TO "authenticated";
 GRANT USAGE ON SCHEMA "public" TO "service_role";
-GRANT ALL ON SCHEMA "public" TO "root";
 
 
 
@@ -1155,98 +1154,84 @@ GRANT ALL ON SCHEMA "public" TO "root";
 GRANT ALL ON FUNCTION "public"."get_all_profiles_with_email"() TO "anon";
 GRANT ALL ON FUNCTION "public"."get_all_profiles_with_email"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_all_profiles_with_email"() TO "service_role";
-GRANT ALL ON FUNCTION "public"."get_all_profiles_with_email"() TO "root";
 
 
 
 GRANT ALL ON FUNCTION "public"."get_all_users"() TO "anon";
 GRANT ALL ON FUNCTION "public"."get_all_users"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_all_users"() TO "service_role";
-GRANT ALL ON FUNCTION "public"."get_all_users"() TO "root";
 
 
 
 GRANT ALL ON FUNCTION "public"."get_current_user_role"() TO "anon";
 GRANT ALL ON FUNCTION "public"."get_current_user_role"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_current_user_role"() TO "service_role";
-GRANT ALL ON FUNCTION "public"."get_current_user_role"() TO "root";
 
 
 
 GRANT ALL ON FUNCTION "public"."get_my_claim"("claim" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."get_my_claim"("claim" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_my_claim"("claim" "text") TO "service_role";
-GRANT ALL ON FUNCTION "public"."get_my_claim"("claim" "text") TO "root";
 
 
 
 GRANT ALL ON FUNCTION "public"."get_professors_with_details"() TO "anon";
 GRANT ALL ON FUNCTION "public"."get_professors_with_details"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_professors_with_details"() TO "service_role";
-GRANT ALL ON FUNCTION "public"."get_professors_with_details"() TO "root";
 
 
 
 GRANT ALL ON FUNCTION "public"."get_profile_with_email"() TO "anon";
 GRANT ALL ON FUNCTION "public"."get_profile_with_email"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_profile_with_email"() TO "service_role";
-GRANT ALL ON FUNCTION "public"."get_profile_with_email"() TO "root";
 
 
 
 GRANT ALL ON FUNCTION "public"."get_profiles_with_email"() TO "anon";
 GRANT ALL ON FUNCTION "public"."get_profiles_with_email"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_profiles_with_email"() TO "service_role";
-GRANT ALL ON FUNCTION "public"."get_profiles_with_email"() TO "root";
 
 
 
 GRANT ALL ON FUNCTION "public"."get_profiles_with_email"("p_user_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."get_profiles_with_email"("p_user_id" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_profiles_with_email"("p_user_id" "uuid") TO "service_role";
-GRANT ALL ON FUNCTION "public"."get_profiles_with_email"("p_user_id" "uuid") TO "root";
 
 
 
 GRANT ALL ON FUNCTION "public"."get_user_role_for_claims"("user_id_input" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."get_user_role_for_claims"("user_id_input" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_user_role_for_claims"("user_id_input" "uuid") TO "service_role";
-GRANT ALL ON FUNCTION "public"."get_user_role_for_claims"("user_id_input" "uuid") TO "root";
 
 
 
 GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "anon";
 GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "service_role";
-GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "root";
 
 
 
 GRANT ALL ON FUNCTION "public"."is_admin"() TO "anon";
 GRANT ALL ON FUNCTION "public"."is_admin"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."is_admin"() TO "service_role";
-GRANT ALL ON FUNCTION "public"."is_admin"() TO "root";
 
 
 
 GRANT ALL ON FUNCTION "public"."is_gestor"() TO "anon";
 GRANT ALL ON FUNCTION "public"."is_gestor"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."is_gestor"() TO "service_role";
-GRANT ALL ON FUNCTION "public"."is_gestor"() TO "root";
 
 
 
 GRANT ALL ON FUNCTION "public"."update_guardian_with_students"("p_guardian_id" "uuid", "p_profile_data" "jsonb", "p_student_ids" "uuid"[]) TO "anon";
 GRANT ALL ON FUNCTION "public"."update_guardian_with_students"("p_guardian_id" "uuid", "p_profile_data" "jsonb", "p_student_ids" "uuid"[]) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."update_guardian_with_students"("p_guardian_id" "uuid", "p_profile_data" "jsonb", "p_student_ids" "uuid"[]) TO "service_role";
-GRANT ALL ON FUNCTION "public"."update_guardian_with_students"("p_guardian_id" "uuid", "p_profile_data" "jsonb", "p_student_ids" "uuid"[]) TO "root";
 
 
 
 GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "anon";
 GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "service_role";
-GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "root";
 
 
 
@@ -1268,77 +1253,66 @@ GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "root";
 GRANT ALL ON TABLE "public"."caregivers_students" TO "anon";
 GRANT ALL ON TABLE "public"."caregivers_students" TO "authenticated";
 GRANT ALL ON TABLE "public"."caregivers_students" TO "service_role";
-GRANT ALL ON TABLE "public"."caregivers_students" TO "root";
 
 
 
 GRANT ALL ON TABLE "public"."classes" TO "anon";
 GRANT ALL ON TABLE "public"."classes" TO "authenticated";
 GRANT ALL ON TABLE "public"."classes" TO "service_role";
-GRANT ALL ON TABLE "public"."classes" TO "root";
 
 
 
 GRANT ALL ON TABLE "public"."documents" TO "anon";
 GRANT ALL ON TABLE "public"."documents" TO "authenticated";
 GRANT ALL ON TABLE "public"."documents" TO "service_role";
-GRANT ALL ON TABLE "public"."documents" TO "root";
 
 
 
 GRANT ALL ON TABLE "public"."guardians_students" TO "anon";
 GRANT ALL ON TABLE "public"."guardians_students" TO "authenticated";
 GRANT ALL ON TABLE "public"."guardians_students" TO "service_role";
-GRANT ALL ON TABLE "public"."guardians_students" TO "root";
 
 
 
 GRANT ALL ON TABLE "public"."professors" TO "anon";
 GRANT ALL ON TABLE "public"."professors" TO "authenticated";
 GRANT ALL ON TABLE "public"."professors" TO "service_role";
-GRANT ALL ON TABLE "public"."professors" TO "root";
 
 
 
 GRANT ALL ON TABLE "public"."profiles" TO "anon";
 GRANT ALL ON TABLE "public"."profiles" TO "authenticated";
 GRANT ALL ON TABLE "public"."profiles" TO "service_role";
-GRANT ALL ON TABLE "public"."profiles" TO "root";
 
 
 
 GRANT ALL ON TABLE "public"."reports" TO "anon";
 GRANT ALL ON TABLE "public"."reports" TO "authenticated";
 GRANT ALL ON TABLE "public"."reports" TO "service_role";
-GRANT ALL ON TABLE "public"."reports" TO "root";
 
 
 
 GRANT ALL ON TABLE "public"."schedules" TO "anon";
 GRANT ALL ON TABLE "public"."schedules" TO "authenticated";
 GRANT ALL ON TABLE "public"."schedules" TO "service_role";
-GRANT ALL ON TABLE "public"."schedules" TO "root";
 
 
 
 GRANT ALL ON TABLE "public"."students" TO "anon";
 GRANT ALL ON TABLE "public"."students" TO "authenticated";
 GRANT ALL ON TABLE "public"."students" TO "service_role";
-GRANT ALL ON TABLE "public"."students" TO "root";
 
 
 
 GRANT ALL ON TABLE "public"."teachers_classes" TO "anon";
 GRANT ALL ON TABLE "public"."teachers_classes" TO "authenticated";
 GRANT ALL ON TABLE "public"."teachers_classes" TO "service_role";
-GRANT ALL ON TABLE "public"."teachers_classes" TO "root";
 
 
 
 GRANT ALL ON SEQUENCE "public"."teachers_classes_id_seq" TO "anon";
 GRANT ALL ON SEQUENCE "public"."teachers_classes_id_seq" TO "authenticated";
 GRANT ALL ON SEQUENCE "public"."teachers_classes_id_seq" TO "service_role";
-GRANT ALL ON SEQUENCE "public"."teachers_classes_id_seq" TO "root";
 
 
 
@@ -1369,7 +1343,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQ
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "anon";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "service_role";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "root";
 
 
 
@@ -1380,7 +1353,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUN
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "anon";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "service_role";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "root";
 
 
 
@@ -1391,4 +1363,3 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "anon";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "service_role";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "root";
