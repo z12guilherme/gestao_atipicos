@@ -852,24 +852,18 @@ CREATE POLICY "Gestores têm acesso total a vínculos de responsáveis" ON "publ
 
 
 CREATE POLICY "Gestors and Professors can insert guardians_students" ON "public"."guardians_students" FOR INSERT TO "authenticated" WITH CHECK ((EXISTS ( SELECT 1
-   FROM "public"."users" "u"
-  WHERE (("u"."id" = "auth"."uid"()) AND ("u"."role" = ANY (ARRAY['gestor'::"text", 'professor'::"text"]))))));
    FROM "public"."profiles" "p"
   WHERE (("p"."user_id" = "auth"."uid"()) AND ("p"."role" = ANY (ARRAY['gestor'::"public"."user_role", 'professor'::"public"."user_role"]))))));
 
 
 
 CREATE POLICY "Professors and Gestors can insert students" ON "public"."students" FOR INSERT TO "authenticated" WITH CHECK ((EXISTS ( SELECT 1
-   FROM "public"."users" "u"
-  WHERE (("u"."id" = "auth"."uid"()) AND ("u"."role" = ANY (ARRAY['gestor'::"text", 'professor'::"text"]))))));
    FROM "public"."profiles" "p"
   WHERE (("p"."user_id" = "auth"."uid"()) AND ("p"."role" = ANY (ARRAY['gestor'::"public"."user_role", 'professor'::"public"."user_role"]))))));
 
 
 
 CREATE POLICY "Professors and Gestors can update students" ON "public"."students" FOR UPDATE TO "authenticated" USING ((EXISTS ( SELECT 1
-   FROM "public"."users" "u"
-  WHERE (("u"."id" = "auth"."uid"()) AND ("u"."role" = ANY (ARRAY['gestor'::"text", 'professor'::"text"]))))));
    FROM "public"."profiles" "p"
   WHERE (("p"."user_id" = "auth"."uid"()) AND ("p"."role" = ANY (ARRAY['gestor'::"public"."user_role", 'professor'::"public"."user_role"]))))));
 
@@ -946,8 +940,6 @@ CREATE POLICY "Root full access on students" ON "public"."students" USING (("aut
 
 
 CREATE POLICY "Students visible only to Gestors, Professors or linked Guardian" ON "public"."students" FOR SELECT TO "authenticated" USING (((EXISTS ( SELECT 1
-   FROM "public"."users" "u"
-  WHERE (("u"."id" = "auth"."uid"()) AND ("u"."role" = ANY (ARRAY['gestor'::"text", 'professor'::"text"]))))) OR (EXISTS ( SELECT 1
    FROM "public"."profiles" "p"
   WHERE (("p"."user_id" = "auth"."uid"()) AND ("p"."role" = ANY (ARRAY['gestor'::"public"."user_role", 'professor'::"public"."user_role"]))))) OR (EXISTS ( SELECT 1
    FROM "public"."guardians_students" "gs"
