@@ -7,7 +7,7 @@ Bem-vindo(a) ao Gestão Atípicos! Este manual foi criado para guiar você atrav
 Para começar, acesse a plataforma através do link fornecido pela sua instituição e utilize o email e a senha cadastrados para fazer login.
 
 - **Página de Login:** Insira suas credenciais.
-- **Esqueci minha senha:** Caso tenha esquecido sua senha, utilize a opção de recuperação para redefini-la.
+- **Esqueci minha senha:** Caso tenha esquecido a sua senha, utilize a opção de recuperação para redefini-la.
 
 ### 1.1. Instalação do Aplicativo (Android)
 
