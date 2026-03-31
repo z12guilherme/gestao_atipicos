@@ -6,11 +6,10 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "noImplicitAny": false,
-    "noUnusedParameters": false,
-    "skipLibCheck": true,
-    "allowJs": true,
-    "noUnusedLocals": false,
-    "strictNullChecks": false
+    // Para maior qualidade e segurança do código, recomendo habilitar o modo estrito.
+    // Isso pode exigir alguns ajustes no código para tratar nulos e tipos implícitos,
+    // mas o ganho em robustez é imenso.
+    "strict": true,
+    "skipLibCheck": true
   }
 }

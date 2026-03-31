@@ -2,15 +2,15 @@ import { Dispatch, SetStateAction, useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { UserPlus, Edit, Save, Trash2, Upload, FileDown, Loader2, GraduationCap, X, Search, FileText, Eye } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"; 
+import { UserPlus, Edit, Save, Trash2, Upload, FileDown, Loader2, GraduationCap, X, Search, FileText, Eye, Link2 } from "lucide-react";
 import { useStudents, Student } from "@/hooks/useStudents";
 import {
   Form,
@@ -25,7 +25,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z, ZodError } from "zod";
 import ExcelJS from 'exceljs';
 import { useUsers } from "@/hooks/useUsers";
-import { MultiSelect } from "@/components/ui/MultiSelect";
 import { ImportErrorsDialog } from "@/components/shared/ImportErrorsDialog";
 import { PdfViewerDialog } from "@/components/shared/PdfViewerDialog";
 import { Textarea } from "../ui/textarea";
@@ -33,6 +32,8 @@ import { correlationLogger as logger } from "@/lib/correlation";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/errors";
 import { useQueryClient } from "@tanstack/react-query";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const studentSchema = z.object({
   name: z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres").max(100, "Nome muito longo"),
@@ -71,6 +72,14 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
   const [selectedClass, setSelectedClass] = useState("all");
   // Estado para o modal do PDF
   const [isPdfViewerOpen, setPdfViewerOpen] = useState(false);
+  // Estados para o novo modal de vínculo
+  const [isLinkGuardianDialogOpen, setLinkGuardianDialogOpen] = useState(false);
+  const [guardianSearchTerm, setGuardianSearchTerm] = useState("");
+  const [tempSelectedGuardians, setTempSelectedGuardians] = useState<string[]>([]);
+  // Estados para o novo modal de vínculo de cuidadores
+  const [isLinkCaregiverDialogOpen, setLinkCaregiverDialogOpen] = useState(false);
+  const [caregiverSearchTerm, setCaregiverSearchTerm] = useState("");
+  const [tempSelectedCaregivers, setTempSelectedCaregivers] = useState<string[]>([]);
   const [pdfPath, setPdfPath] = useState<string | null>(null);
 
   const caregivers = useMemo(() => allUsers.filter(u => u.role === 'cuidador'), [allUsers]);
@@ -103,8 +112,6 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
       })
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [students, searchTerm, selectedClass]);
-
-
   const form = useForm<StudentFormData>({
     resolver: zodResolver(studentSchema),
     values: editingStudent ? {
@@ -126,6 +133,43 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
       caregiver_ids: [],
     },
   });
+
+  // Assiste ao valor de 'guardian_ids' para usar como dependência estável no useMemo
+  const watchedGuardianIds = form.watch('guardian_ids');
+  const watchedCaregiverIds = form.watch('caregiver_ids');
+
+  const availableGuardians = useMemo(() => {
+    const linkedIds = watchedGuardianIds || [];
+    return guardians
+      .filter(g => !linkedIds.includes(g.id))
+      .filter(g => g.name.toLowerCase().includes(guardianSearchTerm.toLowerCase()));
+  }, [guardians, watchedGuardianIds, guardianSearchTerm]);
+
+  const availableCaregivers = useMemo(() => {
+    const linkedIds = watchedCaregiverIds || [];
+    return caregivers
+      .filter(c => !linkedIds.includes(c.id))
+      .filter(c => c.name.toLowerCase().includes(caregiverSearchTerm.toLowerCase()));
+  }, [caregivers, watchedCaregiverIds, caregiverSearchTerm]);
+
+  const handleConfirmLinkGuardians = () => {
+    const currentIds = form.getValues('guardian_ids') || [];
+    form.setValue('guardian_ids', [...currentIds, ...tempSelectedGuardians], { shouldDirty: true });
+    setLinkGuardianDialogOpen(false);
+    setTempSelectedGuardians([]);
+    setGuardianSearchTerm("");
+    toast.info(`${tempSelectedGuardians.length} responsável(eis) pronto(s) para vincular. Salve as alterações do estudante para confirmar.`);
+  };
+
+  const handleConfirmLinkCaregivers = () => {
+    const currentIds = form.getValues('caregiver_ids') || [];
+    form.setValue('caregiver_ids', [...currentIds, ...tempSelectedCaregivers], { shouldDirty: true });
+    setLinkCaregiverDialogOpen(false);
+    setTempSelectedCaregivers([]);
+    setCaregiverSearchTerm("");
+    toast.info(`${tempSelectedCaregivers.length} cuidador(es) pronto(s) para vincular. Salve as alterações do estudante para confirmar.`);
+  };
+
 
   const handleOpenEditModal = (student: Student) => {
     setEditingStudent(student);
@@ -314,6 +358,90 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
         fileName={importFile?.name || ''}
       />
       <Card>
+      <Dialog open={isLinkGuardianDialogOpen} onOpenChange={setLinkGuardianDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Vincular Responsáveis</DialogTitle>
+            <DialogDescription>
+              Busque e selecione os responsáveis para vincular a {editingStudent?.name || 'este estudante'}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar responsável..."
+                value={guardianSearchTerm}
+                onChange={(e) => setGuardianSearchTerm(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            <ScrollArea className="h-64 border rounded-md">
+              <div className="p-4 space-y-2">
+                {availableGuardians.length > 0 ? availableGuardians.map(guardian => (
+                  <div key={guardian.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`guardian-${guardian.id}`}
+                      checked={tempSelectedGuardians.includes(guardian.id)}
+                      onCheckedChange={(checked) => {
+                        setTempSelectedGuardians(prev =>
+                          checked
+                            ? [...prev, guardian.id]
+                            : prev.filter(id => id !== guardian.id)
+                        );
+                      }}
+                    />
+                    <Label htmlFor={`guardian-${guardian.id}`} className="font-normal">{guardian.name}</Label>
+                  </div>
+                )) : <p className="text-sm text-center text-muted-foreground py-4">Nenhum outro responsável encontrado.</p>}
+              </div>
+            </ScrollArea>
+          </div>
+          <DialogFooter><Button variant="ghost" onClick={() => setLinkGuardianDialogOpen(false)}>Cancelar</Button><Button onClick={handleConfirmLinkGuardians}>Confirmar Vínculo</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={isLinkCaregiverDialogOpen} onOpenChange={setLinkCaregiverDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Vincular Cuidadores</DialogTitle>
+            <DialogDescription>
+              Busque e selecione os cuidadores para vincular a {editingStudent?.name || 'este estudante'}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar cuidador..."
+                value={caregiverSearchTerm}
+                onChange={(e) => setCaregiverSearchTerm(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            <ScrollArea className="h-64 border rounded-md">
+              <div className="p-4 space-y-2">
+                {availableCaregivers.length > 0 ? availableCaregivers.map(caregiver => (
+                  <div key={caregiver.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`caregiver-${caregiver.id}`}
+                      checked={tempSelectedCaregivers.includes(caregiver.id)}
+                      onCheckedChange={(checked) => {
+                        setTempSelectedCaregivers(prev =>
+                          checked
+                            ? [...prev, caregiver.id]
+                            : prev.filter(id => id !== caregiver.id)
+                        );
+                      }}
+                    />
+                    <Label htmlFor={`caregiver-${caregiver.id}`} className="font-normal">{caregiver.name}</Label>
+                  </div>
+                )) : <p className="text-sm text-center text-muted-foreground py-4">Nenhum outro cuidador encontrado.</p>}
+              </div>
+            </ScrollArea>
+          </div>
+          <DialogFooter><Button variant="ghost" onClick={() => setLinkCaregiverDialogOpen(false)}>Cancelar</Button><Button onClick={handleConfirmLinkCaregivers}>Confirmar Vínculo</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -461,25 +589,59 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="guardian_ids">Responsáveis Vinculados</Label>
-                      <MultiSelect
-                        options={guardians.map(g => ({ value: g.id, label: g.name }))}
-                        selected={form.watch('guardian_ids') || []}
-                        onChange={(selected) => form.setValue('guardian_ids', selected)}
-                        placeholder="Selecione os responsáveis..."
-                        className="w-full"
-                      />
+                      <Label>Responsáveis Vinculados</Label>
+                      <div className="rounded-md border p-3 min-h-[76px] bg-muted/20">
+                        {form.watch('guardian_ids')?.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {form.watch('guardian_ids').map(id => {
+                              const guardian = guardians.find(g => g.id === id);
+                              return (
+                                <Badge key={id} variant="secondary" className="text-sm flex items-center gap-2">
+                                  {guardian?.name || 'Carregando...'}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const currentIds = form.getValues('guardian_ids') || [];
+                                      form.setValue('guardian_ids', currentIds.filter(gid => gid !== id), { shouldDirty: true });
+                                    }}
+                                    className="rounded-full hover:bg-background/50 p-0.5"
+                                    aria-label={`Remover ${guardian?.name}`}
+                                  ><X className="h-3 w-3" /></button>
+                                </Badge>
+                              );
+                            })}
+                          </div>
+                        ) : <p className="text-xs text-muted-foreground px-2 py-1">Nenhum responsável vinculado.</p>}
+                      </div>
+                      <Button type="button" variant="outline" size="sm" onClick={() => setLinkGuardianDialogOpen(true)}><Link2 className="mr-2 h-4 w-4" />Vincular Responsável</Button>
                     </div>
-
+                    
                     <div className="space-y-2">
-                      <Label htmlFor="caregiver_ids">Cuidadores Vinculados</Label>
-                      <MultiSelect
-                        options={caregivers.map(c => ({ value: c.id, label: c.name }))}
-                        selected={form.watch('caregiver_ids') || []}
-                        onChange={(selected) => form.setValue('caregiver_ids', selected)}
-                        placeholder="Selecione os cuidadores..."
-                        className="w-full"
-                      />
+                      <Label>Cuidadores Vinculados</Label>
+                      <div className="rounded-md border p-3 min-h-[76px] bg-muted/20">
+                        {form.watch('caregiver_ids')?.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {form.watch('caregiver_ids').map(id => {
+                              const caregiver = caregivers.find(c => c.id === id);
+                              return (
+                                <Badge key={id} variant="secondary" className="text-sm flex items-center gap-2">
+                                  {caregiver?.name || 'Carregando...'}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const currentIds = form.getValues('caregiver_ids') || [];
+                                      form.setValue('caregiver_ids', currentIds.filter(cid => cid !== id), { shouldDirty: true });
+                                    }}
+                                    className="rounded-full hover:bg-background/50 p-0.5"
+                                    aria-label={`Remover ${caregiver?.name}`}
+                                  ><X className="h-3 w-3" /></button>
+                                </Badge>
+                              );
+                            })}
+                          </div>
+                        ) : <p className="text-xs text-muted-foreground px-2 py-1">Nenhum cuidador vinculado.</p>}
+                      </div>
+                      <Button type="button" variant="outline" size="sm" onClick={() => setLinkCaregiverDialogOpen(true)}><Link2 className="mr-2 h-4 w-4" />Vincular Cuidador</Button>
                     </div>
                     </div>
                     <div className="flex justify-end space-x-2 pt-4 mt-4 border-t">

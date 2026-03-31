@@ -10,11 +10,12 @@ import { useProfile } from "@/hooks/useProfile";
 import { format, formatDistanceToNow, differenceInYears } from 'date-fns';
 import { subDays, startOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { HeartHandshake, User, FileText, Calendar, GraduationCap, Stethoscope, Info, Loader2, ShieldCheck, Cake, BarChart3, TrendingUp, BookOpen, Clock } from "lucide-react";
+import { HeartHandshake, User, FileText, Calendar, GraduationCap, Stethoscope, Info, Loader2, ShieldCheck, Cake, BarChart3, TrendingUp, BookOpen, Clock, Eye } from "lucide-react";
 import { useStudentReports } from "@/hooks/useStudentReports";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { cn } from "@/lib/utils";
 import { useSchedules } from "@/hooks/useSchedules";
+import { PdfViewerDialog } from "@/components/shared/PdfViewerDialog";
 
 
 /**
@@ -52,18 +53,26 @@ const processReportDataForChart = (reports: { created_at: string }[]) => {
  * Componente que exibe os detalhes completos de um estudante selecionado.
  */
 function StudentDetails({ student }: { student: Student }) {
+  const [isPdfViewerOpen, setPdfViewerOpen] = useState(false);
   const { reports, isLoading: isLoadingReports } = useStudentReports(student.id);
   const age = student.birth_date ? differenceInYears(new Date(), new Date(student.birth_date)) : null;
   const reportChartData = processReportDataForChart(reports || []);
 
   const today = useMemo(() => new Date(), []);
-  const { schedules: studentSchedule, loading: isLoadingSchedule } = useSchedules(student.id, today);
+  const { schedules: studentSchedule, isLoading: isLoadingSchedule } = useSchedules(student.id, today);
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <>
+      <PdfViewerDialog
+        isOpen={isPdfViewerOpen}
+        onOpenChange={setPdfViewerOpen}
+        filePath={student.laudo_url}
+        fileName={`Laudo de ${student.name}`}
+      />
+      <div className="space-y-6 animate-fade-in">
       {/* Cabeçalho do Estudante */}
-      <Card className="border-0 shadow-lg bg-white dark:bg-slate-900/70">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 md:p-6">
+        <Card className="overflow-hidden border-0 shadow-lg bg-white dark:bg-slate-900/70">
+          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/50 dark:to-cyan-950/50 p-4 md:p-6">
           <div className="flex items-center space-x-4">
             <div className="h-14 w-14 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-2xl shadow-md">
               {student.name.charAt(0)}
@@ -76,13 +85,21 @@ function StudentDetails({ student }: { student: Student }) {
               </CardDescription>
             </div>
           </div>
-          {student.status && (
-            <Badge variant={student.status === 'ativo' ? 'default' : 'destructive'} className="capitalize text-xs">
-              {student.status}
-            </Badge>
-          )}
-        </CardHeader>
-      </Card>
+            <div className="flex flex-col items-end gap-2">
+              {student.status && (
+                <Badge variant={student.status === 'ativo' ? 'success' : 'destructive'} className="capitalize text-xs">
+                  {student.status}
+                </Badge>
+              )}
+              {student.laudo_url && (
+                <Button variant="outline" size="sm" onClick={() => setPdfViewerOpen(true)}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  Ver Laudo
+                </Button>
+              )}
+            </div>
+          </div>
+        </Card>
       <div className="grid lg:grid-cols-3 gap-6">
       {/* Coluna Principal */}
       <div className="lg:col-span-2 space-y-6">
@@ -91,7 +108,7 @@ function StudentDetails({ student }: { student: Student }) {
           <CardHeader>
             <CardTitle className="flex items-center text-lg"><User className="mr-2 h-5 w-5 text-blue-500" /> Dados Pessoais</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5 text-sm max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+          <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5 text-sm">
             {student.birth_date && (
               <div className="flex items-start space-x-3">
                 <Cake className="h-4 w-4 mt-0.5 text-pink-500 flex-shrink-0" />
@@ -136,7 +153,7 @@ function StudentDetails({ student }: { student: Student }) {
         {/* Card de Análise e Gráficos */}
         <Card className="border-0 shadow-lg bg-white dark:bg-slate-900/70">
           <CardHeader>
-            <CardTitle className="flex items-center text-lg"><TrendingUp className="mr-2 h-5 w-5 text-indigo-500" /> Análise de Atividades</CardTitle>
+            <CardTitle className="flex items-center text-lg"><TrendingUp className="mr-2 h-5 w-5 text-indigo-500" /> Acompanhamento</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* KPIs */}
@@ -146,7 +163,7 @@ function StudentDetails({ student }: { student: Student }) {
                 <p className="text-xs text-muted-foreground">Observações Totais</p>
               </div>
               <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
-                <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400 truncate">
                   {reports && reports.length > 0 ? formatDistanceToNow(new Date(reports[0].created_at), { locale: ptBR }) : 'N/A'}
                 </p>
                 <p className="text-xs text-muted-foreground">Último Registro</p>
@@ -154,25 +171,29 @@ function StudentDetails({ student }: { student: Student }) {
             </div>
 
             {/* Gráfico de Atividades */}
-            {isLoadingReports ? <Skeleton className="h-48 w-full mt-4" /> : reportChartData.length > 0 && (
+            {isLoadingReports ? <Skeleton className="h-48 w-full mt-4" /> : (
               <div>
                 <h5 className="text-sm font-medium text-muted-foreground mb-2 mt-4">Observações por Semana (Últimos 3 meses)</h5>
-                <div className="h-48 w-full">
-                  <ResponsiveContainer>
-                    <BarChart data={reportChartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
-                      <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                      <YAxis allowDecimals={false} width={30} tick={{ fontSize: 10 }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--background))',
-                          borderColor: 'hsl(var(--border))',
-                        }}
-                      />
-                      <Bar dataKey="observacoes" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+                {reportChartData.length > 0 ? (
+                  <div className="h-48 w-full">
+                    <ResponsiveContainer>
+                      <BarChart data={reportChartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
+                        <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                        <YAxis allowDecimals={false} width={30} tick={{ fontSize: 10 }} />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--background))',
+                            borderColor: 'hsl(var(--border))',
+                          }}
+                        />
+                        <Bar dataKey="observacoes" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <p className="text-center text-sm text-muted-foreground py-4">Não há dados suficientes para gerar o gráfico.</p>
+                )}
               </div>
             )}
           </CardContent>
@@ -186,7 +207,7 @@ function StudentDetails({ student }: { student: Student }) {
           <CardHeader>
             <CardTitle className="flex items-center text-lg"><Clock className="mr-2 h-5 w-5 text-green-500" /> Cronograma do Dia</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+          <CardContent className="space-y-3 max-h-[250px] overflow-y-auto pr-2">
             {isLoadingSchedule ? (
               <div className="flex items-center justify-center p-4 text-slate-500 dark:text-slate-400">
                 <Loader2 className="h-5 w-5 animate-spin mr-2" /> Carregando...
@@ -213,7 +234,7 @@ function StudentDetails({ student }: { student: Student }) {
           <CardHeader>
             <CardTitle className="flex items-center text-lg"><FileText className="mr-2 h-5 w-5 text-blue-500" /> Últimas Observações</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+          <CardContent className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
               {isLoadingReports && (
                 <div className="flex items-center justify-center p-4 text-slate-500 dark:text-slate-400">
                   <Loader2 className="h-5 w-5 animate-spin mr-2" /> Carregando...
@@ -222,7 +243,7 @@ function StudentDetails({ student }: { student: Student }) {
               {!isLoadingReports && reports && reports.length > 0 && (
                 reports.map(report => (
                   <div key={report.id} className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                    <p className="text-sm text-slate-800 dark:text-slate-200 mb-2">{report.content}</p>
+                    <p className="text-sm text-slate-800 dark:text-slate-200 mb-2 whitespace-pre-wrap">{report.content}</p>
                     <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                       <span className="flex items-center"><User className="h-3 w-3 mr-1.5" />{report.caregiver_name || 'Cuidador'}</span>
                       <span className="flex items-center"><Calendar className="h-3 w-3 mr-1.5" />{formatDistanceToNow(new Date(report.created_at), { addSuffix: true, locale: ptBR })}</span>
@@ -239,8 +260,9 @@ function StudentDetails({ student }: { student: Student }) {
           </CardContent>
         </Card>
       </div>
+      </div>
     </div>
-    </div>
+    </>
   );
 }
 
@@ -251,7 +273,7 @@ function StudentDetails({ student }: { student: Student }) {
 export function ResponsavelDashboard() {
   const { profile, isLoading: isLoadingProfile } = useProfile();
   
-  // Busca direta dos estudantes vinculados para garantir que os dados apareçam corretamente
+  // Busca direta dos estudantes vinculados
   const { data: students, isLoading } = useQuery({
     queryKey: ['guardianStudents', profile?.id],
     queryFn: async () => {
@@ -264,7 +286,11 @@ export function ResponsavelDashboard() {
         
       if (error) throw error;
       
-      return data.map((item: any) => item.students) as Student[];
+      // Filtra estudantes nulos que podem vir de vínculos quebrados
+      const validStudents = data.map((item: any) => item.students).filter(Boolean);
+
+      // Ordena os estudantes por nome
+      return validStudents.sort((a, b) => a.name.localeCompare(b.name)) as Student[];
     },
     enabled: !!profile?.id,
   });
@@ -275,7 +301,7 @@ export function ResponsavelDashboard() {
   const selectedStudent = useMemo(() => {
     if (!students) return null;
     const currentId = selectedStudentId || students?.[0]?.id;
-    return students?.find(s => s.id === currentId);
+    return students.find(s => s.id === currentId);
   }, [students, selectedStudentId]);
 
   const getWelcomeMessage = () => {
@@ -300,7 +326,7 @@ export function ResponsavelDashboard() {
   }
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
+    <div className="space-y-6">
       <div className="animate-fade-in-down">
         <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
           {getWelcomeMessage()}, {profile?.name?.split(' ')[0]}!
@@ -319,8 +345,9 @@ export function ResponsavelDashboard() {
       ) : students && (
         <div className="space-y-6">
           {/* Seletor de Estudantes (Abas) */}
-          <div className="border-b border-slate-200 dark:border-slate-800 overflow-x-auto pb-1">
-            <nav className="-mb-px flex space-x-6 min-w-max px-1" aria-label="Tabs">
+          {students.length > 1 && (
+            <div className="border-b border-slate-200 dark:border-slate-800 overflow-x-auto pb-1">
+              <nav className="-mb-px flex space-x-6 min-w-max px-1" aria-label="Tabs">
               {students.map((student) => (
                 <Button
                   key={student.id}
@@ -328,7 +355,7 @@ export function ResponsavelDashboard() {
                   onClick={() => setSelectedStudentId(student.id)}
                   className={cn(
                     "whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm rounded-none",
-                    (selectedStudentId || students[0].id) === student.id
+                    selectedStudent?.id === student.id
                       ? 'border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-300'
                       : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:border-slate-700'
                   )}
@@ -336,13 +363,14 @@ export function ResponsavelDashboard() {
                   {student.name}
                 </Button>
               ))}
-            </nav>
-          </div>
+              </nav>
+            </div>
+          )}
 
           {/* Detalhes do Estudante Selecionado */}
           {selectedStudent ? (
             <StudentDetails student={selectedStudent} />
-          ) : <p>Selecione um estudante para ver os detalhes.</p>}
+          ) : <p className="text-center text-muted-foreground py-10">Selecione um estudante para ver os detalhes.</p>}
         </div>
       )}
     </div>

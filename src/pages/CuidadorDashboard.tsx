@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PdfViewerDialog } from "@/components/shared/PdfViewerDialog";
 import { useQuery } from "@tanstack/react-query";
@@ -41,20 +41,24 @@ function StudentCard({ student }: { student: Student }) {
         filePath={student.laudo_url}
         fileName={`Laudo de ${student.name}`}
       />
-      <div className="flex items-center space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-        <div className="h-10 w-10 rounded-full bg-gradient-to-r from-green-500 to-teal-500 flex items-center justify-center text-white font-medium">
+      <div className="flex items-center space-x-3 p-3 rounded-lg border bg-slate-50 dark:bg-slate-800/50 dark:border-slate-700">
+        <div className="h-10 w-10 rounded-full bg-gradient-to-r from-green-500 to-teal-500 flex items-center justify-center text-white font-medium flex-shrink-0">
           {student.name.charAt(0)}
         </div>
-        <div className="flex-1">
-          <p className="font-medium text-sm">{student.name}</p>
-          <p className="text-xs text-muted-foreground">{student.class_name || 'Sem turma'}</p>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-sm truncate">{student.name}</p>
+          <p className="text-xs text-muted-foreground truncate">{student.class_name || 'Sem turma'}</p>
         </div>
-        {student.laudo_url && (
-          <button onClick={() => setPdfViewerOpen(true)} className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" title="Visualizar Laudo">
-            <Eye className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-          </button>
-        )}
-        <Badge variant={student.status === 'ativo' ? 'default' : 'secondary'} className="text-xs">{student.status}</Badge>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {student.laudo_url && (
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPdfViewerOpen(true)} title="Visualizar Laudo">
+              <Eye className="h-4 w-4 text-muted-foreground" />
+            </Button>
+          )}
+          <Badge variant={student.status === 'ativo' ? 'success' : 'secondary'} className="capitalize text-xs">
+            {student.status}
+          </Badge>
+        </div>
       </div>
     </>
   );
@@ -64,8 +68,12 @@ export function CuidadorDashboard() {
   const { profile } = useProfile();
   const [isNoteDialogOpen, setNoteDialogOpen] = useState(false);
 
-  const { students: assignedStudents, isLoading: isLoadingStudents } = useCaregiverData();
+  const { students, isLoading: isLoadingStudents } = useCaregiverData();
   const { data: dashboardData, isLoading: isLoadingDashboard } = useCaregiverDashboardData();
+
+  const assignedStudents = useMemo(() => {
+    return [...students].sort((a, b) => a.name.localeCompare(b.name));
+  }, [students]);
 
   const isLoading = isLoadingStudents || isLoadingDashboard;
 
@@ -84,28 +92,30 @@ export function CuidadorDashboard() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header Section */}
-      <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
-        <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
-            {getWelcomeMessage()}, {profile?.name?.split(' ')[0]}!
-          </h1>
-          <p className="text-lg text-muted-foreground mt-2">
-            Acompanhe suas atividades e o progresso dos estudantes
-          </p>
-        </div>
-        <div className="flex items-center space-x-4">
-          <div className="text-right">
-            <p className="text-sm text-muted-foreground">Hoje</p>
-            <p className="text-sm font-medium">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+      <Card className="border-0 shadow-sm bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-950/30 dark:to-teal-950/30">
+        <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-green-800 dark:text-green-200">
+              {getWelcomeMessage()}, {profile?.name?.split(' ')[0]}!
+            </h1>
+            <p className="text-md text-muted-foreground mt-1">
+              Acompanhe suas atividades e o progresso dos estudantes.
+            </p>
           </div>
-          <Button onClick={() => setNoteDialogOpen(true)} size="sm" className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700">
-            <MessageSquare className="mr-2 h-4 w-4" />
-            Nova Observação
-          </Button>
-        </div>
-      </div>
+          <div className="flex items-center space-x-4">
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">Hoje</p>
+              <p className="text-sm font-medium">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+            </div>
+            <Button onClick={() => setNoteDialogOpen(true)} size="sm" className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white shadow">
+              <MessageSquare className="mr-2 h-4 w-4" />
+              Nova Observação
+            </Button>
+          </div>
+        </CardHeader>
+      </Card>
 
 
       {/* Quick Stats Cards */}
@@ -248,12 +258,12 @@ export function CuidadorDashboard() {
                 </div>
               ) : (
                 recentNotes.map((note, index) => (
-                  <div key={note.id} className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                  <div key={note.id} className="p-3 rounded-lg border bg-slate-50 dark:bg-slate-800/50 dark:border-slate-700">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-medium">{note.student_name}</p>
+                      <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{note.student_name}</p>
                       <span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(note.created_at), { addSuffix: true, locale: ptBR })}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">{note.note}</p>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{note.note}</p>
                   </div>
                 )))}
             </CardContent>
