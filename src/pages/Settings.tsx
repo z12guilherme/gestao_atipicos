@@ -14,6 +14,7 @@ import { Loader2, Save, Users, Mail } from 'lucide-react';
 import { AvatarUpload } from '@/components/shared/AvatarUpload';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserManagement } from '@/components/gestor/UserManagement';
+import { SiemDashboard } from '@/components/gestor/SiemDashboard';
 import { User } from '@/hooks/useUsers';
 
 const profileSchema = z.object({
@@ -82,6 +83,7 @@ export default function Settings() {
           <TabsTrigger value="profile">Perfil</TabsTrigger>
           <TabsTrigger value="security">Segurança</TabsTrigger>
           {profile?.role === 'gestor' && <TabsTrigger value="users">Usuários</TabsTrigger>}
+          {profile?.role === 'gestor' && <TabsTrigger value="siem">Monitoramento (SIEM)</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="profile">
@@ -150,6 +152,12 @@ export default function Settings() {
                 <UserManagement isDialogOpen={isUserDialogOpen} setDialogOpen={setUserDialogOpen} editingUser={editingUser} setEditingUser={setEditingUser} />
               </CardContent>
             </Card>
+          </TabsContent>
+        )}
+
+        {profile?.role === 'gestor' && (
+          <TabsContent value="siem">
+             <SiemDashboard />
           </TabsContent>
         )}
       </Tabs>

@@ -65,25 +65,33 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        "slide-in-from-bottom-4": {
+          from: { opacity: "0", transform: "translateY(16px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "count-up": {
+          from: { opacity: "0", transform: "translateY(8px) scale(0.9)" },
+          to: { opacity: "1", transform: "translateY(0) scale(1)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "slide-in-from-bottom-4": "slide-in-from-bottom-4 0.5s ease-out",
+        "count-up": "count-up 0.4s ease-out",
+      },
+      boxShadow: {
+        "glow-sm": "0 0 15px hsl(243 75% 59% / 0.2)",
+        "glow": "0 0 30px hsl(243 75% 59% / 0.3)",
+        "glow-lg": "0 0 50px hsl(243 75% 59% / 0.4)",
+        "inner-glow": "inset 0 1px 0 hsl(0 0% 100% / 0.1)",
       },
     },
   },

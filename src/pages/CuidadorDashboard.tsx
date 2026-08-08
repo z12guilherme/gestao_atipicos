@@ -1,26 +1,21 @@
 import { useState, useMemo } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PdfViewerDialog } from "@/components/shared/PdfViewerDialog";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
-import { 
-  Users, 
-  GraduationCap, 
-  Heart, 
+import {
+  Users,
+  GraduationCap,
+  Heart,
   Calendar,
-  Clock,
   Activity,
-  AlertCircle,
-  CheckCircle,
   MessageSquare,
   FileText,
   Star,
-  Download,
-  Eye
+  Eye,
+  Sparkles,
+  Clock,
 } from "lucide-react";
 import { useCaregiverData, Student } from "@/hooks/useCaregiverData";
 import { useCaregiverDashboardData } from "@/hooks/useCaregiverDashboardData";
@@ -41,21 +36,33 @@ function StudentCard({ student }: { student: Student }) {
         filePath={student.laudo_url}
         fileName={`Laudo de ${student.name}`}
       />
-      <div className="flex items-center space-x-3 p-3 rounded-lg border bg-slate-50 dark:bg-slate-800/50 dark:border-slate-700">
-        <div className="h-10 w-10 rounded-full bg-gradient-to-r from-green-500 to-teal-500 flex items-center justify-center text-white font-medium flex-shrink-0">
+      <div className="group flex items-center gap-3 p-3 rounded-xl border border-border/60 bg-card hover:border-primary/30 hover:shadow-glow-sm transition-all duration-300 animate-fade-in">
+        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold flex-shrink-0 ring-2 ring-emerald-500/20 group-hover:ring-emerald-500/40 transition-all">
           {student.name.charAt(0)}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-sm truncate">{student.name}</p>
-          <p className="text-xs text-muted-foreground truncate">{student.class_name || 'Sem turma'}</p>
+          <p className="font-semibold text-sm truncate">{student.name}</p>
+          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+            <GraduationCap className="h-3 w-3" />
+            {student.class_name || 'Sem turma'}
+          </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {student.laudo_url && (
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setPdfViewerOpen(true)} title="Visualizar Laudo">
-              <Eye className="h-4 w-4 text-muted-foreground" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600"
+              onClick={() => setPdfViewerOpen(true)}
+              title="Visualizar Laudo"
+            >
+              <Eye className="h-3.5 w-3.5" />
             </Button>
           )}
-          <Badge variant={student.status === 'ativo' ? 'success' : 'secondary'} className="capitalize text-xs">
+          <Badge
+            variant={student.status === 'ativo' ? 'success' : 'secondary'}
+            className="capitalize text-xs rounded-full"
+          >
             {student.status}
           </Badge>
         </div>
@@ -64,6 +71,27 @@ function StudentCard({ student }: { student: Student }) {
   );
 }
 
+const StatCard = ({
+  title, value, subtitle, icon: Icon, gradient, delay,
+}: {
+  title: string; value: string | number; subtitle: string;
+  icon: React.ElementType; gradient: string; delay: string;
+}) => (
+  <div className={`relative overflow-hidden rounded-2xl p-5 ${gradient} animate-slide-up delay-${delay} group hover:scale-[1.02] transition-transform duration-300`}>
+    <div className="absolute -top-3 -right-3 h-16 w-16 rounded-full bg-white/10 blur-sm" />
+    <div className="relative flex items-start justify-between">
+      <div>
+        <p className="text-xs font-medium text-white/75 uppercase tracking-wide">{title}</p>
+        <p className="mt-2 text-3xl font-bold text-white">{value}</p>
+        <p className="mt-1 text-xs text-white/60">{subtitle}</p>
+      </div>
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15">
+        <Icon className="h-5 w-5 text-white" />
+      </div>
+    </div>
+  </div>
+);
+
 export function CuidadorDashboard() {
   const { profile } = useProfile();
   const [isNoteDialogOpen, setNoteDialogOpen] = useState(false);
@@ -71,219 +99,214 @@ export function CuidadorDashboard() {
   const { students, isLoading: isLoadingStudents } = useCaregiverData();
   const { data: dashboardData, isLoading: isLoadingDashboard } = useCaregiverDashboardData();
 
-  const assignedStudents = useMemo(() => {
-    return [...students].sort((a, b) => a.name.localeCompare(b.name));
-  }, [students]);
+  const assignedStudents = useMemo(() =>
+    [...students].sort((a, b) => a.name.localeCompare(b.name)),
+    [students]
+  );
 
   const isLoading = isLoadingStudents || isLoadingDashboard;
-
   const recentNotes = dashboardData?.recentNotes || [];
   const todayScheduleCount = dashboardData?.todayScheduleCount || 0;
-  const averageRating = "N/A"; // TODO: Buscar dados reais de avaliação
-
-  const hasStudents = assignedStudents.length > 0;
-  const hasRecentNotes = recentNotes.length > 0;
 
   const getWelcomeMessage = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Bom dia";
-    if (hour < 18) return "Boa tarde";
+    const h = new Date().getHours();
+    if (h < 12) return "Bom dia";
+    if (h < 18) return "Boa tarde";
     return "Boa noite";
   };
 
+  const stats = [
+    {
+      title: "Estudantes",
+      value: assignedStudents.length,
+      subtitle: "Sob seus cuidados",
+      icon: Users,
+      gradient: "bg-gradient-to-br from-emerald-500 to-teal-600",
+      delay: "100",
+    },
+    {
+      title: "Atividades Hoje",
+      value: todayScheduleCount > 0 ? todayScheduleCount : "–",
+      subtitle: "Programadas para hoje",
+      icon: Calendar,
+      gradient: "bg-gradient-to-br from-indigo-500 to-violet-600",
+      delay: "200",
+    },
+    {
+      title: "Observações",
+      value: recentNotes.length > 0 ? recentNotes.length : "–",
+      subtitle: "Registradas hoje",
+      icon: FileText,
+      gradient: "bg-gradient-to-br from-violet-500 to-purple-700",
+      delay: "300",
+    },
+    {
+      title: "Avaliação",
+      value: "N/A",
+      subtitle: "Média das famílias",
+      icon: Star,
+      gradient: "bg-gradient-to-br from-amber-500 to-orange-600",
+      delay: "400",
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Header Section */}
-      <Card className="border-0 shadow-sm bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-950/30 dark:to-teal-950/30">
-        <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      {/* Hero banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 p-6 md:p-8 animate-fade-in-down">
+        {/* Decorative blobs */}
+        <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-white/10 blur-xl" />
+        <div className="absolute bottom-0 left-1/3 h-20 w-20 rounded-full bg-white/8 blur-lg" />
+        <div className="absolute -bottom-4 -right-4 h-24 w-24 rounded-full bg-teal-800/30" />
+
+        <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-green-800 dark:text-green-200">
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="h-4 w-4 text-emerald-200 animate-pulse" />
+              <span className="text-xs font-medium text-emerald-200 uppercase tracking-wide">Painel do Cuidador</span>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-white">
               {getWelcomeMessage()}, {profile?.name?.split(' ')[0]}!
             </h1>
-            <p className="text-md text-muted-foreground mt-1">
+            <p className="text-emerald-100/80 text-sm mt-1.5">
               Acompanhe suas atividades e o progresso dos estudantes.
             </p>
+            <p className="text-xs text-emerald-200/60 mt-2 flex items-center gap-1.5">
+              <Clock className="h-3 w-3" />
+              {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </p>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="text-right">
-              <p className="text-sm text-muted-foreground">Hoje</p>
-              <p className="text-sm font-medium">{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-            </div>
-            <Button onClick={() => setNoteDialogOpen(true)} size="sm" className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white shadow">
-              <MessageSquare className="mr-2 h-4 w-4" />
-              Nova Observação
-            </Button>
-          </div>
-        </CardHeader>
-      </Card>
-
-
-      {/* Quick Stats Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {isLoading ? (
-          <>
-            <Skeleton className="h-[120px]" />
-            <Skeleton className="h-[120px]" />
-            <Skeleton className="h-[120px]" />
-            <Skeleton className="h-[120px]" />
-          </>
-        ) : (
-          <>
-          <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950/50 dark:to-emerald-900/50">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-emerald-500/10" />
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
-            <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">
-              Estudantes Atribuídos
-            </CardTitle>
-            <div className="h-10 w-10 rounded-full bg-green-600 flex items-center justify-center">
-              <Users className="h-5 w-5 text-white" />
-            </div>
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="text-3xl font-bold text-green-900 dark:text-green-100">{assignedStudents.length}</div>
-            <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-              Sob seus cuidados
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950/50 dark:to-indigo-900/50">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10" />
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
-            <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">
-              Atividades Hoje
-            </CardTitle>
-            <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center">
-              <Calendar className="h-5 w-5 text-white" />
-            </div>
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="text-3xl font-bold text-blue-900 dark:text-blue-100">{todayScheduleCount > 0 ? todayScheduleCount : '-'}</div>
-            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-              Programadas para hoje
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-purple-50 to-violet-100 dark:from-purple-950/50 dark:to-violet-900/50">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-violet-500/10" />
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
-            <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">
-              Observações
-            </CardTitle>
-            <div className="h-10 w-10 rounded-full bg-purple-600 flex items-center justify-center">
-              <FileText className="h-5 w-5 text-white" />
-            </div>
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="text-3xl font-bold text-purple-900 dark:text-purple-100">{recentNotes.length > 0 ? recentNotes.length : '-'}</div>
-            <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
-              Registradas hoje
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-950/50 dark:to-amber-900/50">
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-amber-500/10" />
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
-            <CardTitle className="text-sm font-medium text-orange-700 dark:text-orange-300">
-              Avaliação
-            </CardTitle>
-            <div className="h-10 w-10 rounded-full bg-orange-600 flex items-center justify-center">
-              <Star className="h-5 w-5 text-white" />
-            </div>
-          </CardHeader>
-          <CardContent className="relative">
-            <div className="text-3xl font-bold text-orange-900 dark:text-orange-100">{averageRating}</div>
-            <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
-              Média das famílias
-            </p>
-          </CardContent>
-        </Card>
-        </>
-        )}
+          <Button
+            onClick={() => setNoteDialogOpen(true)}
+            className="bg-white/15 hover:bg-white/25 text-white border border-white/20 backdrop-blur-sm rounded-xl w-fit"
+          >
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Nova Observação
+          </Button>
+        </div>
       </div>
 
-      {/* Main Content Grid */}
+      {/* Stat Cards */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        {isLoading
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-32 rounded-2xl" />
+            ))
+          : stats.map((s) => <StatCard key={s.title} {...s} />)
+        }
+      </div>
+
+      {/* Main Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Today's Schedule */}
-        <div className="lg:col-span-2">
-          {/* Componente de gerenciamento de cronograma inserido aqui */}
+        {/* Schedule — takes 2 cols */}
+        <div className="lg:col-span-2 animate-slide-up delay-200">
           <ScheduleManagement />
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Students Under Care */}
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Heart className="h-5 w-5 text-green-600" />
-                <span>Seus Estudantes</span>
+        <div className="space-y-4 animate-slide-up delay-300">
+          {/* Students */}
+          <Card className="rounded-2xl border-border/60 shadow-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-500/15">
+                  <Heart className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                Seus Estudantes
+                <span className="ml-auto text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                  {assignedStudents.length}
+                </span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2">
               {isLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-16 w-full" />
-                  <Skeleton className="h-16 w-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-14 w-full rounded-xl" />
+                  <Skeleton className="h-14 w-full rounded-xl" />
                 </div>
-              ) : !hasStudents ? (
-                <div className="text-center py-4 px-2">
-                  <Heart className="mx-auto h-8 w-8 text-muted-foreground" />
-                  <p className="mt-2 text-sm text-muted-foreground">Você ainda não tem estudantes sob seus cuidados.</p>
-                  <p className="text-xs text-muted-foreground">Peça a um gestor para atribuir estudantes a você.</p>
+              ) : assignedStudents.length === 0 ? (
+                <div className="text-center py-6 px-2">
+                  <div className="flex h-12 w-12 mx-auto items-center justify-center rounded-full bg-muted">
+                    <Heart className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="mt-3 text-sm font-medium">Sem estudantes</p>
+                  <p className="text-xs text-muted-foreground mt-1">Peça a um gestor para atribuir estudantes.</p>
                 </div>
-              ) : (assignedStudents.map((student) => <StudentCard key={student.id} student={student} />))}
+              ) : (
+                assignedStudents.map((s) => <StudentCard key={s.id} student={s} />)
+              )}
             </CardContent>
           </Card>
 
           {/* Recent Notes */}
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <MessageSquare className="h-5 w-5 text-purple-600" />
-                <span>Observações Recentes</span>
+          <Card className="rounded-2xl border-border/60 shadow-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-500/15">
+                  <MessageSquare className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                </div>
+                Observações Recentes
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2">
               {isLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-16 w-full" />
-                </div>
-              ) : !hasRecentNotes ? (
-                 <div className="text-center py-4 px-2">
-                  <MessageSquare className="mx-auto h-8 w-8 text-muted-foreground" />
-                  <p className="mt-2 text-sm text-muted-foreground">Nenhuma observação registrada hoje.</p>
+                <Skeleton className="h-20 w-full rounded-xl" />
+              ) : recentNotes.length === 0 ? (
+                <div className="text-center py-6 px-2">
+                  <div className="flex h-12 w-12 mx-auto items-center justify-center rounded-full bg-muted">
+                    <MessageSquare className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="mt-3 text-sm font-medium">Nenhuma observação</p>
+                  <p className="text-xs text-muted-foreground mt-1">Registrada hoje.</p>
                 </div>
               ) : (
-                recentNotes.map((note, index) => (
-                  <div key={note.id} className="p-3 rounded-lg border bg-slate-50 dark:bg-slate-800/50 dark:border-slate-700">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{note.student_name}</p>
-                      <span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(note.created_at), { addSuffix: true, locale: ptBR })}</span>
+                recentNotes.map((note) => (
+                  <div key={note.id} className="p-3 rounded-xl border border-border/60 bg-muted/30 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold">{note.student_name}</p>
+                      <span className="text-[10px] text-muted-foreground">
+                        {formatDistanceToNow(new Date(note.created_at), { addSuffix: true, locale: ptBR })}
+                      </span>
                     </div>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{note.note}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{note.note}</p>
                   </div>
-                )))}
+                ))
+              )}
             </CardContent>
           </Card>
 
           {/* Quick Actions */}
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-sm">Ações Rápidas</CardTitle>
+          <Card className="rounded-2xl border-border/60 shadow-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-500/15">
+                  <Activity className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                Ações Rápidas
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <Button onClick={() => setNoteDialogOpen(true)} variant="outline" className="w-full justify-start">
+            <CardContent className="space-y-2">
+              <Button
+                onClick={() => setNoteDialogOpen(true)}
+                className="w-full justify-start rounded-xl bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-500/10 dark:to-violet-500/10 text-indigo-700 dark:text-indigo-300 hover:from-indigo-100 hover:to-violet-100 dark:hover:from-indigo-500/20 dark:hover:to-violet-500/20 border border-indigo-200 dark:border-indigo-500/20 font-medium"
+                variant="ghost"
+              >
                 <MessageSquare className="mr-2 h-4 w-4" />
                 Nova Observação
               </Button>
-              <Button variant="outline" className="w-full justify-start" disabled>
+              <Button
+                variant="ghost"
+                className="w-full justify-start rounded-xl text-muted-foreground"
+                disabled
+              >
                 <Calendar className="mr-2 h-4 w-4" />
                 Ver Cronograma Completo
               </Button>
-              <Button variant="outline" className="w-full justify-start" disabled>
+              <Button
+                variant="ghost"
+                className="w-full justify-start rounded-xl text-muted-foreground"
+                disabled
+              >
                 <Activity className="mr-2 h-4 w-4" />
                 Relatório de Progresso
               </Button>

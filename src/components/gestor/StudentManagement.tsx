@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"; 
-import { UserPlus, Edit, Save, Trash2, Upload, FileDown, Loader2, GraduationCap, X, Search, FileText, Eye, Link2 } from "lucide-react";
+import { UserPlus, Edit, Save, Trash2, Upload, FileDown, Loader2, GraduationCap, X, Search, FileText, Eye, Link2, HeartPulse, UsersRound } from "lucide-react";
 import { useStudents, Student } from "@/hooks/useStudents";
 import {
   Form,
@@ -357,7 +357,7 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
         errors={importErrors}
         fileName={importFile?.name || ''}
       />
-      <Card>
+      <Card className="rounded-2xl border-border/60 shadow-card">
       <Dialog open={isLinkGuardianDialogOpen} onOpenChange={setLinkGuardianDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -486,170 +486,210 @@ export function StudentManagement({ isDialogOpen, setDialogOpen, editingStudent,
 
               <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
                 <DialogTrigger asChild>
-                  <Button><UserPlus className="mr-2 h-4 w-4" />Novo Estudante</Button>
+                  <Button className="rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-glow-sm"><UserPlus className="mr-2 h-4 w-4" />Novo Estudante</Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px] w-[95vw]">
-                  <DialogHeader>
-                    <DialogTitle>{editingStudent ? 'Editar Estudante' : 'Cadastrar Novo Estudante'}</DialogTitle>
-                    <DialogDescription>Preencha os campos abaixo.</DialogDescription>
-                  </DialogHeader>
+                <DialogContent className="sm:max-w-[600px] w-[95vw] rounded-2xl p-0 overflow-hidden border-border/60 shadow-card">
+                  <div className="bg-gradient-to-r from-indigo-500/10 to-violet-500/10 px-6 py-5 border-b border-border/40 relative">
+                    <div className="absolute top-2 right-4 p-4 opacity-10 pointer-events-none">
+                      <GraduationCap className="w-16 h-16" />
+                    </div>
+                    <DialogHeader>
+                      <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                        {editingStudent ? <Edit className="h-5 w-5 text-indigo-500" /> : <UserPlus className="h-5 w-5 text-indigo-500" />}
+                        {editingStudent ? 'Editar Estudante' : 'Cadastrar Novo Estudante'}
+                      </DialogTitle>
+                      <DialogDescription>Preencha as informações detalhadas do estudante.</DialogDescription>
+                    </DialogHeader>
+                  </div>
                   <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)}>
-                    <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-4 custom-scrollbar">
+                    <div className="px-6 py-5 space-y-5 max-h-[65vh] overflow-y-auto custom-scrollbar">
+                      <section className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 dark:border-slate-700/70 dark:bg-slate-900/40">
+                        <div className="mb-4 flex items-center gap-2 text-slate-700 dark:text-slate-200">
+                          <div className="rounded-lg bg-slate-200 p-2 text-slate-700 dark:bg-slate-800 dark:text-slate-200"><UserPlus className="h-4 w-4" /></div>
+                          <div><h3 className="text-sm font-bold">Dados do estudante</h3><p className="text-xs text-muted-foreground">Identificação e situação atual</p></div>
+                        </div>
                       <div className="space-y-2">
-                        <Label htmlFor="name">Nome Completo *</Label>
-                        <Input id="name" {...form.register("name")} />
+                        <Label htmlFor="name" className="text-sm font-semibold">Nome Completo *</Label>
+                        <Input id="name" {...form.register("name")} className="h-11 rounded-xl bg-white border-slate-200 shadow-sm dark:bg-slate-950 dark:border-slate-700 focus:ring-2 focus:ring-primary/20 transition-all" />
                         {form.formState.errors.name && <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>}
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="birth_date">Data de Nascimento *</Label>
-                        <Input id="birth_date" type="date" {...form.register("birth_date")} />
-                        {form.formState.errors.birth_date && <p className="text-sm text-destructive">{form.formState.errors.birth_date.message}</p>}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="birth_date" className="text-sm font-semibold">Data de Nascimento *</Label>
+                          <Input id="birth_date" type="date" {...form.register("birth_date")} className="h-11 rounded-xl bg-white border-slate-200 shadow-sm dark:bg-slate-950 dark:border-slate-700 focus:ring-2 focus:ring-primary/20 transition-all" />
+                          {form.formState.errors.birth_date && <p className="text-sm text-destructive">{form.formState.errors.birth_date.message}</p>}
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="status" className="text-sm font-semibold">Status *</Label>
+                          <FormField
+                            name="status"
+                            control={form.control}
+                            render={({ field }) => (
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger className="h-11 rounded-xl bg-white border-slate-200 shadow-sm dark:bg-slate-950 dark:border-slate-700 focus:ring-2 focus:ring-primary/20 transition-all"><SelectValue /></SelectTrigger>
+                                <SelectContent className="rounded-xl">
+                                  <SelectItem value="ativo">Ativo</SelectItem>
+                                  <SelectItem value="inativo">Inativo</SelectItem>
+                                  <SelectItem value="aguardando">Aguardando</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="status">Status *</Label>
-                        <FormField
-                          name="status"
-                          control={form.control}
-                          render={({ field }) => (
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <SelectTrigger><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="ativo">Ativo</SelectItem>
-                                <SelectItem value="inativo">Inativo</SelectItem>
-                                <SelectItem value="aguardando">Aguardando</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                       <div className="space-y-2">
-                        <Label htmlFor="class_name">Turma</Label>
-                        <Input id="class_name" {...form.register("class_name")} /> 
-                      </div>
-                       <div className="space-y-2">
-                        <Label htmlFor="period">Período</Label>
-                        <Controller
-                          name="period"
-                          control={form.control}
-                          render={({ field }) => (
-                            <Select onValueChange={field.onChange} value={field.value ?? undefined}>
-                              <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Manhã">Manhã</SelectItem>
-                                <SelectItem value="Tarde">Tarde</SelectItem>
-                                <SelectItem value="Integral">Integral</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
-                      </div>
-                    </div>
-                     <div className="space-y-2">
-                      <Label htmlFor="diagnosis">Diagnóstico</Label>
-                      <Input id="diagnosis" {...form.register("diagnosis")} />
-                    </div>
-                     <div className="space-y-2">
-                      <Label htmlFor="medical_info">Informações Médicas Relevantes</Label>
-                      <Textarea id="medical_info" {...form.register("medical_info")} />
-                    </div>
+                      </section>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="laudo_file">Laudo Médico (PDF)</Label>
-                      {/* @ts-ignore - Verifica se existe laudo_url no estudante em edição */}
-                      {editingStudent?.laudo_url ? (
-                        <div className="flex items-center justify-between p-3 border rounded-md bg-muted/40">
-                          <div className="flex items-center space-x-3">
-                            <div className="p-2 bg-blue-100 rounded-full dark:bg-blue-900/30">
-                              <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <section className="rounded-2xl border border-indigo-100 bg-indigo-50/70 p-4 dark:border-indigo-900/60 dark:bg-indigo-950/20">
+                        <div className="mb-4 flex items-center gap-2 text-indigo-700 dark:text-indigo-300">
+                          <div className="rounded-lg bg-indigo-100 p-2 dark:bg-indigo-900/50"><GraduationCap className="h-4 w-4" /></div>
+                          <div><h3 className="text-sm font-bold">Vínculo escolar</h3><p className="text-xs text-indigo-700/70 dark:text-indigo-300/70">Turma e período de estudo</p></div>
+                        </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="class_name" className="text-sm font-semibold">Turma</Label>
+                          <Input id="class_name" {...form.register("class_name")} className="h-11 rounded-xl bg-white border-indigo-100 shadow-sm dark:bg-slate-950 dark:border-indigo-900/60 focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Ex: 2º Ano A" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="period" className="text-sm font-semibold">Período</Label>
+                          <Controller
+                            name="period"
+                            control={form.control}
+                            render={({ field }) => (
+                              <Select onValueChange={field.onChange} value={field.value ?? undefined}>
+                                <SelectTrigger className="h-11 rounded-xl bg-white border-indigo-100 shadow-sm dark:bg-slate-950 dark:border-indigo-900/60 focus:ring-2 focus:ring-primary/20 transition-all"><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                                <SelectContent className="rounded-xl">
+                                  <SelectItem value="Manhã">Manhã</SelectItem>
+                                  <SelectItem value="Tarde">Tarde</SelectItem>
+                                  <SelectItem value="Integral">Integral</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                        </div>
+                      </div>
+                      </section>
+
+                      <section className="rounded-2xl border border-amber-100 bg-amber-50/70 p-4 dark:border-amber-900/60 dark:bg-amber-950/20">
+                        <div className="mb-4 flex items-center gap-2 text-amber-800 dark:text-amber-300">
+                          <div className="rounded-lg bg-amber-100 p-2 dark:bg-amber-900/50"><HeartPulse className="h-4 w-4" /></div>
+                          <div><h3 className="text-sm font-bold">Saúde e acompanhamento</h3><p className="text-xs text-amber-800/70 dark:text-amber-300/70">Informações que ajudam no cuidado</p></div>
+                        </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="diagnosis" className="text-sm font-semibold">Diagnóstico</Label>
+                        <Input id="diagnosis" {...form.register("diagnosis")} className="h-11 rounded-xl bg-white border-amber-100 shadow-sm dark:bg-slate-950 dark:border-amber-900/60 focus:ring-2 focus:ring-primary/20 transition-all" />
+                      </div>
+
+                      <div className="space-y-2 mt-4">
+                        <Label htmlFor="medical_info" className="text-sm font-semibold">Informações Médicas Relevantes</Label>
+                        <Textarea id="medical_info" {...form.register("medical_info")} className="min-h-[80px] rounded-xl bg-white border-amber-100 shadow-sm dark:bg-slate-950 dark:border-amber-900/60 focus:ring-2 focus:ring-primary/20 transition-all resize-none" />
+                      </div>
+
+                      <div className="space-y-2 mt-4">
+                        <Label htmlFor="laudo_file" className="text-sm font-semibold">Laudo Médico (PDF)</Label>
+                        {/* @ts-ignore - Verifica se existe laudo_url no estudante em edição */}
+                        {editingStudent?.laudo_url ? (
+                          <div className="flex items-center justify-between p-3 border border-amber-100 rounded-xl bg-white/80 dark:border-amber-900/60 dark:bg-slate-950/60">
+                            <div className="flex items-center space-x-3">
+                              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                                <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                              </div>
+                              <div className="space-y-0.5">
+                                <p className="text-sm font-medium">Laudo Anexado</p>
+                                <p className="text-xs text-muted-foreground">Documento PDF salvo</p>
+                              </div>
                             </div>
-                            <div className="space-y-0.5">
-                              <p className="text-sm font-medium">Laudo Anexado</p>
-                              <p className="text-xs text-muted-foreground">PDF disponível</p>
+                            <div className="flex space-x-2">
+                              <Button type="button" variant="outline" size="sm" onClick={handleViewLaudo} className="rounded-lg h-8">
+                                <Eye className="h-3.5 w-3.5 mr-1.5" /> Ver
+                              </Button>
+                              <Button type="button" variant="destructive" size="sm" onClick={handleRemoveLaudo} className="rounded-lg h-8">
+                                <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Remover
+                              </Button>
                             </div>
                           </div>
-                          <div className="flex space-x-2">
-                            <Button type="button" variant="outline" size="sm" onClick={handleViewLaudo} title="Visualizar Laudo">
-                              <Eye className="h-4 w-4 mr-2" /> Visualizar
-                            </Button>
-                            <Button type="button" variant="destructive" size="sm" onClick={handleRemoveLaudo}>
-                              <Trash2 className="h-4 w-4 mr-2" /> Remover
-                            </Button>
+                        ) : (
+                          <>
+                            <Input id="laudo_file" type="file" accept="application/pdf" {...form.register("laudo_file")} className="h-11 rounded-xl bg-white border-amber-100 shadow-sm dark:bg-slate-950 dark:border-amber-900/60 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-100 file:text-amber-800 hover:file:bg-amber-200 dark:file:bg-amber-900/50 dark:file:text-amber-200 transition-all cursor-pointer" />
+                            {form.formState.errors.laudo_file && <p className="text-sm text-destructive">{form.formState.errors.laudo_file.message as string}</p>}
+                          </>
+                        )}
+                      </div>
+                      </section>
+
+                      <section className="rounded-2xl border border-teal-100 bg-teal-50/70 p-4 dark:border-teal-900/60 dark:bg-teal-950/20">
+                        <div className="mb-4 flex items-center gap-2 text-teal-800 dark:text-teal-300">
+                          <div className="rounded-lg bg-teal-100 p-2 dark:bg-teal-900/50"><UsersRound className="h-4 w-4" /></div>
+                          <div><h3 className="text-sm font-bold">Rede de apoio</h3><p className="text-xs text-teal-800/70 dark:text-teal-300/70">Responsáveis e cuidadores vinculados</p></div>
+                        </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-sm font-semibold">Responsáveis</Label>
+                            <Button type="button" variant="ghost" size="sm" onClick={() => setLinkGuardianDialogOpen(true)} className="h-7 text-xs rounded-lg text-primary hover:bg-primary/10"><Link2 className="mr-1.5 h-3 w-3" />Adicionar</Button>
+                          </div>
+                          <div className="rounded-xl border border-teal-100 p-3 min-h-[90px] bg-white/80 dark:border-teal-900/60 dark:bg-slate-950/60">
+                            {form.watch('guardian_ids')?.length > 0 ? (
+                              <div className="flex flex-wrap gap-2">
+                                {form.watch('guardian_ids').map(id => {
+                                  const guardian = guardians.find(g => g.id === id);
+                                  return (
+                                    <Badge key={id} variant="outline" className="text-xs py-1 px-2 rounded-lg flex items-center gap-1.5 border-teal-200 bg-teal-100 text-teal-950 dark:border-teal-800 dark:bg-teal-900/50 dark:text-teal-100">
+                                      {guardian?.name || 'Carregando...'}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const currentIds = form.getValues('guardian_ids') || [];
+                                          form.setValue('guardian_ids', currentIds.filter(gid => gid !== id), { shouldDirty: true });
+                                        }}
+                                        className="rounded-full hover:bg-destructive/10 hover:text-destructive p-0.5 transition-colors"
+                                      ><X className="h-3 w-3" /></button>
+                                    </Badge>
+                                  );
+                                })}
+                              </div>
+                            ) : <p className="text-xs text-muted-foreground py-2 text-center">Nenhum responsável vinculado.</p>}
                           </div>
                         </div>
-                      ) : (
-                        <>
-                          <Input id="laudo_file" type="file" accept="application/pdf" {...form.register("laudo_file")} />
-                          {form.formState.errors.laudo_file && <p className="text-sm text-destructive">{form.formState.errors.laudo_file.message as string}</p>}
-                        </>
-                      )}
-                    </div>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-sm font-semibold">Cuidadores</Label>
+                            <Button type="button" variant="ghost" size="sm" onClick={() => setLinkCaregiverDialogOpen(true)} className="h-7 text-xs rounded-lg text-primary hover:bg-primary/10"><Link2 className="mr-1.5 h-3 w-3" />Adicionar</Button>
+                          </div>
+                          <div className="rounded-xl border border-teal-100 p-3 min-h-[90px] bg-white/80 dark:border-teal-900/60 dark:bg-slate-950/60">
+                            {form.watch('caregiver_ids')?.length > 0 ? (
+                              <div className="flex flex-wrap gap-2">
+                                {form.watch('caregiver_ids').map(id => {
+                                  const caregiver = caregivers.find(c => c.id === id);
+                                  return (
+                                    <Badge key={id} variant="outline" className="text-xs py-1 px-2 rounded-lg flex items-center gap-1.5 border-teal-200 bg-teal-100 text-teal-950 dark:border-teal-800 dark:bg-teal-900/50 dark:text-teal-100">
+                                      {caregiver?.name || 'Carregando...'}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const currentIds = form.getValues('caregiver_ids') || [];
+                                          form.setValue('caregiver_ids', currentIds.filter(cid => cid !== id), { shouldDirty: true });
+                                        }}
+                                        className="rounded-full hover:bg-destructive/10 hover:text-destructive p-0.5 transition-colors"
+                                      ><X className="h-3 w-3" /></button>
+                                    </Badge>
+                                  );
+                                })}
+                              </div>
+                            ) : <p className="text-xs text-muted-foreground py-2 text-center">Nenhum cuidador vinculado.</p>}
+                          </div>
+                        </div>
+                      </div>
+                      </section>
 
-                    <div className="space-y-2">
-                      <Label>Responsáveis Vinculados</Label>
-                      <div className="rounded-md border p-3 min-h-[76px] bg-muted/20">
-                        {form.watch('guardian_ids')?.length > 0 ? (
-                          <div className="flex flex-wrap gap-2">
-                            {form.watch('guardian_ids').map(id => {
-                              const guardian = guardians.find(g => g.id === id);
-                              return (
-                                <Badge key={id} variant="secondary" className="text-sm flex items-center gap-2">
-                                  {guardian?.name || 'Carregando...'}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const currentIds = form.getValues('guardian_ids') || [];
-                                      form.setValue('guardian_ids', currentIds.filter(gid => gid !== id), { shouldDirty: true });
-                                    }}
-                                    className="rounded-full hover:bg-background/50 p-0.5"
-                                    aria-label={`Remover ${guardian?.name}`}
-                                  ><X className="h-3 w-3" /></button>
-                                </Badge>
-                              );
-                            })}
-                          </div>
-                        ) : <p className="text-xs text-muted-foreground px-2 py-1">Nenhum responsável vinculado.</p>}
-                      </div>
-                      <Button type="button" variant="outline" size="sm" onClick={() => setLinkGuardianDialogOpen(true)}><Link2 className="mr-2 h-4 w-4" />Vincular Responsável</Button>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Cuidadores Vinculados</Label>
-                      <div className="rounded-md border p-3 min-h-[76px] bg-muted/20">
-                        {form.watch('caregiver_ids')?.length > 0 ? (
-                          <div className="flex flex-wrap gap-2">
-                            {form.watch('caregiver_ids').map(id => {
-                              const caregiver = caregivers.find(c => c.id === id);
-                              return (
-                                <Badge key={id} variant="secondary" className="text-sm flex items-center gap-2">
-                                  {caregiver?.name || 'Carregando...'}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const currentIds = form.getValues('caregiver_ids') || [];
-                                      form.setValue('caregiver_ids', currentIds.filter(cid => cid !== id), { shouldDirty: true });
-                                    }}
-                                    className="rounded-full hover:bg-background/50 p-0.5"
-                                    aria-label={`Remover ${caregiver?.name}`}
-                                  ><X className="h-3 w-3" /></button>
-                                </Badge>
-                              );
-                            })}
-                          </div>
-                        ) : <p className="text-xs text-muted-foreground px-2 py-1">Nenhum cuidador vinculado.</p>}
-                      </div>
-                      <Button type="button" variant="outline" size="sm" onClick={() => setLinkCaregiverDialogOpen(true)}><Link2 className="mr-2 h-4 w-4" />Vincular Cuidador</Button>
-                    </div>
-                    </div>
-                    <div className="flex justify-end space-x-2 pt-4 mt-4 border-t">
-                      <Button type="button" variant="ghost" onClick={() => handleDialogChange(false)}>Cancelar</Button>
-                      <Button type="submit" disabled={createStudent.isPending || updateStudent.isPending}>
+                    <div className="flex items-center justify-end space-x-3 px-6 py-4 bg-muted/20 border-t border-border/40">
+                      <Button type="button" variant="ghost" className="rounded-xl" onClick={() => handleDialogChange(false)}>Cancelar</Button>
+                      <Button type="submit" className="rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-glow-sm" disabled={createStudent.isPending || updateStudent.isPending}>
                         {editingStudent
-                          ? (updateStudent.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : <><Save className="mr-2 h-4 w-4" /> Salvar</>)
-                          : (createStudent.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando...</> : <><UserPlus className="mr-2 h-4 w-4" /> Criar</>)
+                          ? (updateStudent.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</> : <><Save className="mr-2 h-4 w-4" /> Salvar Alterações</>)
+                          : (createStudent.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Criando...</> : <><UserPlus className="mr-2 h-4 w-4" /> Criar Estudante</>)
                         }
                       </Button>
                     </div>

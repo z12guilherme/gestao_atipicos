@@ -70,43 +70,58 @@ function StudentDetails({ student }: { student: Student }) {
         fileName={`Laudo de ${student.name}`}
       />
       <div className="space-y-6 animate-fade-in">
-      {/* Cabeçalho do Estudante */}
-        <Card className="overflow-hidden border-0 shadow-lg bg-white dark:bg-slate-900/70">
-          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/50 dark:to-cyan-950/50 p-4 md:p-6">
-          <div className="flex items-center space-x-4">
-            <div className="h-14 w-14 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-2xl shadow-md">
-              {student.name.charAt(0)}
+        {/* Student header card */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-500 p-5 md:p-6">
+          <div className="absolute -top-6 -right-6 h-24 w-24 rounded-full bg-white/10 blur-xl" />
+          <div className="absolute bottom-0 left-1/2 h-16 w-16 rounded-full bg-white/8 blur-lg" />
+          <div className="relative flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="h-14 w-14 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-white font-bold text-2xl shadow-lg">
+                {student.name.charAt(0)}
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">{student.name}</h2>
+                <p className="text-sm text-white/70 flex items-center gap-1.5 mt-0.5">
+                  <GraduationCap className="h-3.5 w-3.5" />
+                  {student.class_name || 'Turma não informada'}
+                </p>
+              </div>
             </div>
-            <div>
-              <CardTitle className="text-xl font-bold text-slate-800 dark:text-slate-50">{student.name}</CardTitle>
-              <CardDescription className="text-sm text-slate-500 dark:text-slate-400 flex items-center mt-1">
-                <GraduationCap className="inline-block h-4 w-4 mr-1.5" />
-                {student.class_name || "Turma não informada"}
-              </CardDescription>
-            </div>
-          </div>
             <div className="flex flex-col items-end gap-2">
               {student.status && (
-                <Badge variant={student.status === 'ativo' ? 'success' : 'destructive'} className="capitalize text-xs">
+                <Badge
+                  variant={student.status === 'ativo' ? 'success' : 'destructive'}
+                  className="capitalize text-xs bg-white/20 text-white border-white/30"
+                >
                   {student.status}
                 </Badge>
               )}
               {student.laudo_url && (
-                <Button variant="outline" size="sm" onClick={() => setPdfViewerOpen(true)}>
-                  <Eye className="mr-2 h-4 w-4" />
+                <Button
+                  size="sm"
+                  onClick={() => setPdfViewerOpen(true)}
+                  className="bg-white/20 hover:bg-white/30 text-white border border-white/30 rounded-lg"
+                  variant="ghost"
+                >
+                  <Eye className="mr-1.5 h-3.5 w-3.5" />
                   Ver Laudo
                 </Button>
               )}
             </div>
           </div>
-        </Card>
+        </div>
       <div className="grid lg:grid-cols-3 gap-6">
       {/* Coluna Principal */}
       <div className="lg:col-span-2 space-y-6">
         {/* Card de Informações Pessoais */}
-        <Card className="border-0 shadow-lg bg-white dark:bg-slate-900/70">
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg"><User className="mr-2 h-5 w-5 text-blue-500" /> Dados Pessoais</CardTitle>
+        <Card className="rounded-2xl border-border/60 shadow-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base font-semibold">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-500/15">
+                <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              Dados Pessoais
+            </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5 text-sm">
             {student.birth_date && (
@@ -151,9 +166,14 @@ function StudentDetails({ student }: { student: Student }) {
         </Card>
 
         {/* Card de Análise e Gráficos */}
-        <Card className="border-0 shadow-lg bg-white dark:bg-slate-900/70">
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg"><TrendingUp className="mr-2 h-5 w-5 text-indigo-500" /> Acompanhamento</CardTitle>
+        <Card className="rounded-2xl border-border/60 shadow-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base font-semibold">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-500/15">
+                <TrendingUp className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              Acompanhamento
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* KPIs */}
@@ -203,9 +223,14 @@ function StudentDetails({ student }: { student: Student }) {
       {/* Coluna de Observações (Sidebar) */}
       <div className="lg:col-span-1 space-y-6">
         {/* Card de Cronograma */}
-        <Card className="border-0 shadow-lg bg-white dark:bg-slate-900/70">
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg"><Clock className="mr-2 h-5 w-5 text-green-500" /> Cronograma do Dia</CardTitle>
+        <Card className="rounded-2xl border-border/60 shadow-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base font-semibold">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-500/15">
+                <Clock className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              Cronograma do Dia
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 max-h-[250px] overflow-y-auto pr-2">
             {isLoadingSchedule ? (
@@ -230,9 +255,14 @@ function StudentDetails({ student }: { student: Student }) {
 
 
         {/* Card de Observações */}
-        <Card className="border-0 shadow-lg bg-white dark:bg-slate-900/70">
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg"><FileText className="mr-2 h-5 w-5 text-blue-500" /> Últimas Observações</CardTitle>
+        <Card className="rounded-2xl border-border/60 shadow-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base font-semibold">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-500/15">
+                <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              Últimas Observações
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 max-h-[500px] overflow-y-auto pr-2">
               {isLoadingReports && (
@@ -327,43 +357,48 @@ export function ResponsavelDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="animate-fade-in-down">
-        <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-          {getWelcomeMessage()}, {profile?.name?.split(' ')[0]}!
-        </h1>
-        <p className="text-md md:text-lg text-muted-foreground mt-2">
-          Acompanhe o dia a dia e o desenvolvimento dos seus filhos.
-        </p>
+      {/* Hero header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-cyan-500 p-6 md:p-8 animate-fade-in-down">
+        <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-white/10 blur-xl" />
+        <div className="absolute bottom-0 right-1/4 h-20 w-20 rounded-full bg-white/8 blur-lg" />
+        <div className="relative">
+          <p className="text-xs font-semibold text-blue-100/80 uppercase tracking-widest mb-2">Portal do Responsável</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-white">
+            {getWelcomeMessage()}, {profile?.name?.split(' ')[0]}!
+          </h1>
+          <p className="text-blue-100/80 text-sm mt-1.5">
+            Acompanhe o dia a dia e o desenvolvimento dos seus filhos.
+          </p>
+        </div>
       </div>
 
       {!isLoading && (!students || students.length === 0) ? (
-        <div className="text-center py-20 px-6 border-2 border-dashed rounded-xl bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800">
-          <HeartHandshake className="mx-auto h-16 w-16 text-slate-400 dark:text-slate-500" />
-          <h3 className="mt-4 text-xl font-semibold text-slate-800 dark:text-slate-100">Nenhum Estudante Vinculado</h3>
-          <p className="mt-2 text-md text-muted-foreground max-w-md mx-auto">Parece que ainda não há estudantes associados ao seu perfil. Por favor, entre em contato com a gestão da instituição para fazer o vínculo.</p>
+        <div className="text-center py-20 px-6 border-2 border-dashed border-border/60 rounded-2xl bg-muted/30">
+          <div className="flex h-16 w-16 mx-auto items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/30 dark:to-blue-900/30">
+            <HeartHandshake className="h-8 w-8 text-indigo-500" />
+          </div>
+          <h3 className="mt-4 text-lg font-semibold">Nenhum Estudante Vinculado</h3>
+          <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">Entre em contato com a gestão da instituição para vincular um estudante ao seu perfil.</p>
         </div>
       ) : students && (
         <div className="space-y-6">
-          {/* Seletor de Estudantes (Abas) */}
+          {/* Student pill tabs */}
           {students.length > 1 && (
-            <div className="border-b border-slate-200 dark:border-slate-800 overflow-x-auto pb-1">
-              <nav className="-mb-px flex space-x-6 min-w-max px-1" aria-label="Tabs">
+            <div className="flex flex-wrap gap-2">
               {students.map((student) => (
-                <Button
+                <button
                   key={student.id}
-                  variant="ghost"
                   onClick={() => setSelectedStudentId(student.id)}
                   className={cn(
-                    "whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm rounded-none",
+                    "px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
                     selectedStudent?.id === student.id
-                      ? 'border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-300'
-                      : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:border-slate-700'
+                      ? 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-glow-sm'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
                   )}
                 >
-                  {student.name}
-                </Button>
+                  {student.name.split(' ')[0]}
+                </button>
               ))}
-              </nav>
             </div>
           )}
 
