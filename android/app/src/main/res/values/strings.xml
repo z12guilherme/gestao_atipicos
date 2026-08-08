@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">Atípicos</string>
-    <string name="title_activity_main">Gestão Atípicos</string>
-    <string name="package_name">com.gestaoatipicos.app</string>
-    <string name="custom_url_scheme">com.gestaoatipicos.app</string>
-</resources>
