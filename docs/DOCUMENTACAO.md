@@ -136,7 +136,13 @@ A segurança do projeto adota uma estratégia de **Defesa em Profundidade (Defen
 
 ### 3.4. Funcionalidades Implementadas
 
-As funcionalidades descritas nos objetivos foram implementadas através de componentes React, hooks customizados (`useStudents`, `useUsers`) e interações com a API do Supabase. A importação em massa para gestores, por exemplo, utiliza uma Edge Function (`bulk-create-students`) para processar os dados no servidor, garantindo melhor performance e segurança. Recentemente, foram adicionados o módulo de **Gestão de Documentos**, permitindo o upload seguro de laudos médicos (PDF), e a **importação de cronogramas** para cuidadores via planilha.
+As funcionalidades descritas nos objetivos foram implementadas através de componentes React, hooks customizados (`useStudents`, `useUsers`, `usePdi`, `useHealth`, etc.) e interações com a API do Supabase via React Query. Dentre as principais funcionalidades, destacam-se:
+
+- **Gestão PDI & Evolução:** Painel analítico de Plano de Desenvolvimento Individual, contendo Metas do Semestre, Anedotário Multidisciplinar, Gamificação (Conquistas) e mapeamento de Gatilhos Comportamentais por IA.
+- **Diário de Saúde & Medicação:** Módulo focado na saúde diária do aluno (sono, alimentação, higiene) e em um rigoroso controle e administração de medicamentos no ambiente escolar.
+- **Comunicação e Família:** Portal unificado oferecendo Chat Criptografado, Agendamento de Reuniões, Mural de Recados com controle de assinaturas e Central de Materiais.
+- **Segurança (Check-ins e Incidentes):** Monitoramento de entradas/saídas, listagem de pessoas autorizadas com biometria/foto, alertas de botão de pânico (SOS) e log de incidentes.
+- **Importação em Massa e Documentos:** Funcionalidades para processar dados no servidor (Edge Functions) e upload seguro de laudos médicos (PDF) via Storage.
 
 ---
 
@@ -277,11 +283,9 @@ O projeto "Gestão Atípicos" atingiu com sucesso seus objetivos, entregando uma
 
 Como próximos passos, o projeto pode evoluir nas seguintes áreas:
 
-- **Módulo de Comunicação Direta:** Implementar um sistema de chat em tempo real para facilitar a comunicação instantânea entre cuidadores e responsáveis, permitindo a troca de mensagens privadas e seguras.
-- **Relatórios e Análises:** Criar um módulo para que gestores possam gerar relatórios personalizados sobre a frequência de observações, evolução dos estudantes e carga de trabalho dos cuidadores.
-- **Notificações:** Sistema de notificações (na plataforma, por e-mail ou push) para avisar sobre novas observações, mensagens ou alertas importantes.
+- **Integração IoT e Wearables:** Sincronizar os batimentos cardíacos e níveis de estresse captados por relógios inteligentes (smartwatches) diretamente com o Diário de Saúde para prever crises sensoriais.
+- **Relatórios Avançados com LLMs:** Utilizar Inteligência Artificial (ex: OpenAI/Gemini) para ler todo o anedotário mensal e gerar resumos pedagógicos automáticos em PDF.
 - **Integração com Calendário:** Sincronizar o cronograma de atividades dos estudantes com calendários externos (Google Calendar, Outlook Calendar) para pais e cuidadores.
-- **Plano de Desenvolvimento Individual (PDI):** Módulo para criar, acompanhar e avaliar metas e objetivos específicos para cada estudante, com a colaboração de professores, cuidadores e responsáveis.
 
 Este projeto demonstra o grande potencial da tecnologia para resolver problemas reais no setor educacional, oferecendo ferramentas que apoiam e valorizam o trabalho de todos os envolvidos no processo de inclusão.
 

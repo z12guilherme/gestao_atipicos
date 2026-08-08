@@ -18,8 +18,12 @@ import { StudentsPage } from "./pages/StudentsPage";
 import { UsersPage } from "./pages/UsersPage";
 import { ClassManagement } from "./components/gestor/ClassManagement";
 import Settings from "./pages/Settings";
-import UpdatePasswordPage from "./pages/UpdatePasswordPage"; // Importa a nova página
+import UpdatePasswordPage from "./pages/UpdatePasswordPage";
 import TutorialPage from "./pages/TutorialPage";
+import { SecurityPage } from "./pages/SecurityPage";
+import { HealthPage } from "./pages/HealthPage";
+import { PdiDashboard } from "./pages/PdiDashboard";
+import { CommunicationPage } from "./pages/CommunicationPage";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +47,10 @@ function App() {
                   <Route path="/students" element={<StudentsPage />} />
                   <Route path="/users" element={<UsersPage />} />
                   <Route path="/classes" element={<ClassManagement />} />
+                  <Route path="/communication" element={<CommunicationPage />} />
+                  <Route path="/health" element={<HealthPage />} />
+                  <Route path="/pdi" element={<PdiDashboard />} />
+                  <Route path="/security" element={<SecurityPage />} />
                   <Route path="/settings" element={<Settings />} />
                   {/* Rota raiz (genérica) por último */}
                   <Route path="/" element={<Dashboard />} />

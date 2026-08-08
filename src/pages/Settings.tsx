@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserManagement } from '@/components/gestor/UserManagement';
 import { SiemDashboard } from '@/components/gestor/SiemDashboard';
 import { User } from '@/hooks/useUsers';
+import { MFAEnroll } from '@/components/MFAEnroll';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres.'),
@@ -119,7 +120,7 @@ export default function Settings() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="security">
+        <TabsContent value="security" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Segurança da Conta</CardTitle>
@@ -138,6 +139,8 @@ export default function Settings() {
               </Button>
             </CardContent>
           </Card>
+
+          <MFAEnroll />
         </TabsContent>
 
         {profile?.role === 'gestor' && (

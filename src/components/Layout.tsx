@@ -19,6 +19,10 @@ import {
   Bell,
   Sparkles,
   ChevronRight,
+  ShieldCheck,
+  HeartPulse,
+  BrainCircuit,
+  MessageSquare,
 } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -85,6 +89,10 @@ export function Layout() {
     { to: "/students",  icon: GraduationCap, label: "Alunos" },
     { to: "/users",     icon: Users,         label: "Usuários" },
     { to: "/classes",   icon: School,        label: "Turmas" },
+    { to: "/communication", icon: MessageSquare, label: "Comunicação" },
+    { to: "/health",    icon: HeartPulse,    label: "Diário de Saúde" },
+    { to: "/pdi",       icon: BrainCircuit,  label: "PDI & Evolução" },
+    { to: "/security",  icon: ShieldCheck,   label: "Segurança" },
     { to: "/settings",  icon: UserCog,       label: "Configurações" },
   ];
 

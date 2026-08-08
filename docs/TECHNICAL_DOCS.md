@@ -226,16 +226,23 @@ Tabela associativa (N-para-N) que vincula responsáveis a estudantes.
 
 ## 8. Funcionalidades e Módulos
 
-### 8.1. Gestão de Vínculos
+### 8.1. Gestão de Vínculos (Core)
 Módulo crítico que associa Cuidadores e Responsáveis aos Estudantes. Esta lógica garante que as informações de um aluno (como diário de bordo e ocorrências) sejam visíveis apenas para a equipe autorizada.
     
-### 8.2. Dashboard Analítico
+### 8.2. Módulos de Extensão (PDI, Saúde, Comunicação e Segurança)
+O sistema foi modularizado para cobrir a jornada completa do estudante atípico:
+*   **PDI & Evolução:** Acompanhamento de metas, anedotário e gamificação. Dados persistidos nas tabelas `pdi_goals`, `anecdotal_records` e `student_achievements`.
+*   **Saúde & Medicação:** Módulo de Diário de Saúde (`daily_health_logs`) e controle rigoroso de medicações (`medications`, `medication_logs`).
+*   **Comunicação Integrada:** Chat criptografado (`messages`), mural de recados e gestão de materiais pedagógicos.
+*   **Segurança Física:** Controle de entrada/saída (`student_checkins`) e incidentes.
+
+### 8.3. Dashboard Analítico
 Visualização de dados agregados para tomada de decisão:
 *   Total de alunos e usuários.
 *   Distribuição por turmas.
 *   Gráficos interativos (Recharts) com suporte a temas (Claro/Escuro).
 
-### 8.3. Importação em Massa
+### 8.4. Importação em Massa
 Funcionalidade desenvolvida com *Edge Functions* para processar grandes volumes de dados (CSV/XLSX), permitindo a migração rápida de legados para o novo sistema.
 
 ## 9. Qualidade e Testes
